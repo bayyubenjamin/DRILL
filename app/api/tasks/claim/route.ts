@@ -14,6 +14,11 @@ export async function POST(request: Request) {
     const tgUser = JSON.parse(new URLSearchParams(initData).get('user')!);
     const { data: user } = await supabaseAdmin.from('users').select('id').eq('telegram_user_id', tgUser.id).single();
     
+    // Validasi jika user tidak ditemukan di database
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     // Ambil info reward dari task
     const { data: task } = await supabaseAdmin.from('tasks').select('reward').eq('id', taskId).single();
     if (!task) return NextResponse.json({ error: 'Task not found' }, { status: 404 });
@@ -33,7 +38,6 @@ export async function POST(request: Request) {
     const { data: account } = await supabaseAdmin.from('mining_accounts').select('balance').eq('user_id', user.id).single();
     const newBalance = (account?.balance || 0) + Number(task.reward);
     
-    // Hitung level dan speed secara terpisah menggunakan fungsi yang tersedia
     const level = calculateLevel(newBalance);
     const speed = calculateMiningSpeed(level);
 
