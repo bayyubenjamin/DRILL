@@ -10,16 +10,31 @@ export function useTelegramAuth() {
       try {
         if (typeof window === 'undefined') return;
 
-        // Beritahu Telegram bahwa Mini App sudah siap ditampilkan
-        WebApp.ready();
-        
-        // Expand Mini App ke ukuran penuh (UX lebih baik)
-        WebApp.expand();
+        // Coba inisialisasi Telegram WebApp jika tersedia
+        try {
+          WebApp.ready();
+          WebApp.expand();
+        } catch (e) {
+          console.warn('Telegram WebApp SDK not fully initialized:', e);
+        }
 
-        const initData = WebApp.initData;
+        let initData = WebApp.initData;
 
+        // BYPASS / FALLBACK UNTUK DEBUGGING:
+        // Jika initData kosong dan kita sedang di development atau ingin tes manual,
+        // kita bisa kirim string kosong atau mock data agar API tetap merespons (atau sesuaikan kebutuhan backend).
         if (!initData) {
-          console.warn('initData tidak ditemukan. Apakah ini dijalankan di luar Telegram?');
+          console.warn('initData tidak ditemukan.');
+          
+          // Jika ingin bypass otomatis saat testing lokal, aktifkan baris di bawah ini:
+          // if (process.env.NODE_ENV === 'development') {
+          //   initData = 'query_id=AAH...&user=%7B%22id%22%3A123456789%7D...'; // mock initData jika perlu
+          // } else {
+          //   setAuthFailed();
+          //   return;
+          // }
+
+          // Untuk sekarang kita biarkan trigger gagal jika benar-benar kosong:
           setAuthFailed();
           return;
         }
