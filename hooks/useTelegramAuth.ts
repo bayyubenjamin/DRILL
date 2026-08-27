@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import WebApp from '@twa-dev/sdk';
 import { useUserStore } from '@/store/useUserStore';
 
 export function useTelegramAuth() {
@@ -10,34 +9,33 @@ export function useTelegramAuth() {
       try {
         if (typeof window === 'undefined') return;
 
-        // Coba inisialisasi Telegram WebApp jika tersedia
-        try {
-          WebApp.ready();
-          WebApp.expand();
-        } catch (e) {
-          console.warn('Telegram WebApp SDK not fully initialized:', e);
+        // Fungsi helper untuk mengambil initData secara aman dari Telegram native object
+        const getTelegramInitData = () => {
+          // @ts-ignore
+          return window.Telegram?.WebApp?.initData || '';
+        };
+
+        // Berikan sedikit waktu (retry mechanism) jika Telegram WebApp object terlambat inject
+        let initData = getTelegramInitData();
+        let retries = 0;
+        while (!initData && retries < 10) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          initData = getTelegramInitData();
+          retries++;
         }
 
-        let initData = WebApp.initData;
-
-        // BYPASS / FALLBACK UNTUK DEBUGGING:
-        // Jika initData kosong dan kita sedang di development atau ingin tes manual,
-        // kita bisa kirim string kosong atau mock data agar API tetap merespons (atau sesuaikan kebutuhan backend).
+        // Jika setelah dicoba beberapa kali tetap kosong, baru anggap gagal/di luar telegram
         if (!initData) {
-          console.warn('initData tidak ditemukan.');
-          
-          // Jika ingin bypass otomatis saat testing lokal, aktifkan baris di bawah ini:
-          // if (process.env.NODE_ENV === 'development') {
-          //   initData = 'query_id=AAH...&user=%7B%22id%22%3A123456789%7D...'; // mock initData jika perlu
-          // } else {
-          //   setAuthFailed();
-          //   return;
-          // }
-
-          // Untuk sekarang kita biarkan trigger gagal jika benar-benar kosong:
+          console.warn('initData tetap kosong setelah dicoba ulang.');
           setAuthFailed();
           return;
         }
+
+        // Opsional: panggil ready dan expand secara aman
+        // @ts-ignore
+        window.Telegram?.WebApp?.ready();
+        // @ts-ignore
+        window.Telegram?.WebApp?.expand();
 
         const res = await fetch('/api/user/auth', {
           method: 'POST',
