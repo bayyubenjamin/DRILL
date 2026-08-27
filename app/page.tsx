@@ -1,8 +1,22 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Battery, Zap, Trophy, RefreshCw, Lock, AlertCircle, ShieldCheck } from 'lucide-react';
+import { Battery, Zap, Trophy, RefreshCw, Lock, ShieldCheck } from 'lucide-react';
+
+// Telegram Mini App types (keeps Telegram integration type-safe without changing the UI)
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp?: {
+        initData?: string;
+        HapticFeedback?: {
+          notificationOccurred: (type: 'success' | 'warning' | 'error') => void;
+        };
+      };
+    };
+  }
+}
 
 // --- Constants ---
 // Genesis end timestamp (30 days from project start)
