@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ⚡ DRILL NETWORK — DRILL ENGINE
 
-## Getting Started
+> Industrial + Futuristic + Dark + Minimal Web3 Telegram Mini App built on TON Testnet and Supabase.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🛠️ Tech Stack
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Framework:** Next.js 14+ (App Router, TypeScript, Tailwind CSS)
+- **State Management:** Zustand
+- **Animations:** Framer Motion, Lucide Icons
+- **Database & Auth:** Supabase (PostgreSQL, Row Level Security, Service Role API)
+- **TON Ecosystem:** @tonconnect/ui-react, @ton/ton, @twa-dev/sdk
+- **Smart Contracts:** Tact (TON Testnet)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🚀 Core Features
 
-## Learn More
+1. **Off-Chain Mining Engine:** Real-time visual increment with server-side authoritative validation and atomic claim logic.
+2. **Dynamic Level Progression:** Non-linear level calculator based on total $DRILL balance.
+3. **Task System:** Interactive tasks with strict anti-double-claim protection (`UNIQUE` constraints).
+4. **Referral System:** Telegram `startapp` link generation and automated energy transfer rewards.
+5. **TON Wallet & NFT Access:** TonConnect integration for Testnet wallets with Mining NFT access verification.
+6. **Genesis Season & Halving:** 30-day locked withdrawal phase with automated quarterly halving emission logic.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## ⚙️ Environment Variables
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Buat file `.env.local` di lingkungan lokal Anda berdasarkan template berikut:
 
-## Deploy on Vercel
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+NEXT_PUBLIC_TON_NETWORK=testnet
+NEXT_PUBLIC_TON_CONNECT_MANIFEST_URL=[https://your-domain.vercel.app/tonconnect-manifest.json](https://your-domain.vercel.app/tonconnect-manifest.json)
+TON_RPC_URL=[https://testnet.toncenter.com/api/v2/jsonRPC](https://testnet.toncenter.com/api/v2/jsonRPC)
+TON_TESTNET_MNEMONIC="word1 word2 ... word24"
+
+GENESIS_START_TIMESTAMP=1725148800
+NEXT_PUBLIC_NFT_COLLECTION_ADDRESS=your_testnet_nft_collection_address
