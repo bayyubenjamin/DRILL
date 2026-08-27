@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { validateTelegramWebAppData } from '@/utils/telegram';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { calculateLevelAndSpeed } from '@/lib/level/calculator';
+import { calculateLevel, calculateMiningSpeed } from '@/lib/level/calculator';
 
 export async function POST(request: Request) {
   try {
@@ -32,7 +32,10 @@ export async function POST(request: Request) {
     // Update balance user secara atomic
     const { data: account } = await supabaseAdmin.from('mining_accounts').select('balance').eq('user_id', user.id).single();
     const newBalance = (account?.balance || 0) + Number(task.reward);
-    const { level, speed } = calculateLevelAndSpeed(newBalance);
+    
+    // Hitung level dan speed secara terpisah menggunakan fungsi yang tersedia
+    const level = calculateLevel(newBalance);
+    const speed = calculateMiningSpeed(level);
 
     const { data: updatedAccount } = await supabaseAdmin.from('mining_accounts').update({
       balance: newBalance,
