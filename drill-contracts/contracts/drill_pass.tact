@@ -67,13 +67,19 @@ contract DrillPassItem(
     }
 }
 
-contract DrillPassCollection(
-    admin: Address,
-    nextItemIndex: Int as uint64,
-    mintPrice: Int as coins,
-    content: Cell,
-) {
+contract DrillPassCollection {
+    admin: Address;
+    nextItemIndex: Int as uint64;
+    mintPrice: Int as coins;
+    content: Cell;
     minted: map<Address, Int>;
+
+    init(admin: Address, mintPrice: Int, content: Cell) {
+        self.admin = admin;
+        self.nextItemIndex = 0;
+        self.mintPrice = mintPrice;
+        self.content = content;
+    }
 
     receive() {}
 
@@ -109,12 +115,11 @@ contract DrillPassCollection(
 
     receive(msg: RevokePass) {
         require(sender() == self.admin, "Only admin");
-        let ownerDummy: Address = self.admin;
         deploy(DeployParameters{
             value: 0,
             mode: SendRemainingValue,
             body: Revoke{ queryId: msg.queryId }.toCell(),
-            init: initOf DrillPassItem(myAddress(), msg.itemIndex, ownerDummy, self.admin, 0, true),
+            init: initOf DrillPassItem(myAddress(), msg.itemIndex, self.admin, self.admin, 0, true),
         });
     }
 

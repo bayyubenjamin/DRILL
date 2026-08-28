@@ -15,7 +15,7 @@ export async function run(provider: NetworkProvider) {
   const price = toNano(process.env.MINT_PRICE_TON || '1');
 
   const collection = provider.open(
-    await DrillPassCollection.fromInit(admin, 0n, price, offchainContent(metadataUrl)),
+    await DrillPassCollection.fromInit(admin, price, offchainContent(metadataUrl)),
   );
 
   await collection.send(provider.sender(), { value: toNano('0.15') }, null);
