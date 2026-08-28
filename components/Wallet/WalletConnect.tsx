@@ -1,22 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import {
-  TonConnectButton,
-  useTonAddress,
-  useTonConnectUI,
-  useTonWallet,
-} from '@tonconnect/ui-react';
-import { ShieldAlert, ShieldCheck, Wallet } from 'lucide-react';
-
-const QUICK_WALLETS = [
-  { appName: 'telegram-wallet', label: 'TELEGRAM WALLET' },
-  { appName: 'tonkeeper', label: 'TONKEEPER' },
-] as const;
+import { useTonAddress, useTonConnectUI } from '@tonconnect/ui-react';
+import { LogOut, ShieldAlert, ShieldCheck, Wallet } from 'lucide-react';
 
 export default function WalletConnect() {
   const address = useTonAddress();
-  const wallet = useTonWallet();
   const [tonConnectUI] = useTonConnectUI();
   const [isClient, setIsClient] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -29,7 +18,10 @@ export default function WalletConnect() {
   }, []);
 
   useEffect(() => {
-    if (!address) return;
+    if (!address) {
+      setNftActive(false);
+      return;
+    }
     void verifyNFT(address);
   }, [address]);
 
@@ -51,21 +43,14 @@ export default function WalletConnect() {
     }
   };
 
-  const haptic = () => {
-    window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.('light');
-  };
-
-  const openModal = async () => {
+  const handleConnect = async () => {
     setError(null);
     setBusy(true);
-    haptic();
+    window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.('light');
     try {
-      if (!tonConnectUI) {
-        throw new Error('TonConnect belum siap');
-      }
       await tonConnectUI.openModal();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Gagal membuka modal wallet';
+      const message = err instanceof Error ? err.message : 'Gagal membuka daftar wallet';
       console.error('TonConnect openModal failed:', err);
       setError(message);
     } finally {
@@ -73,21 +58,12 @@ export default function WalletConnect() {
     }
   };
 
-  const openWallet = async (appName: string) => {
+  const handleDisconnect = async () => {
     setError(null);
-    setBusy(true);
-    haptic();
     try {
-      if (!tonConnectUI) {
-        throw new Error('TonConnect belum siap');
-      }
-      await tonConnectUI.openSingleWalletModal(appName);
+      await tonConnectUI.disconnect();
     } catch (err) {
-      const message = err instanceof Error ? err.message : `Gagal membuka ${appName}`;
-      console.error('TonConnect openSingleWalletModal failed:', err);
-      setError(message);
-    } finally {
-      setBusy(false);
+      console.error('TonConnect disconnect failed:', err);
     }
   };
 
@@ -97,36 +73,33 @@ export default function WalletConnect() {
 
   return (
     <div className="flex flex-col items-center w-full gap-2">
-      <div className="w-full flex justify-center tonconnect-button-wrap">
-        <TonConnectButton style={{ width: '100%' }} />
-      </div>
-
-      {!wallet && (
-        <>
+      {!address ? (
+        <button
+          type="button"
+          onClick={handleConnect}
+          disabled={busy}
+          className="w-full py-3 px-4 bg-zinc-900 border border-emerald-500/40 hover:border-emerald-400 rounded-xl font-mono text-xs font-bold tracking-widest text-emerald-400 flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(16,185,129,0.1)] active:scale-[0.98] cursor-pointer disabled:opacity-60"
+        >
+          <Wallet className="w-4 h-4 text-emerald-400" />
+          <span>{busy ? 'OPENING...' : 'CONNECT TON WALLET'}</span>
+        </button>
+      ) : (
+        <div className="w-full p-3 bg-zinc-950 border border-zinc-800 rounded-xl flex items-center justify-between font-mono text-xs">
+          <div className="flex items-center gap-2 overflow-hidden">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
+            <span className="text-zinc-300 truncate">
+              {address.slice(0, 4)}...{address.slice(-4)}
+            </span>
+          </div>
           <button
             type="button"
-            onClick={openModal}
-            disabled={busy}
-            className="w-full py-3 px-4 bg-zinc-900 border border-emerald-500/40 hover:border-emerald-400 rounded-xl font-mono text-xs font-bold tracking-widest text-emerald-400 flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(16,185,129,0.1)] active:scale-[0.98] cursor-pointer disabled:opacity-60"
+            onClick={handleDisconnect}
+            className="text-zinc-500 hover:text-red-400 p-1.5 transition-colors cursor-pointer"
+            title="Disconnect Wallet"
           >
-            <Wallet className="w-4 h-4 text-emerald-400" />
-            <span>{busy ? 'OPENING WALLET...' : 'CONNECT TON WALLET'}</span>
+            <LogOut className="w-4 h-4" />
           </button>
-
-          <div className="grid grid-cols-2 gap-2 w-full">
-            {QUICK_WALLETS.map((item) => (
-              <button
-                key={item.appName}
-                type="button"
-                onClick={() => openWallet(item.appName)}
-                disabled={busy}
-                className="py-2 px-3 bg-zinc-950 border border-zinc-800 hover:border-emerald-500/50 rounded-lg font-mono text-[10px] tracking-widest text-zinc-300 disabled:opacity-60"
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </>
+        </div>
       )}
 
       {error && (
