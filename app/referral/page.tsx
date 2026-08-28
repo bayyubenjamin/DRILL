@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Copy, CheckCircle2, ArrowLeft, Zap, Clock3 } from 'lucide-react';
 import Link from 'next/link';
+import { BOT_USERNAME, REFERRAL_REWARD } from '@/lib/referral/constants';
 
 export default function ReferralPage() {
   const [stats, setStats] = useState({
@@ -16,11 +17,10 @@ export default function ReferralPage() {
   const [loading, setLoading] = useState(true);
   const [tgUserId, setTgUserId] = useState<number | string>('');
 
-  const BOT_USERNAME = 'DrillEngineBot';
   const referralLink = `https://t.me/${BOT_USERNAME}/app?startapp=${tgUserId || ''}`;
 
   useEffect(() => {
-    const initReferral = async () => {
+    const run = async () => {
       try {
         const tg = window.Telegram?.WebApp;
         const initData = tg?.initData;
@@ -55,19 +55,17 @@ export default function ReferralPage() {
         setLoading(false);
       }
     };
-
-    void initReferral();
+    void run();
   }, []);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
-    window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success');
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleShare = () => {
-    const shareText = 'Join the DRILL NETWORK Genesis Season and mine $DRILL with me!';
+    const shareText = 'Join DRILL ENGINE and mine $DRILL with me.';
     const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`;
     window.Telegram?.WebApp?.openTelegramLink?.(shareUrl);
   };
@@ -81,26 +79,19 @@ export default function ReferralPage() {
         <h1 className="text-xl tracking-widest text-emerald-500">REFERRAL SYSTEM</h1>
       </header>
 
-      <div className="flex items-center justify-between bg-zinc-900 border border-zinc-800 p-6 rounded-lg mb-8 relative overflow-hidden">
-        <div className="flex flex-col items-center z-10">
+      <div className="flex items-center justify-between bg-zinc-900 border border-zinc-800 p-6 rounded-lg mb-8">
+        <div className="flex flex-col items-center">
           <div className="w-12 h-12 rounded-full bg-zinc-800 border-2 border-emerald-500 flex items-center justify-center">
             <Users className="text-emerald-500" size={20} />
           </div>
           <span className="text-xs mt-2 text-zinc-400">FRIEND</span>
         </div>
-        <div className="flex-1 h-[2px] bg-zinc-800 mx-4 relative flex items-center justify-center z-0">
-          <motion.div
-            initial={{ left: 0, opacity: 0 }}
-            animate={{ left: '100%', opacity: [0, 1, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-            className="absolute w-4 h-4 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981] -translate-x-1/2 flex items-center justify-center"
-          >
-            <Zap size={8} className="text-black" />
-          </motion.div>
-          <span className="absolute -top-4 text-[10px] text-emerald-500 font-bold tracking-widest">+500 $DRILL</span>
+        <div className="flex-1 h-[2px] bg-zinc-800 mx-4 relative flex items-center justify-center">
+          <motion.div animate={{ left: ['0%', '100%'] }} transition={{ duration: 1.5, repeat: Infinity }} className="absolute w-3 h-3 rounded-full bg-emerald-500" />
+          <span className="absolute -top-4 text-[10px] text-emerald-500 font-bold">+{REFERRAL_REWARD} $DRILL</span>
         </div>
-        <div className="flex flex-col items-center z-10">
-          <div className="w-12 h-12 rounded-full bg-zinc-800 border-2 border-emerald-500 flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+        <div className="flex flex-col items-center">
+          <div className="w-12 h-12 rounded-full bg-zinc-800 border-2 border-emerald-500 flex items-center justify-center">
             <Zap className="text-emerald-500" size={20} />
           </div>
           <span className="text-xs mt-2 text-emerald-400 font-bold">YOU</span>
@@ -108,48 +99,41 @@ export default function ReferralPage() {
       </div>
 
       {loading ? (
-        <div className="text-center text-zinc-500 animate-pulse text-sm">LOADING STATS...</div>
+        <div className="text-center text-zinc-500 text-sm">LOADING STATS...</div>
       ) : (
         <div className="grid grid-cols-2 gap-3 mb-6">
-          <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-lg flex flex-col items-center justify-center">
-            <span className="text-zinc-500 text-xs mb-1">TOTAL INVITES</span>
-            <span className="text-2xl font-bold text-white">{stats.totalInvites}</span>
+          <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-lg text-center">
+            <span className="text-zinc-500 text-xs">TOTAL INVITES</span>
+            <p className="text-2xl font-bold">{stats.totalInvites}</p>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-lg flex flex-col items-center justify-center">
-            <span className="text-zinc-500 text-xs mb-1">TOTAL EARNED</span>
-            <span className="text-xl font-bold text-emerald-400">+{stats.totalEarned}</span>
+          <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-lg text-center">
+            <span className="text-zinc-500 text-xs">TOTAL EARNED</span>
+            <p className="text-xl font-bold text-emerald-400">+{stats.totalEarned}</p>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-lg flex flex-col items-center justify-center">
-            <span className="text-zinc-500 text-xs mb-1 flex items-center gap-1">
-              <Clock3 size={12} /> PENDING
-            </span>
-            <span className="text-xl font-bold text-amber-400">{stats.pendingCount}</span>
+          <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-lg text-center">
+            <span className="text-zinc-500 text-xs flex items-center justify-center gap-1"><Clock3 size={12} /> PENDING</span>
+            <p className="text-xl font-bold text-amber-400">{stats.pendingCount}</p>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-lg flex flex-col items-center justify-center">
-            <span className="text-zinc-500 text-xs mb-1 flex items-center gap-1">
-              <CheckCircle2 size={12} /> VALID
-            </span>
-            <span className="text-xl font-bold text-emerald-400">{stats.validCount}</span>
+          <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-lg text-center">
+            <span className="text-zinc-500 text-xs flex items-center justify-center gap-1"><CheckCircle2 size={12} /> VALID</span>
+            <p className="text-xl font-bold text-emerald-400">{stats.validCount}</p>
           </div>
         </div>
       )}
 
       <p className="text-[10px] text-zinc-500 leading-relaxed mb-6">
-        Referral masuk sebagai PENDING. Status berubah VALID dan reward +500 $DRILL cair setelah teman mint Mining NFT.
+        Teman buka link, data langsung tersimpan PENDING di Supabase. Jadi VALID +{REFERRAL_REWARD} $DRILL setelah teman mint SBT.
       </p>
 
       <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-lg mt-auto">
-        <p className="text-xs text-zinc-400 mb-3 text-center uppercase tracking-wider">Your Unique Extraction Link</p>
+        <p className="text-xs text-zinc-400 mb-3 text-center uppercase tracking-wider">Your invite link</p>
         <div className="flex items-center space-x-2 bg-black border border-zinc-800 rounded p-2 mb-4">
-          <div className="flex-1 truncate text-xs text-zinc-300 select-all">{referralLink}</div>
-          <button onClick={handleCopy} className="p-2 bg-zinc-800 rounded text-emerald-500 hover:bg-zinc-700 transition-colors">
+          <div className="flex-1 truncate text-xs text-zinc-300">{referralLink}</div>
+          <button onClick={handleCopy} className="p-2 bg-zinc-800 rounded text-emerald-500">
             {copied ? <CheckCircle2 size={16} /> : <Copy size={16} />}
           </button>
         </div>
-        <button
-          onClick={handleShare}
-          className="w-full bg-emerald-500 text-black font-bold tracking-widest text-sm py-3 rounded-lg hover:bg-emerald-400 transition-colors"
-        >
+        <button onClick={handleShare} className="w-full bg-emerald-500 text-black font-bold tracking-widest text-sm py-3 rounded-lg">
           INVITE OPERATORS
         </button>
       </div>
