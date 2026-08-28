@@ -1,18 +1,41 @@
-export const DRILL_RANKS = [
-  { id: 1, name: 'INITIATE', minTotal: 0, bonus: 'Base access' },
-  { id: 2, name: 'SPARK', minTotal: 100, bonus: '+2% engine speed' },
-  { id: 3, name: 'CORE', minTotal: 500, bonus: 'Withdraw unlocked tier' },
-  { id: 4, name: 'ENGINE', minTotal: 2_000, bonus: '+8% engine speed' },
-  { id: 5, name: 'GENESIS', minTotal: 5_000, bonus: 'Genesis badge' },
-  { id: 6, name: 'OVERDRIVE', minTotal: 15_000, bonus: '+15% engine speed' },
-  { id: 7, name: 'APEX', minTotal: 50_000, bonus: 'Apex operator card' },
-  { id: 8, name: 'MYTHIC', minTotal: 100_000, bonus: 'Max visible rank' },
-] as const;
+import { calculateLevel, getRequiredBalanceForLevel, MAX_LEVEL } from '@/lib/level/calculator';
 
-export function getRankIndex(totalDrill: number) {
-  let current = 0;
-  DRILL_RANKS.forEach((rank, index) => {
-    if (totalDrill >= rank.minTotal) current = index;
-  });
-  return current;
+export const MILESTONE_LEVELS = [1, 10, 25, 50, 75, 100, 150, 200, 250, 300, 400, 500] as const;
+
+const TITLES: Record<number, string> = {
+  1: 'INITIATE',
+  10: 'SPARK',
+  25: 'CORE',
+  50: 'OPERATOR',
+  75: 'ENGINE',
+  100: 'GENESIS',
+  150: 'OVERDRIVE',
+  200: 'TITAN',
+  250: 'APEX',
+  300: 'VOID',
+  400: 'MYTHIC',
+  500: 'DRILL MASTER',
+};
+
+export function getLevelTitle(level: number) {
+  const milestones = [...MILESTONE_LEVELS].reverse();
+  const hit = milestones.find((item) => level >= item) || 1;
+  return TITLES[hit] || 'INITIATE';
+}
+
+export function getVisibleLevelCards(totalDrill: number) {
+  const current = calculateLevel(totalDrill);
+  const start = Math.max(1, current - 2);
+  const end = Math.min(MAX_LEVEL, current + 4);
+  const cards = [];
+  for (let level = start; level <= end; level += 1) {
+    cards.push({
+      level,
+      title: getLevelTitle(level),
+      required: getRequiredBalanceForLevel(level),
+      unlocked: totalDrill >= getRequiredBalanceForLevel(level),
+      current: level === current,
+    });
+  }
+  return cards;
 }
