@@ -2,63 +2,51 @@ import { useEffect } from 'react';
 import { useUserStore } from '@/store/useUserStore';
 
 export function useTelegramAuth() {
-  const { setUser, setAuthFailed } = useUserStore();
+  const { setUser, setAuthFailed, setGuest } = useUserStore();
 
   useEffect(() => {
     const authenticate = async () => {
       try {
         if (typeof window === 'undefined') return;
 
-        // Fungsi helper untuk mengambil initData secara aman dari Telegram native object
-        const getTelegramInitData = () => {
-          // @ts-ignore
-          return window.Telegram?.WebApp?.initData || '';
-        };
+        const readInitData = () => window.Telegram?.WebApp?.initData || '';
 
-        // Perpanjang retry mechanism menjadi 50 iterasi (total 5 detik)
-        // karena injeksi script Telegram di HP kadang lambat
-        let initData = getTelegramInitData();
+        let initData = readInitData();
         let retries = 0;
-        while (!initData && retries < 50) {
+        while (!initData && retries < 30) {
           await new Promise((resolve) => setTimeout(resolve, 100));
-          initData = getTelegramInitData();
-          retries++;
+          initData = readInitData();
+          retries += 1;
         }
 
-        // Jika setelah 5 detik tetap kosong
+        window.Telegram?.WebApp?.ready?.();
+        window.Telegram?.WebApp?.expand?.();
+
         if (!initData) {
-          alert('Gagal mendapatkan initData Telegram. Pastikan dibuka di dalam aplikasi Telegram.');
-          setAuthFailed();
+          setGuest();
           return;
         }
-
-        // Ekspansi layar WebApp
-        // @ts-ignore
-        window.Telegram?.WebApp?.ready();
-        // @ts-ignore
-        window.Telegram?.WebApp?.expand();
 
         const res = await fetch('/api/user/auth', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ initData }),
         });
-
         const data = await res.json();
 
-        if (res.ok && data.success) {
+        if (res.ok && data.success && data.user) {
           setUser(data.user);
-        } else {
-          // Tampilkan alert agar error dari Supabase / HMAC Telegram terlihat di HP
-          alert(`Auth Error: ${res.status} - ${data.error || 'Unknown error'}`);
-          setAuthFailed();
+          return;
         }
-      } catch (error: any) {
-        alert(`Network/Client Error: ${error.message}`);
+
+        console.error('Telegram auth failed:', data.error || res.status);
+        setAuthFailed();
+      } catch (error) {
+        console.error('Telegram auth error:', error);
         setAuthFailed();
       }
     };
 
-    authenticate();
-  }, [setUser, setAuthFailed]);
+    void authenticate();
+  }, [setUser, setAuthFailed, setGuest]);
 }

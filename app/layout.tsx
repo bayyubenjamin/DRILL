@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import BottomNav from '@/components/UI/BottomNav';
 import TonProvider from '@/components/Wallet/TonProvider';
+import TelegramAuthProvider from '@/components/UI/TelegramAuthProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -24,10 +25,10 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <TonProvider>
-          <div className="pb-20">
-            {children}
-          </div>
-          <BottomNav />
+          <TelegramAuthProvider>
+            <div className="pb-20">{children}</div>
+            <BottomNav />
+          </TelegramAuthProvider>
         </TonProvider>
       </body>
     </html>

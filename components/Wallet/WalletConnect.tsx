@@ -6,21 +6,9 @@ import { useTonAddress, useTonConnectUI } from '@tonconnect/ui-react';
 import { LogOut, ShieldAlert, ShieldCheck, Wallet, X } from 'lucide-react';
 
 const WALLETS = [
-  {
-    appName: 'telegram-wallet',
-    label: 'Wallet',
-    hint: 'Telegram',
-  },
-  {
-    appName: 'tonkeeper',
-    label: 'Tonkeeper',
-    hint: 'App / Extension',
-  },
-  {
-    appName: 'mytonwallet',
-    label: 'MyTonWallet',
-    hint: 'App / Web',
-  },
+  { appName: 'telegram-wallet', label: 'Wallet', hint: 'Telegram' },
+  { appName: 'tonkeeper', label: 'Tonkeeper', hint: 'App / Extension' },
+  { appName: 'mytonwallet', label: 'MyTonWallet', hint: 'App / Web' },
 ] as const;
 
 export default function WalletConnect() {
@@ -43,8 +31,23 @@ export default function WalletConnect() {
       return;
     }
     setOpen(false);
+    void persistWallet(address);
     void verifyNFT(address);
   }, [address]);
+
+  const persistWallet = async (walletAddress: string) => {
+    try {
+      const initData = window.Telegram?.WebApp?.initData || '';
+      if (!initData) return;
+      await fetch('/api/user/wallet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData, walletAddress }),
+      });
+    } catch (err) {
+      console.error('Wallet persist failed:', err);
+    }
+  };
 
   const verifyNFT = async (walletAddress: string) => {
     setIsVerifying(true);
@@ -169,15 +172,10 @@ export default function WalletConnect() {
             >
               <div className="flex items-center justify-between mb-3">
                 <h2 className="font-mono text-xs tracking-widest text-emerald-400">SELECT WALLET</h2>
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  className="text-zinc-500 hover:text-white p-1"
-                >
+                <button type="button" onClick={() => setOpen(false)} className="text-zinc-500 hover:text-white p-1">
                   <X className="w-4 h-4" />
                 </button>
               </div>
-
               <div className="flex flex-col gap-2">
                 {WALLETS.map((wallet) => (
                   <button

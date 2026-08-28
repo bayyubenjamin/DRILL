@@ -9,16 +9,18 @@ interface UserState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  isAuthFailed: boolean; // Tambahkan ini
+  isAuthFailed: boolean;
   setUser: (user: User) => void;
   setAuthFailed: () => void;
+  setGuest: () => void;
 }
 
 export const useUserStore = create<UserState>((set) => ({
   user: null,
   isAuthenticated: false,
   isLoading: true,
-  isAuthFailed: false, // Tambahkan nilai default
+  isAuthFailed: false,
   setUser: (user) => set({ user, isAuthenticated: true, isLoading: false, isAuthFailed: false }),
   setAuthFailed: () => set({ isLoading: false, isAuthenticated: false, isAuthFailed: true }),
+  setGuest: () => set({ user: null, isAuthenticated: false, isLoading: false, isAuthFailed: false }),
 }));
