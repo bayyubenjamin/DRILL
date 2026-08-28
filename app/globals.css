@@ -5,25 +5,19 @@
   --foreground: #ffffff;
 }
 
+html,
 body {
   background-color: var(--background);
   color: var(--foreground);
+  min-height: 100%;
+  overflow-x: hidden;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
-/* Official TonConnect host element. Keep it above the Mini App chrome. */
-tc-root,
-#tc-widget-root {
-  position: relative;
+/* Do not force position:relative on the TonConnect host.
+   That clips/hides the official modal inside Telegram's WebView. */
+#tc-widget-root,
+tc-root {
   z-index: 2147483646 !important;
   pointer-events: auto !important;
-}
-
-.tonconnect-button-wrap {
-  min-height: 40px;
-}
-
-.tonconnect-button-wrap > div,
-.tonconnect-button-wrap button {
-  width: 100% !important;
 }
