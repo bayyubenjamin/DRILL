@@ -27,6 +27,6 @@ export async function hasOnchainPass(walletAddress: string) {
   }
 }
 
-export function buyPassPayloadBase64(queryId = 0n) {
+export function buyPassPayloadBase64(queryId = BigInt(0)) {
   return beginCell().storeUint(BUY_PASS_OPCODE, 32).storeUint(queryId, 64).endCell().toBoc().toString('base64');
 }
