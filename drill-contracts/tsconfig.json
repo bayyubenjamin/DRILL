@@ -5,7 +5,6 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "outDir": "dist"
-  },
-  "include": ["scripts", "wrappers", "build"]
+    "outDir": "./dist"
+  }
 }

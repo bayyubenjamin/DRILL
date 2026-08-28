@@ -4,17 +4,19 @@
   "private": true,
   "scripts": {
     "build": "blueprint build --all",
-    "deploy:jetton": "blueprint run deployJetton",
-    "deploy:sbt": "blueprint run deploySbt",
-    "mint": "blueprint run mintDrill"
+    "test": "blueprint test",
+    "deploy:jetton": "blueprint run deployDrillJetton --testnet --tonconnect",
+    "deploy:sbt": "blueprint run deployDrillPass --testnet --tonconnect",
+    "mint": "blueprint run mintDrill --testnet --tonconnect"
   },
   "devDependencies": {
-    "@ton/blueprint": "^0.36.0",
-    "@ton/core": "^0.61.0",
+    "@ton/blueprint": "^0.40.0",
+    "@ton/core": "^0.63.0",
     "@ton/crypto": "^3.3.0",
-    "@ton/sandbox": "^0.33.0",
-    "@ton/test-utils": "^0.7.0",
-    "@ton/ton": "^15.2.1",
-    "typescript": "^5.6.3"
+    "@ton/sandbox": "^0.37.0",
+    "@ton/test-utils": "^0.11.0",
+    "@ton/ton": "^16.0.0",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
   }
 }
