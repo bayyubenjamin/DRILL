@@ -15,7 +15,7 @@ export async function run(provider: NetworkProvider) {
   const price = toNano(process.env.MINT_PRICE_TON || '1');
   const minted = Dictionary.empty<Address, bigint>(
     Dictionary.Keys.Address(),
-    Dictionary.Values.BigInt(),
+    Dictionary.Values.BigInt(257),
   );
 
   const collection = provider.open(
