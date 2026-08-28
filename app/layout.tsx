@@ -2,7 +2,7 @@ import Script from 'next/script';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import BottomNav from '@/components/UI/BottomNav'; // <-- Tambahkan import ini
+import BottomNav from '@/components/UI/BottomNav';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -19,10 +19,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Load script Telegram seawal mungkin */}
         <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        {/* Tambahkan div dengan padding bawah (pb-20) agar konten tidak tertutup menu navigasi */}
+        <div className="pb-20">
+          {children}
+        </div>
+        
+        {/* Panggil BottomNav di bawah konten utama */}
+        <BottomNav />
+      </body>
     </html>
   );
 }
