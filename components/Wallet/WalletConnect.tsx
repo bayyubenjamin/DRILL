@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useTonAddress, useTonConnectUI } from '@tonconnect/ui-react';
+import { TonConnectButton, useTonAddress, useTonConnectUI } from '@tonconnect/ui-react';
 import { LogOut, ShieldAlert, ShieldCheck, Wallet } from 'lucide-react';
 
 export default function WalletConnect() {
@@ -10,8 +10,6 @@ export default function WalletConnect() {
   const [isClient, setIsClient] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [nftActive, setNftActive] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -43,23 +41,7 @@ export default function WalletConnect() {
     }
   };
 
-  const handleConnect = async () => {
-    setError(null);
-    setBusy(true);
-    window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.('light');
-    try {
-      await tonConnectUI.openModal();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Gagal membuka daftar wallet';
-      console.error('TonConnect openModal failed:', err);
-      setError(message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const handleDisconnect = async () => {
-    setError(null);
     try {
       await tonConnectUI.disconnect();
     } catch (err) {
@@ -74,15 +56,16 @@ export default function WalletConnect() {
   return (
     <div className="flex flex-col items-center w-full gap-2">
       {!address ? (
-        <button
-          type="button"
-          onClick={handleConnect}
-          disabled={busy}
-          className="w-full py-3 px-4 bg-zinc-900 border border-emerald-500/40 hover:border-emerald-400 rounded-xl font-mono text-xs font-bold tracking-widest text-emerald-400 flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(16,185,129,0.1)] active:scale-[0.98] cursor-pointer disabled:opacity-60"
-        >
-          <Wallet className="w-4 h-4 text-emerald-400" />
-          <span>{busy ? 'OPENING...' : 'CONNECT TON WALLET'}</span>
-        </button>
+        <div className="relative w-full h-12">
+          <div className="absolute inset-0 py-3 px-4 bg-zinc-900 border border-emerald-500/40 rounded-xl font-mono text-xs font-bold tracking-widest text-emerald-400 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.1)] pointer-events-none">
+            <Wallet className="w-4 h-4 text-emerald-400" />
+            <span>CONNECT TON WALLET</span>
+          </div>
+          {/* Official TonConnect control must receive the tap inside Telegram WebView */}
+          <div className="absolute inset-0 z-10 opacity-0 [&_*]:!w-full [&_*]:!h-full [&_*]:!min-w-full">
+            <TonConnectButton style={{ width: '100%', height: '48px' }} />
+          </div>
+        </div>
       ) : (
         <div className="w-full p-3 bg-zinc-950 border border-zinc-800 rounded-xl flex items-center justify-between font-mono text-xs">
           <div className="flex items-center gap-2 overflow-hidden">
@@ -100,12 +83,6 @@ export default function WalletConnect() {
             <LogOut className="w-4 h-4" />
           </button>
         </div>
-      )}
-
-      {error && (
-        <p className="w-full text-[10px] font-mono text-red-400 text-center break-words">
-          {error}
-        </p>
       )}
 
       {address && (
