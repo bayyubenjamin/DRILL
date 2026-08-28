@@ -10,3 +10,13 @@ body {
   color: var(--foreground);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
+
+/* TonConnect injects its modal into document.body.
+   Keep it above the fixed bottom nav (z-50) and Telegram chrome. */
+#tc-widget-root,
+.tc-modal,
+.tc-dropdown,
+.tc-notification,
+[class^="tc-"] {
+  z-index: 2147483000 !important;
+}
