@@ -11,12 +11,19 @@ body {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
-/* TonConnect injects its modal into document.body.
-   Keep it above the fixed bottom nav (z-50) and Telegram chrome. */
-#tc-widget-root,
-.tc-modal,
-.tc-dropdown,
-.tc-notification,
-[class^="tc-"] {
-  z-index: 2147483000 !important;
+/* Official TonConnect host element. Keep it above the Mini App chrome. */
+tc-root,
+#tc-widget-root {
+  position: relative;
+  z-index: 2147483646 !important;
+  pointer-events: auto !important;
+}
+
+.tonconnect-button-wrap {
+  min-height: 40px;
+}
+
+.tonconnect-button-wrap > div,
+.tonconnect-button-wrap button {
+  width: 100% !important;
 }

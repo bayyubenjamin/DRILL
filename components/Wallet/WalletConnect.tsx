@@ -2,49 +2,65 @@
 
 import { useEffect, useState } from 'react';
 import {
-  useIsConnectionRestored,
+  TonConnectButton,
   useTonAddress,
-  useTonConnectModal,
   useTonConnectUI,
+  useTonWallet,
 } from '@tonconnect/ui-react';
-import { Wallet, ShieldAlert, ShieldCheck, LogOut } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, Wallet } from 'lucide-react';
+
+const QUICK_WALLETS = [
+  { appName: 'telegram-wallet', label: 'TELEGRAM WALLET' },
+  { appName: 'tonkeeper', label: 'TONKEEPER' },
+] as const;
+
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp?: {
+        initData?: string;
+        ready?: () => void;
+        expand?: () => void;
+        disableVerticalSwipes?: () => void;
+        openTelegramLink?: (url: string) => void;
+        HapticFeedback?: {
+          impactOccurred?: (style: 'light' | 'medium' | 'heavy') => void;
+        };
+      };
+    };
+  }
+}
 
 export default function WalletConnect() {
-  const userFriendlyAddress = useTonAddress();
-  const connectionRestored = useIsConnectionRestored();
-  const { open } = useTonConnectModal();
+  const address = useTonAddress();
+  const wallet = useTonWallet();
   const [tonConnectUI] = useTonConnectUI();
+  const [isClient, setIsClient] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [nftActive, setNftActive] = useState(false);
-  const [isClient, setIsClient] = useState(false);
-  const [isOpening, setIsOpening] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   useEffect(() => {
-    if (userFriendlyAddress && isClient) {
-      verifyNFT(userFriendlyAddress);
-    }
-  }, [userFriendlyAddress, isClient]);
+    if (!address) return;
+    void verifyNFT(address);
+  }, [address]);
 
   const verifyNFT = async (walletAddress: string) => {
     setIsVerifying(true);
     try {
-      const WebApp = (await import('@twa-dev/sdk')).default;
-      const initData = WebApp.initData || '';
-
+      const initData = window.Telegram?.WebApp?.initData || '';
       const res = await fetch('/api/nft/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ initData, walletAddress }),
       });
       const data = await res.json();
-      if (data.success) {
-        setNftActive(true);
-      }
+      if (data.success) setNftActive(true);
     } catch (err) {
       console.error('NFT Verification Failed:', err);
     } finally {
@@ -52,38 +68,43 @@ export default function WalletConnect() {
     }
   };
 
-  const handleConnectClick = async () => {
+  const haptic = () => {
+    window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.('light');
+  };
+
+  const openModal = async () => {
     setError(null);
-    setIsOpening(true);
+    setBusy(true);
+    haptic();
     try {
-      if (typeof open === 'function') {
-        await open();
-        return;
+      if (!tonConnectUI) {
+        throw new Error('TonConnect belum siap');
       }
-
-      if (tonConnectUI?.openModal) {
-        await tonConnectUI.openModal();
-        return;
-      }
-
-      setError('Wallet connector belum siap. Tutup mini app lalu buka ulang.');
+      await tonConnectUI.openModal();
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Gagal membuka daftar wallet';
+      const message = err instanceof Error ? err.message : 'Gagal membuka modal wallet';
       console.error('TonConnect openModal failed:', err);
       setError(message);
     } finally {
-      setIsOpening(false);
+      setBusy(false);
     }
   };
 
-  const handleDisconnectClick = async () => {
+  const openWallet = async (appName: string) => {
+    setError(null);
+    setBusy(true);
+    haptic();
     try {
-      if (tonConnectUI?.disconnect) {
-        await tonConnectUI.disconnect();
+      if (!tonConnectUI) {
+        throw new Error('TonConnect belum siap');
       }
+      await tonConnectUI.openSingleWalletModal(appName);
     } catch (err) {
-      console.error('TonConnect disconnect failed:', err);
+      const message = err instanceof Error ? err.message : `Gagal membuka ${appName}`;
+      console.error('TonConnect openSingleWalletModal failed:', err);
+      setError(message);
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -93,48 +114,45 @@ export default function WalletConnect() {
 
   return (
     <div className="flex flex-col items-center w-full gap-2">
-      {!userFriendlyAddress ? (
-        <button
-          type="button"
-          onClick={handleConnectClick}
-          disabled={!connectionRestored || isOpening}
-          className="w-full py-3 px-4 bg-zinc-900 border border-emerald-500/40 hover:border-emerald-400 rounded-xl font-mono text-xs font-bold tracking-widest text-emerald-400 flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(16,185,129,0.1)] active:scale-[0.98] cursor-pointer disabled:opacity-60 disabled:cursor-wait"
-        >
-          <Wallet className="w-4 h-4 text-emerald-400" />
-          <span>
-            {!connectionRestored
-              ? 'LOADING WALLET...'
-              : isOpening
-                ? 'OPENING...'
-                : 'CONNECT TON WALLET'}
-          </span>
-        </button>
-      ) : (
-        <div className="w-full p-3 bg-zinc-950 border border-zinc-800 rounded-xl flex items-center justify-between font-mono text-xs">
-          <div className="flex items-center gap-2 overflow-hidden">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
-            <span className="text-zinc-300 truncate">
-              {userFriendlyAddress.slice(0, 4)}...{userFriendlyAddress.slice(-4)}
-            </span>
-          </div>
+      <div className="w-full flex justify-center tonconnect-button-wrap">
+        <TonConnectButton style={{ width: '100%' }} />
+      </div>
+
+      {!wallet && (
+        <>
           <button
             type="button"
-            onClick={handleDisconnectClick}
-            className="text-zinc-500 hover:text-red-400 p-1.5 transition-colors cursor-pointer"
-            title="Disconnect Wallet"
+            onClick={openModal}
+            disabled={busy}
+            className="w-full py-3 px-4 bg-zinc-900 border border-emerald-500/40 hover:border-emerald-400 rounded-xl font-mono text-xs font-bold tracking-widest text-emerald-400 flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(16,185,129,0.1)] active:scale-[0.98] cursor-pointer disabled:opacity-60"
           >
-            <LogOut className="w-4 h-4" />
+            <Wallet className="w-4 h-4 text-emerald-400" />
+            <span>{busy ? 'OPENING WALLET...' : 'CONNECT TON WALLET'}</span>
           </button>
-        </div>
+
+          <div className="grid grid-cols-2 gap-2 w-full">
+            {QUICK_WALLETS.map((item) => (
+              <button
+                key={item.appName}
+                type="button"
+                onClick={() => openWallet(item.appName)}
+                disabled={busy}
+                className="py-2 px-3 bg-zinc-950 border border-zinc-800 hover:border-emerald-500/50 rounded-lg font-mono text-[10px] tracking-widest text-zinc-300 disabled:opacity-60"
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </>
       )}
 
       {error && (
-        <p className="w-full text-[10px] font-mono text-red-400 text-center">
+        <p className="w-full text-[10px] font-mono text-red-400 text-center break-words">
           {error}
         </p>
       )}
 
-      {userFriendlyAddress && (
+      {address && (
         <div className="flex items-center space-x-1.5 text-[10px] font-mono mt-1">
           {isVerifying ? (
             <span className="text-amber-400 animate-pulse">VERIFYING NFT ACCESS...</span>

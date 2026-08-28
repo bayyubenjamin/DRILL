@@ -1,22 +1,37 @@
 'use client';
 
-import React from 'react';
+import { useEffect } from 'react';
 import { THEME, TonConnectUIProvider } from '@tonconnect/ui-react';
-
-const APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL ?? 'https://drill-chi-flax.vercel.app';
 
 const MANIFEST_URL =
   process.env.NEXT_PUBLIC_TON_CONNECT_MANIFEST_URL ??
-  `${APP_URL}/tonconnect-manifest.json`;
+  'https://drill-chi-flax.vercel.app/tonconnect-manifest.json';
 
 const TWA_RETURN_URL = process.env.NEXT_PUBLIC_TWA_RETURN_URL;
 
+function initTelegramWebApp() {
+  if (typeof window === 'undefined') return;
+  const tg = window.Telegram?.WebApp;
+  if (!tg) return;
+  try {
+    tg.ready();
+    tg.expand();
+    tg.disableVerticalSwipes?.();
+  } catch (error) {
+    console.warn('Telegram WebApp init failed:', error);
+  }
+}
+
 export default function TonProvider({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    initTelegramWebApp();
+  }, []);
+
   return (
     <TonConnectUIProvider
       manifestUrl={MANIFEST_URL}
       restoreConnection
+      enableAndroidBackHandler={false}
       uiPreferences={{
         theme: THEME.DARK,
         borderRadius: 's',
