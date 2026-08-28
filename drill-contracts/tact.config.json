@@ -1,0 +1,16 @@
+{
+  "projects": [
+    {
+      "name": "DrillJettonMinter",
+      "path": "./contracts/drill_jetton_minter.tact",
+      "output": "./build/DrillJettonMinter",
+      "mode": "full"
+    },
+    {
+      "name": "DrillPassCollection",
+      "path": "./contracts/drill_pass_collection.tact",
+      "output": "./build/DrillPassCollection",
+      "mode": "full"
+    }
+  ]
+}

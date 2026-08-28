@@ -1,0 +1,7 @@
+{
+  "name": "DRILL",
+  "symbol": "DRILL",
+  "decimals": "9",
+  "description": "DRILL ENGINE utility token. Hard cap 10,000,000,000. Admin mint only.",
+  "image": "https://drill-chi-flax.vercel.app/icon-192.png"
+}
