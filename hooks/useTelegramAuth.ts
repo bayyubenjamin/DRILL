@@ -15,23 +15,24 @@ export function useTelegramAuth() {
           return window.Telegram?.WebApp?.initData || '';
         };
 
-        // Berikan sedikit waktu (retry mechanism) jika Telegram WebApp object terlambat inject
+        // Perpanjang retry mechanism menjadi 50 iterasi (total 5 detik)
+        // karena injeksi script Telegram di HP kadang lambat
         let initData = getTelegramInitData();
         let retries = 0;
-        while (!initData && retries < 10) {
+        while (!initData && retries < 50) {
           await new Promise((resolve) => setTimeout(resolve, 100));
           initData = getTelegramInitData();
           retries++;
         }
 
-        // Jika setelah dicoba beberapa kali tetap kosong, baru anggap gagal/di luar telegram
+        // Jika setelah 5 detik tetap kosong
         if (!initData) {
-          console.warn('initData tetap kosong setelah dicoba ulang.');
+          alert('Gagal mendapatkan initData Telegram. Pastikan dibuka di dalam aplikasi Telegram.');
           setAuthFailed();
           return;
         }
 
-        // Opsional: panggil ready dan expand secara aman
+        // Ekspansi layar WebApp
         // @ts-ignore
         window.Telegram?.WebApp?.ready();
         // @ts-ignore
@@ -45,14 +46,15 @@ export function useTelegramAuth() {
 
         const data = await res.json();
 
-        if (data.success) {
+        if (res.ok && data.success) {
           setUser(data.user);
         } else {
-          console.error('Auth API Error:', data.error);
+          // Tampilkan alert agar error dari Supabase / HMAC Telegram terlihat di HP
+          alert(`Auth Error: ${res.status} - ${data.error || 'Unknown error'}`);
           setAuthFailed();
         }
-      } catch (error) {
-        console.error('Gagal terhubung ke server auth:', error);
+      } catch (error: any) {
+        alert(`Network/Client Error: ${error.message}`);
         setAuthFailed();
       }
     };

@@ -1,9 +1,13 @@
+import Script from 'next/script';
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
-import TelegramAuthProvider from '@/components/UI/TelegramAuthProvider';
 
-export const metadata = {
-  title: 'DRILL ENGINE',
-  description: 'Genesis Season - Drill Network',
+const inter = Inter({ subsets: ['latin'] });
+
+export const metadata: Metadata = {
+  title: 'Drill Engine',
+  description: 'Drill Web3 App',
 };
 
 export default function RootLayout({
@@ -13,11 +17,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-black text-white antialiased">
-        <TelegramAuthProvider>
-          {children}
-        </TelegramAuthProvider>
-      </body>
+      <head>
+        {/* Load script Telegram seawal mungkin */}
+        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
+      </head>
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }
