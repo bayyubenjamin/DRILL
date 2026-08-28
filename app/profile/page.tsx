@@ -27,8 +27,6 @@ type Withdrawal = {
   fee: number;
   receive_amount: number;
   status: string;
-  created_at?: string;
-  wallet_address?: string;
 };
 
 export default function ProfilePage() {
@@ -36,12 +34,11 @@ export default function ProfilePage() {
   const wallet = useTonWallet();
   const [copied, setCopied] = useState(false);
   const [tgUser, setTgUser] = useState<{
-    id?: number;
     first_name?: string;
     last_name?: string;
     username?: string;
-    is_premium?: boolean;
   } | null>(null);
+  const [hasNft, setHasNft] = useState(false);
   const [engineBalance, setEngineBalance] = useState(0);
   const [walletBalance, setWalletBalance] = useState(0);
   const [unclaimed, setUnclaimed] = useState(0);
@@ -59,14 +56,21 @@ export default function ProfilePage() {
 
   const loadAssets = async () => {
     const payload = initData();
-    if (!payload) return;
+    if (!payload || !address) {
+      setHasNft(false);
+      setEngineBalance(0);
+      setUnclaimed(0);
+      setMiningActive(false);
+      return;
+    }
     const res = await fetch('/api/user/assets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ initData: payload }),
+      body: JSON.stringify({ initData: payload, walletAddress: address }),
     });
     const data = await res.json();
     if (!data.success) return;
+    setHasNft(Boolean(data.hasNft));
     setEngineBalance(Number(data.engineBalance || 0));
     setWalletBalance(Number(data.walletBalance || 0));
     setMiningActive(Boolean(data.miningActive));
@@ -78,11 +82,14 @@ export default function ProfilePage() {
   useEffect(() => {
     const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
     if (user) setTgUser(user);
-    void loadAssets();
   }, []);
 
   useEffect(() => {
-    if (!miningActive || !lastClaimAt) {
+    void loadAssets();
+  }, [address]);
+
+  useEffect(() => {
+    if (!address || !hasNft || !miningActive || !lastClaimAt) {
       setUnclaimed(0);
       return;
     }
@@ -93,17 +100,16 @@ export default function ProfilePage() {
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [miningActive, lastClaimAt, miningSpeed]);
+  }, [address, hasNft, miningActive, lastClaimAt, miningSpeed]);
 
-  const liveEngine = engineBalance + unclaimed;
-  const totalAssets = liveEngine + walletBalance;
-  const level = calculateLevel(totalAssets);
-  const progress = getLevelProgress(totalAssets);
+  const liveUnclaimed = address && hasNft && miningActive ? unclaimed : 0;
+  const totalAssets = engineBalance + walletBalance;
+  const level = calculateLevel(totalAssets + liveUnclaimed);
+  const progress = getLevelProgress(totalAssets + liveUnclaimed);
 
   const displayName = useMemo(() => {
     if (!tgUser) return 'OPERATOR';
-    const full = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ');
-    return full || tgUser.username || 'OPERATOR';
+    return [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || tgUser.username || 'OPERATOR';
   }, [tgUser]);
 
   const handleCopy = async () => {
@@ -147,7 +153,7 @@ export default function ProfilePage() {
         </Link>
         <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-md">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          <span className="text-[10px] tracking-widest text-emerald-400 font-semibold">PROFILE</span>
+          <span className="text-[10px] tracking-widest text-emerald-400 font-semibold">TESTNET</span>
         </div>
       </header>
 
@@ -158,7 +164,7 @@ export default function ProfilePage() {
         <div className="min-w-0">
           <p className="text-sm font-bold tracking-wide truncate">{displayName}</p>
           <p className="text-[10px] text-zinc-500 tracking-widest">
-            {tgUser?.username ? `@${tgUser.username}` : 'TELEGRAM IDENTITY NOT LINKED'}
+            {tgUser?.username ? `@${tgUser.username}` : 'TELEGRAM IDENTITY'}
           </p>
         </div>
       </section>
@@ -181,26 +187,33 @@ export default function ProfilePage() {
             <span className="text-xs text-white">{walletBalance.toFixed(4)}</span>
           </div>
           <div className="bg-black border border-zinc-800 rounded-xl p-3 flex justify-between">
-            <span className="text-[10px] text-zinc-500">$DRILL IN ENGINE</span>
-            <span className="text-xs text-emerald-400">{liveEngine.toFixed(4)}</span>
+            <span className="text-[10px] text-zinc-500">ENGINE (CLAIMED)</span>
+            <span className="text-xs text-emerald-400">{engineBalance.toFixed(4)}</span>
+          </div>
+          <div className="bg-black border border-zinc-800 rounded-xl p-3 flex justify-between">
+            <span className="text-[10px] text-zinc-500">UNCLAIMED</span>
+            <span className="text-xs text-amber-400">+{liveUnclaimed.toFixed(4)}</span>
           </div>
           <div className="bg-black border border-emerald-500/30 rounded-xl p-3">
             <div className="flex justify-between">
               <span className="text-[10px] text-zinc-500">TOTAL / LEVEL</span>
               <span className="text-xs text-emerald-400">LV {level.toLocaleString()}</span>
             </div>
-            <p className="text-lg text-white mt-1">{totalAssets.toFixed(4)} $DRILL</p>
+            <p className="text-lg text-white mt-1">{(totalAssets + liveUnclaimed).toFixed(4)} $DRILL</p>
             <div className="w-full bg-zinc-900 h-1.5 rounded-full mt-2 overflow-hidden">
               <div className="h-full bg-emerald-400" style={{ width: `${progress.progressPercent}%` }} />
             </div>
           </div>
         </div>
+        <p className="text-[10px] text-zinc-500 mt-3">
+          {!address ? 'Connect wallet dulu.' : !hasNft ? 'SBT belum ada. Mining dan WD terkunci.' : 'Engine = hasil claim. WD dari engine saja.'}
+        </p>
         <button
           type="button"
           onClick={() => setWdOpen(true)}
-          disabled={!address || engineBalance < MIN_WITHDRAW}
+          disabled={!address || !hasNft || engineBalance < MIN_WITHDRAW}
           className={`mt-3 w-full py-3 rounded-xl text-[11px] tracking-widest font-bold ${
-            !address || engineBalance < MIN_WITHDRAW
+            !address || !hasNft || engineBalance < MIN_WITHDRAW
               ? 'bg-zinc-900 text-zinc-600 border border-zinc-800'
               : 'bg-emerald-500 text-black'
           }`}
@@ -228,8 +241,8 @@ export default function ProfilePage() {
           <p className="text-xs text-zinc-200 mt-1 truncate">{wallet?.device.appName || 'NONE'}</p>
         </div>
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-3">
-          <p className="text-[9px] text-zinc-500">STATUS</p>
-          <p className={`text-xs mt-1 ${address ? 'text-emerald-400' : 'text-zinc-400'}`}>{address ? 'CONNECTED' : 'DISCONNECTED'}</p>
+          <p className="text-[9px] text-zinc-500">SBT</p>
+          <p className={`text-xs mt-1 ${hasNft ? 'text-emerald-400' : 'text-amber-400'}`}>{hasNft ? 'READY' : 'MISSING'}</p>
         </div>
       </section>
 
@@ -249,10 +262,10 @@ export default function ProfilePage() {
           <div className="fixed inset-0 z-[9999] bg-black/80 flex items-end sm:items-center justify-center p-4" onClick={() => setWdOpen(false)}>
             <div className="w-full max-w-sm bg-zinc-950 border border-zinc-800 rounded-2xl p-4" onClick={(e) => e.stopPropagation()}>
               <div className="flex justify-between items-center mb-3">
-                <h2 className="text-xs tracking-widest text-emerald-400">WITHDRAW</h2>
+                <h2 className="text-xs tracking-widest text-emerald-400">WITHDRAW ENGINE</h2>
                 <button type="button" onClick={() => setWdOpen(false)}><X className="w-4 h-4 text-zinc-500" /></button>
               </div>
-              <p className="text-[10px] text-zinc-500 mb-2">Engine available: {engineBalance.toFixed(4)} $DRILL</p>
+              <p className="text-[10px] text-zinc-500 mb-2">Engine claimed: {engineBalance.toFixed(4)} $DRILL</p>
               <input
                 value={wdAmount}
                 onChange={(e) => setWdAmount(e.target.value)}
@@ -264,12 +277,7 @@ export default function ProfilePage() {
                 Fee {WITHDRAW_FEE}. Receive {Math.max(0, Number(wdAmount || 0) - WITHDRAW_FEE).toFixed(2)} $DRILL
               </p>
               {message && <p className="text-[10px] text-amber-400 mb-3">{message}</p>}
-              <button
-                type="button"
-                disabled={busy || !address}
-                onClick={submitWithdraw}
-                className="w-full py-3 rounded-xl bg-emerald-500 text-black text-xs font-bold tracking-widest disabled:opacity-50"
-              >
+              <button type="button" disabled={busy || !address || !hasNft} onClick={submitWithdraw} className="w-full py-3 rounded-xl bg-emerald-500 text-black text-xs font-bold tracking-widest disabled:opacity-50">
                 {busy ? 'QUEUEING...' : 'CONFIRM WITHDRAW'}
               </button>
             </div>
