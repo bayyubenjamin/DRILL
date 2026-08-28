@@ -9,7 +9,7 @@ export const DRILL_JETTON_MASTER =
 
 export const DRILL_PASS_COLLECTION =
   process.env.NEXT_PUBLIC_NFT_COLLECTION_ADDRESS ||
-  'EQChy5T8N_AOxvRFVNiyphzALhFDdx4BTHM2z6N3HdeNXrfP';
+  'EQB9hdar2ubsxlYXWZYkp2uCTeJQrYh8rzrKx5sBnlK8RZjF';
 
 export function explorerAccountUrl(address: string) {
   return `https://testnet.tonscan.org/address/${address}`;
