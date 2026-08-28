@@ -5,9 +5,24 @@ import { calculateLevel, calculateMiningSpeed, getLevelProgress } from '@/lib/le
 
 export async function POST(request: Request) {
   try {
-    const { initData } = await request.json();
+    const { initData, walletAddress } = await request.json();
     if (!initData || !validateTelegramWebAppData(initData, process.env.TELEGRAM_BOT_TOKEN!)) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    }
+    if (!walletAddress) {
+      return NextResponse.json({
+        success: true,
+        hasNft: false,
+        walletAddress: null,
+        account: {
+          balance: 0,
+          miningSpeed: 0,
+          level: 1,
+          lastClaimAt: null,
+          miningActive: false,
+          progressPercent: 0,
+        },
+      });
     }
 
     const tgUser = JSON.parse(new URLSearchParams(initData).get('user')!);
@@ -46,21 +61,23 @@ export async function POST(request: Request) {
       .eq('is_active', true)
       .maybeSingle();
 
-    const balance = Number(account?.balance || 0);
+    const hasNft = Boolean(nft);
+    const miningActive = hasNft && Boolean(account?.mining_active);
+    const balance = hasNft ? Number(account?.balance || 0) : 0;
     const progress = getLevelProgress(balance);
     const level = calculateLevel(balance);
-    const speed = account?.mining_active ? calculateMiningSpeed(level) : 0;
+    const speed = miningActive ? calculateMiningSpeed(level) : 0;
 
     return NextResponse.json({
       success: true,
-      hasNft: Boolean(nft),
-      walletAddress: user.wallet_address || null,
+      hasNft,
+      walletAddress: user.wallet_address || walletAddress,
       account: {
         balance,
         miningSpeed: speed,
         level,
-        lastClaimAt: account?.last_claim_at || null,
-        miningActive: Boolean(account?.mining_active),
+        lastClaimAt: miningActive ? account?.last_claim_at || null : null,
+        miningActive,
         progressPercent: progress.progressPercent,
       },
     });
