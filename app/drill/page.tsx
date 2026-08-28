@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { Hexagon, ShieldCheck, Trophy, Wallet } from 'lucide-react';
+import { useTonAddress } from '@tonconnect/ui-react';
 import { calculateLevel, getLevelProgress, MAX_LEVEL } from '@/lib/level/calculator';
 import { getLevelTitle, getVisibleLevelCards } from '@/lib/level/ranks';
 
 export default function DrillPage() {
+  const walletAddress = useTonAddress();
   const [hasNft, setHasNft] = useState(false);
   const [walletBalance, setWalletBalance] = useState(0);
   const [engineBalance, setEngineBalance] = useState(0);
@@ -14,38 +16,45 @@ export default function DrillPage() {
   const [miningSpeed, setMiningSpeed] = useState(0);
   const [lastClaimAt, setLastClaimAt] = useState<string | null>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      const initData = window.Telegram?.WebApp?.initData || '';
-      if (!initData) return;
-      const [assetsRes, stateRes] = await Promise.all([
-        fetch('/api/user/assets', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ initData }),
-        }),
-        fetch('/api/mining/state', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ initData }),
-        }),
-      ]);
-      const assets = await assetsRes.json();
-      const state = await stateRes.json();
-      if (assets.success) {
-        setWalletBalance(Number(assets.walletBalance || 0));
-        setEngineBalance(Number(assets.engineBalance || 0));
-        setMiningActive(Boolean(assets.miningActive));
-        setMiningSpeed(Number(assets.miningSpeed || 0));
-        setLastClaimAt(assets.lastClaimAt || null);
-      }
-      if (state.success) setHasNft(Boolean(state.hasNft));
-    };
-    void load();
-  }, []);
+  const load = async () => {
+    const initData = window.Telegram?.WebApp?.initData || '';
+    if (!initData || !walletAddress) {
+      setHasNft(false);
+      setEngineBalance(0);
+      setUnclaimed(0);
+      setMiningActive(false);
+      return;
+    }
+    const [assetsRes, stateRes] = await Promise.all([
+      fetch('/api/user/assets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData, walletAddress }),
+      }),
+      fetch('/api/mining/state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData, walletAddress }),
+      }),
+    ]);
+    const assets = await assetsRes.json();
+    const state = await stateRes.json();
+    if (assets.success) {
+      setWalletBalance(Number(assets.walletBalance || 0));
+      setEngineBalance(Number(assets.engineBalance || 0));
+      setMiningActive(Boolean(assets.miningActive));
+      setMiningSpeed(Number(assets.miningSpeed || 0));
+      setLastClaimAt(assets.lastClaimAt || null);
+    }
+    if (state.success) setHasNft(Boolean(state.hasNft));
+  };
 
   useEffect(() => {
-    if (!miningActive || !lastClaimAt) {
+    void load();
+  }, [walletAddress]);
+
+  useEffect(() => {
+    if (!walletAddress || !hasNft || !miningActive || !lastClaimAt) {
       setUnclaimed(0);
       return;
     }
@@ -56,12 +65,13 @@ export default function DrillPage() {
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [miningActive, lastClaimAt, miningSpeed]);
+  }, [walletAddress, hasNft, miningActive, lastClaimAt, miningSpeed]);
 
-  const total = walletBalance + engineBalance + unclaimed;
-  const level = calculateLevel(total);
-  const progress = getLevelProgress(total);
-  const cards = getVisibleLevelCards(total);
+  const liveUnclaimed = walletAddress && hasNft && miningActive ? unclaimed : 0;
+  const claimedTotal = walletBalance + engineBalance;
+  const level = calculateLevel(claimedTotal);
+  const progress = getLevelProgress(claimedTotal);
+  const cards = getVisibleLevelCards(claimedTotal);
 
   return (
     <main className="min-h-screen max-w-md mx-auto bg-black text-white px-4 py-5 font-mono pb-24">
@@ -80,6 +90,7 @@ export default function DrillPage() {
           <div>
             <p className="text-[10px] text-zinc-500 tracking-widest">MINING NFT</p>
             <p className="text-sm text-white">{hasNft ? 'DRILL PASS ACTIVE' : 'NOT MINTED'}</p>
+            <p className="text-[10px] text-zinc-500 mt-1">SBT on-chain testnet</p>
           </div>
         </div>
       </section>
@@ -102,16 +113,21 @@ export default function DrillPage() {
         <div className="grid grid-cols-2 gap-2 mt-3 text-[10px]">
           <div className="bg-black border border-zinc-800 rounded-lg p-2 flex justify-between">
             <span className="text-zinc-500">WALLET</span>
-            <span>{walletBalance.toFixed(2)}</span>
+            <span>{walletBalance.toFixed(4)}</span>
           </div>
           <div className="bg-black border border-zinc-800 rounded-lg p-2 flex justify-between">
             <span className="text-zinc-500">ENGINE</span>
-            <span className="text-emerald-400">{(engineBalance + unclaimed).toFixed(2)}</span>
+            <span className="text-emerald-400">{engineBalance.toFixed(4)}</span>
           </div>
         </div>
+        <div className="bg-black border border-zinc-800 rounded-lg p-2 flex justify-between text-[10px] mt-2">
+          <span className="text-zinc-500">UNCLAIMED</span>
+          <span className="text-amber-400">+{liveUnclaimed.toFixed(4)}</span>
+        </div>
         <p className="text-[10px] text-zinc-400 mt-3 flex items-center gap-1">
-          <Wallet className="w-3 h-3" /> TOTAL {total.toFixed(4)} $DRILL
+          <Wallet className="w-3 h-3" /> LEVEL TOTAL {claimedTotal.toFixed(4)} $DRILL
         </p>
+        <p className="text-[10px] text-zinc-600 mt-1">Level = wallet + claimed. Unclaimed tidak dihitung.</p>
       </section>
 
       <section className="mt-5">
