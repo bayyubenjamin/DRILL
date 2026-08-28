@@ -11,7 +11,7 @@ export default function TonProvider({ children }: { children: React.ReactNode })
       manifestUrl={manifestUrl}
       actionsConfiguration={{
         // Memastikan modal koneksi dompet terbuka dengan baik di dalam ekosistem Telegram
-        twaReturnUrl: 'https://t.me/DrillEngineBot/app' 
+        twaReturnUrl: 'https://t.me/drillengine_bot/app' 
       }}
     >
       {children}
