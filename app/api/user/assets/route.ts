@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { validateTelegramWebAppData } from '@/utils/telegram';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { calculateMiningSpeed } from '@/lib/level/calculator';
 import { hasOnchainPass } from '@/lib/ton/pass';
 
 export async function POST(request: Request) {
@@ -35,10 +34,14 @@ export async function POST(request: Request) {
       .order('created_at', { ascending: false })
       .limit(50);
 
-    const engineBalance = hasNft ? Number(account?.balance || 0) : 0;
+    const engineBalance = Number(account?.balance || 0);
     const miningActive = hasNft && Boolean(account?.mining_active);
     const lastClaimAt = miningActive ? account?.last_claim_at || null : null;
-    const miningSpeed = miningActive ? calculateMiningSpeed(Number(account?.mining_speed || 1)) || Number(account?.mining_speed || 0) : 0;
+    const miningSpeed = miningActive ? Number(account?.mining_speed || 0) : 0;
+    const unclaimed =
+      miningActive && lastClaimAt
+        ? Math.max(0, (Date.now() - new Date(lastClaimAt).getTime()) / 60000) * miningSpeed
+        : 0;
 
     return NextResponse.json({
       success: true,
@@ -46,8 +49,9 @@ export async function POST(request: Request) {
       walletAddress: owner || null,
       walletBalance: 0,
       engineBalance,
+      unclaimed,
       miningActive,
-      miningSpeed: miningActive ? Number(account?.mining_speed || 0.5) : 0,
+      miningSpeed,
       lastClaimAt,
       withdrawals: withdrawals || [],
     });
