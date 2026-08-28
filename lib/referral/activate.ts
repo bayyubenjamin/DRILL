@@ -1,7 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { REFERRAL_REWARD } from '@/lib/referral/constants';
 
-export async function activateReferralForUser(userId: string) {
+export async function activateReferralIfPending(userId: string) {
   const { data: pending } = await supabaseAdmin
     .from('referrals')
     .select('id, referrer_id, reward, status')
