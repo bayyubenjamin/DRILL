@@ -31,7 +31,11 @@ export async function POST(request: Request) {
     const lastClaimAt = new Date(account.last_claim_at);
     const elapsedMinutes = Math.max(0, (now.getTime() - lastClaimAt.getTime()) / 60000);
     const speed = Number(account.mining_speed || 0);
-    const rewardAmount = speed * elapsedMinutes;
+    const rewardAmount = Number((speed * elapsedMinutes).toFixed(8));
+    if (rewardAmount <= 0) {
+      return NextResponse.json({ error: 'Nothing to claim yet' }, { status: 400 });
+    }
+
     const newBalance = Number(account.balance || 0) + rewardAmount;
     const level = calculateLevel(newBalance);
     const nextSpeed = calculateMiningSpeed(level);
@@ -52,7 +56,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Claim failed. Try again.' }, { status: 409 });
     }
 
-    void supabaseAdmin.from('mining_claims').insert({ user_id: user.id, amount: rewardAmount });
+    const { data: claimRow, error: claimError } = await supabaseAdmin
+      .from('mining_claims')
+      .insert({ user_id: user.id, amount: rewardAmount })
+      .select('id, amount, created_at')
+      .single();
+
+    if (claimError) {
+      console.error('mining_claims insert failed:', claimError);
+      return NextResponse.json({
+        success: true,
+        reward: rewardAmount,
+        new_balance: Number(updatedAccount.balance || 0),
+        claimSaved: false,
+        claimError: claimError.message,
+      });
+    }
 
     return NextResponse.json({
       success: true,
@@ -61,6 +80,8 @@ export async function POST(request: Request) {
       last_claim_at: updatedAccount.last_claim_at,
       level: Number(updatedAccount.level || level),
       mining_speed: Number(updatedAccount.mining_speed || nextSpeed),
+      claimSaved: true,
+      claimId: claimRow.id,
     });
   } catch (error) {
     console.error('Claim Error:', error);
