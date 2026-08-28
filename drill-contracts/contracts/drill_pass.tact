@@ -1,14 +1,14 @@
-message SetPrice {
+message(0x3a9dfd19) SetPrice {
     queryId: Int as uint64;
     newPrice: Int as coins;
 }
 
-message AdminMint {
+message(0x41444d4e) AdminMint {
     queryId: Int as uint64;
     to: Address;
 }
 
-message BuyPass {
+message(0x42555950) BuyPass {
     queryId: Int as uint64;
 }
 
@@ -121,7 +121,6 @@ contract DrillPassCollection(
         let index: Int = self.nextItemIndex;
         self.minted.set(to, index);
         self.nextItemIndex = index + 1;
-
         deploy(DeployParameters{
             value: ton("0.05"),
             bounce: false,
