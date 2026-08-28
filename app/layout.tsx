@@ -1,13 +1,9 @@
 import type { Metadata } from 'next';
-import dynamic from 'next/dynamic';
 import Script from 'next/script';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import BottomNav from '@/components/UI/BottomNav';
-
-const TonProvider = dynamic(() => import('@/components/Wallet/TonProvider'), {
-  ssr: false,
-});
+import TonProvider from '@/components/Wallet/TonProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
