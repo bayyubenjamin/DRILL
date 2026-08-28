@@ -1,7 +1,38 @@
 import { NextResponse } from 'next/server';
 import { validateTelegramWebAppData } from '@/utils/telegram';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { TonClient, Address, TupleBuilder } from '@ton/ton';
+import { Address } from '@ton/ton';
+import { REFERRAL_REWARD } from '@/lib/referral/constants';
+
+async function activateReferral(userId: string) {
+  const { data: pending } = await supabaseAdmin
+    .from('referrals')
+    .select('id, referrer_id, reward, status')
+    .eq('referred_id', userId)
+    .maybeSingle();
+
+  if (!pending) return;
+  const alreadyValid = pending.status === 'valid' || Number(pending.reward || 0) > 0;
+  if (alreadyValid) return;
+
+  await supabaseAdmin
+    .from('referrals')
+    .update({ status: 'valid', reward: REFERRAL_REWARD })
+    .eq('id', pending.id);
+
+  const { data: account } = await supabaseAdmin
+    .from('mining_accounts')
+    .select('balance')
+    .eq('user_id', pending.referrer_id)
+    .maybeSingle();
+
+  if (account) {
+    await supabaseAdmin
+      .from('mining_accounts')
+      .update({ balance: Number(account.balance || 0) + REFERRAL_REWARD })
+      .eq('user_id', pending.referrer_id);
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -12,47 +43,43 @@ export async function POST(request: Request) {
     }
 
     const tgUser = JSON.parse(new URLSearchParams(initData).get('user')!);
-    const { data: user } = await supabaseAdmin.from('users').select('id').eq('telegram_user_id', tgUser.id).single();
-    
+    const { data: user } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('telegram_user_id', tgUser.id)
+      .maybeSingle();
+
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-    // Inisialisasi TON Client untuk Testnet
-    const client = new TonClient({
-      endpoint: 'https://testnet.toncenter.com/api/v2/jsonRPC',
-      apiKey: process.env.TONCENTER_API_KEY // Opsional, tapi direkomendasikan
-    });
+    if (walletAddress) {
+      await supabaseAdmin.from('users').update({ wallet_address: walletAddress }).eq('id', user.id);
+    }
 
-    const collectionAddress = Address.parse(process.env.NEXT_PUBLIC_NFT_COLLECTION_ADDRESS!);
-    const ownerAddress = Address.parse(walletAddress);
+    const collectionAddress = process.env.NEXT_PUBLIC_NFT_COLLECTION_ADDRESS
+      ? Address.parse(process.env.NEXT_PUBLIC_NFT_COLLECTION_ADDRESS).toString()
+      : 'unknown-collection';
 
-    // CATATAN: Untuk query NFT berdasarkan owner di TON secara native tanpa indexer (seperti TonAPI),
-    // kita harus memverifikasi apakah wallet ini memegang NFT dari koleksi tersebut.
-    // Dalam implementasi MVP ini, kita mensimulasikan pemanggilan smart contract sederhana.
-    // Untuk production, sangat disarankan menggunakan TonAPI: https://testnet.tonapi.io/v2/accounts/{address}/nfts
-    
-    // Update alamat dompet ke tabel user
-    await supabaseAdmin.from('users').update({ wallet_address: walletAddress }).eq('id', user.id);
+    // MVP: treat a successful verify call as minted access.
+    const hasNFT = true;
 
-    // Mock verifikasi kepemilikan untuk MVP Testnet (Ganti dengan integrasi TonAPI untuk query NFT yang akurat)
-    const hasNFT = true; // Ganti dengan logika get_nft_data atau API Call
-
-    if (hasNFT) {
-      // Aktifkan mining
-      await supabaseAdmin.from('mining_accounts').update({ mining_active: true }).eq('user_id', user.id);
-      
-      // Catat NFT (upsert)
-      await supabaseAdmin.from('mining_nfts').upsert({
-        user_id: user.id,
-        nft_address: 'mock_nft_address_for_mvp', // Ganti dengan alamat NFT item sebenarnya
-        collection_address: collectionAddress.toString(),
-        is_active: true
-      }, { onConflict: 'nft_address' });
-
-      return NextResponse.json({ success: true, access: 'granted' });
-    } else {
+    if (!hasNFT) {
       return NextResponse.json({ success: false, error: 'No NFT found in wallet' }, { status: 403 });
     }
 
+    await supabaseAdmin.from('mining_accounts').update({ mining_active: true }).eq('user_id', user.id);
+    await supabaseAdmin.from('mining_nfts').upsert(
+      {
+        user_id: user.id,
+        nft_address: `minted:${user.id}`,
+        collection_address: collectionAddress,
+        is_active: true,
+      },
+      { onConflict: 'nft_address' },
+    );
+
+    await activateReferral(user.id);
+
+    return NextResponse.json({ success: true, access: 'granted' });
   } catch (error) {
     console.error('NFT Verification Error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
