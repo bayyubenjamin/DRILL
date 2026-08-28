@@ -103,9 +103,9 @@ export default function ProfilePage() {
   }, [address, hasNft, miningActive, lastClaimAt, miningSpeed]);
 
   const liveUnclaimed = address && hasNft && miningActive ? unclaimed : 0;
-  const totalAssets = engineBalance + walletBalance;
-  const level = calculateLevel(totalAssets + liveUnclaimed);
-  const progress = getLevelProgress(totalAssets + liveUnclaimed);
+  const claimedTotal = walletBalance + engineBalance;
+  const level = calculateLevel(claimedTotal);
+  const progress = getLevelProgress(claimedTotal);
 
   const displayName = useMemo(() => {
     if (!tgUser) return 'OPERATOR';
@@ -196,17 +196,17 @@ export default function ProfilePage() {
           </div>
           <div className="bg-black border border-emerald-500/30 rounded-xl p-3">
             <div className="flex justify-between">
-              <span className="text-[10px] text-zinc-500">TOTAL / LEVEL</span>
+              <span className="text-[10px] text-zinc-500">LEVEL = WALLET + CLAIMED</span>
               <span className="text-xs text-emerald-400">LV {level.toLocaleString()}</span>
             </div>
-            <p className="text-lg text-white mt-1">{(totalAssets + liveUnclaimed).toFixed(4)} $DRILL</p>
+            <p className="text-lg text-white mt-1">{claimedTotal.toFixed(4)} $DRILL</p>
             <div className="w-full bg-zinc-900 h-1.5 rounded-full mt-2 overflow-hidden">
               <div className="h-full bg-emerald-400" style={{ width: `${progress.progressPercent}%` }} />
             </div>
           </div>
         </div>
         <p className="text-[10px] text-zinc-500 mt-3">
-          {!address ? 'Connect wallet dulu.' : !hasNft ? 'SBT belum ada. Mining dan WD terkunci.' : 'Engine = hasil claim. WD dari engine saja.'}
+          Unclaimed tidak menambah level. Claim dulu baru naik.
         </p>
         <button
           type="button"
@@ -266,16 +266,8 @@ export default function ProfilePage() {
                 <button type="button" onClick={() => setWdOpen(false)}><X className="w-4 h-4 text-zinc-500" /></button>
               </div>
               <p className="text-[10px] text-zinc-500 mb-2">Engine claimed: {engineBalance.toFixed(4)} $DRILL</p>
-              <input
-                value={wdAmount}
-                onChange={(e) => setWdAmount(e.target.value)}
-                inputMode="decimal"
-                placeholder="Amount"
-                className="w-full bg-black border border-zinc-800 rounded-xl px-3 py-3 text-sm text-white mb-3"
-              />
-              <p className="text-[10px] text-zinc-500 mb-3">
-                Fee {WITHDRAW_FEE}. Receive {Math.max(0, Number(wdAmount || 0) - WITHDRAW_FEE).toFixed(2)} $DRILL
-              </p>
+              <input value={wdAmount} onChange={(e) => setWdAmount(e.target.value)} inputMode="decimal" placeholder="Amount" className="w-full bg-black border border-zinc-800 rounded-xl px-3 py-3 text-sm text-white mb-3" />
+              <p className="text-[10px] text-zinc-500 mb-3">Fee {WITHDRAW_FEE}. Receive {Math.max(0, Number(wdAmount || 0) - WITHDRAW_FEE).toFixed(2)} $DRILL</p>
               {message && <p className="text-[10px] text-amber-400 mb-3">{message}</p>}
               <button type="button" disabled={busy || !address || !hasNft} onClick={submitWithdraw} className="w-full py-3 rounded-xl bg-emerald-500 text-black text-xs font-bold tracking-widest disabled:opacity-50">
                 {busy ? 'QUEUEING...' : 'CONFIRM WITHDRAW'}
@@ -303,7 +295,7 @@ export default function ProfilePage() {
                         <span className="text-white">{Number(item.amount).toFixed(2)} $DRILL</span>
                         <span className="text-emerald-400">{item.status}</span>
                       </div>
-                      <p className="text-[10px] text-zinc-500 mt-1">Receive {Number(item.receive_amount).toFixed(2)} · Fee {Number(item.fee).toFixed(0)}</p>
+                      <p className="text-[10px] text-zinc-500 mt-1">Receive {Number(item.receive_amount).toFixed(2)} \u00b7 Fee {Number(item.fee).toFixed(0)}</p>
                     </div>
                   ))}
                 </div>
