@@ -22,21 +22,10 @@ export default function ReferralPage() {
   useEffect(() => {
     const run = async () => {
       try {
-        const tg = window.Telegram?.WebApp;
-        const initData = tg?.initData;
-        const currentId = tg?.initDataUnsafe?.user?.id;
+        const initData = window.Telegram?.WebApp?.initData;
+        const currentId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
         if (currentId) setTgUserId(currentId);
         if (!initData) return;
-
-        const startParam = tg?.initDataUnsafe?.start_param;
-        if (startParam && currentId && String(startParam) !== String(currentId)) {
-          await fetch('/api/referral/apply', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ initData, referrerTgId: startParam }),
-          }).catch(console.error);
-        }
-
         const res = await fetch('/api/referral', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -57,18 +46,6 @@ export default function ReferralPage() {
     };
     void run();
   }, []);
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(referralLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleShare = () => {
-    const shareText = 'Join DRILL ENGINE and mine $DRILL with me.';
-    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`;
-    window.Telegram?.WebApp?.openTelegramLink?.(shareUrl);
-  };
 
   return (
     <div className="min-h-screen max-w-md mx-auto bg-black text-white p-4 font-mono flex flex-col pb-24">
@@ -122,18 +99,24 @@ export default function ReferralPage() {
       )}
 
       <p className="text-[10px] text-zinc-500 leading-relaxed mb-6">
-        Teman buka link, data langsung tersimpan PENDING di Supabase. Jadi VALID +{REFERRAL_REWARD} $DRILL setelah teman mint SBT.
+        Link: t.me/{BOT_USERNAME}. Teman buka link = PENDING tersimpan. Setelah teman mint SBT = VALID +{REFERRAL_REWARD} $DRILL ke engine kamu.
       </p>
 
       <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-lg mt-auto">
         <p className="text-xs text-zinc-400 mb-3 text-center uppercase tracking-wider">Your invite link</p>
         <div className="flex items-center space-x-2 bg-black border border-zinc-800 rounded p-2 mb-4">
           <div className="flex-1 truncate text-xs text-zinc-300">{referralLink}</div>
-          <button onClick={handleCopy} className="p-2 bg-zinc-800 rounded text-emerald-500">
+          <button onClick={() => { navigator.clipboard.writeText(referralLink); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="p-2 bg-zinc-800 rounded text-emerald-500">
             {copied ? <CheckCircle2 size={16} /> : <Copy size={16} />}
           </button>
         </div>
-        <button onClick={handleShare} className="w-full bg-emerald-500 text-black font-bold tracking-widest text-sm py-3 rounded-lg">
+        <button
+          onClick={() => {
+            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent('Join DRILL ENGINE and mine $DRILL with me.')}`;
+            window.Telegram?.WebApp?.openTelegramLink?.(shareUrl);
+          }}
+          className="w-full bg-emerald-500 text-black font-bold tracking-widest text-sm py-3 rounded-lg"
+        >
           INVITE OPERATORS
         </button>
       </div>

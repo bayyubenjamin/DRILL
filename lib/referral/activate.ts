@@ -1,15 +1,17 @@
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { REFERRAL_REWARD } from '@/lib/referral/constants';
 
-export async function activateReferralIfPending(userId: string) {
+export async function activateReferralForUser(userId: string) {
   const { data: pending } = await supabaseAdmin
     .from('referrals')
     .select('id, referrer_id, reward, status')
     .eq('referred_id', userId)
     .maybeSingle();
 
-  if (!pending) return;
-  if (pending.status === 'valid' || Number(pending.reward || 0) > 0) return;
+  if (!pending) return { activated: false };
+  if (pending.status === 'valid' || Number(pending.reward || 0) > 0) {
+    return { activated: false, alreadyValid: true };
+  }
 
   await supabaseAdmin
     .from('referrals')
@@ -28,4 +30,6 @@ export async function activateReferralIfPending(userId: string) {
       .update({ balance: Number(account.balance || 0) + REFERRAL_REWARD })
       .eq('user_id', pending.referrer_id);
   }
+
+  return { activated: true };
 }
