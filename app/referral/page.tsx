@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import WebApp from '@twa-dev/sdk';
 import { motion } from 'framer-motion';
 import { Users, Copy, CheckCircle2, ArrowLeft, Zap } from 'lucide-react';
 import Link from 'next/link';
+
+// Inisialisasi WebApp secara dinamis untuk menghindari error "window is not defined" saat Vercel build (SSR)
+const WebApp = typeof window !== 'undefined' ? require('@twa-dev/sdk').default : null;
 
 export default function ReferralPage() {
   const [stats, setStats] = useState({ totalInvites: 0, totalEarned: 0 });
@@ -13,13 +15,13 @@ export default function ReferralPage() {
 
   // Ganti dengan username bot Telegram Anda
   const BOT_USERNAME = 'DrillEngineBot'; 
-  const tgUserId = typeof window !== 'undefined' && WebApp.initDataUnsafe?.user?.id;
-  const referralLink = `https://t.me/${BOT_USERNAME}/app?startapp=${tgUserId}`;
+  const tgUserId = WebApp?.initDataUnsafe?.user?.id;
+  const referralLink = `https://t.me/${BOT_USERNAME}/app?startapp=${tgUserId || ''}`;
 
   useEffect(() => {
     const initReferral = async () => {
       try {
-        if (typeof window === 'undefined' || !WebApp.initData) return;
+        if (!WebApp || !WebApp.initData) return;
 
         // Cek apakah user masuk menggunakan link referral (startapp)
         const startParam = WebApp.initDataUnsafe?.start_param;
@@ -51,14 +53,14 @@ export default function ReferralPage() {
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
-    WebApp.HapticFeedback.notificationOccurred('success');
+    WebApp?.HapticFeedback?.notificationOccurred('success');
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleShare = () => {
     const shareText = `Join the DRILL NETWORK Genesis Season and mine $DRILL with me!`;
     const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`;
-    WebApp.openTelegramLink(shareUrl);
+    WebApp?.openTelegramLink(shareUrl);
   };
 
   return (
