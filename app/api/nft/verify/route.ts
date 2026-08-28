@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { validateTelegramWebAppData } from '@/utils/telegram';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { hasOnchainPass } from '@/lib/ton/pass';
 
 export async function POST(request: Request) {
   try {
@@ -8,31 +9,15 @@ export async function POST(request: Request) {
     if (!initData || !validateTelegramWebAppData(initData, process.env.TELEGRAM_BOT_TOKEN!)) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
-
-    const tgUser = JSON.parse(new URLSearchParams(initData).get('user')!);
-    const { data: user } = await supabaseAdmin
-      .from('users')
-      .select('id')
-      .eq('telegram_user_id', tgUser.id)
-      .maybeSingle();
-    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
-
-    if (walletAddress) {
-      await supabaseAdmin.from('users').update({ wallet_address: walletAddress }).eq('id', user.id);
+    if (!walletAddress) {
+      return NextResponse.json({ success: true, hasNft: false, access: 'denied' });
     }
 
-    const { data: nft } = await supabaseAdmin
-      .from('mining_nfts')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('is_active', true)
-      .maybeSingle();
+    const tgUser = JSON.parse(new URLSearchParams(initData).get('user')!);
+    await supabaseAdmin.from('users').update({ wallet_address: walletAddress }).eq('telegram_user_id', tgUser.id);
 
-    return NextResponse.json({
-      success: true,
-      access: nft ? 'granted' : 'denied',
-      hasNft: Boolean(nft),
-    });
+    const hasNft = await hasOnchainPass(walletAddress);
+    return NextResponse.json({ success: true, hasNft, access: hasNft ? 'granted' : 'denied' });
   } catch (error) {
     console.error('NFT Verification Error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

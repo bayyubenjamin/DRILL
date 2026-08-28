@@ -3,14 +3,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Battery, Zap, Trophy, RefreshCw, Lock, ShieldCheck, Pickaxe } from 'lucide-react';
-import { useTonAddress } from '@tonconnect/ui-react';
+import { useTonAddress, useTonConnectUI } from '@tonconnect/ui-react';
 import WalletConnect from '@/components/Wallet/WalletConnect';
 import { getLevelProgress } from '@/lib/level/calculator';
-
-const GENESIS_END_TIMESTAMP = new Date(Date.now() + 29 * 24 * 60 * 60 * 1000 + 14 * 60 * 60 * 1000).getTime();
+import { DRILL_PASS_COLLECTION } from '@/lib/ton/network';
+import { BUY_PASS_OPCODE } from '@/lib/ton/pass';
+import { beginCell, toNano } from '@ton/core';
 
 export default function DrillEngineDashboard() {
   const walletAddress = useTonAddress();
+  const [tonConnectUI] = useTonConnectUI();
   const [hasNft, setHasNft] = useState(false);
   const [account, setAccount] = useState({
     balance: 0,
@@ -29,14 +31,7 @@ export default function DrillEngineDashboard() {
   const resetIdle = () => {
     setHasNft(false);
     setUnclaimed(0);
-    setAccount({
-      balance: 0,
-      miningSpeed: 0,
-      level: 1,
-      lastClaimAt: null,
-      miningActive: false,
-      progressPercent: 0,
-    });
+    setAccount({ balance: 0, miningSpeed: 0, level: 1, lastClaimAt: null, miningActive: false, progressPercent: 0 });
   };
 
   const loadState = async () => {
@@ -80,15 +75,39 @@ export default function DrillEngineDashboard() {
   const displayBalance = live ? account.balance + unclaimed : walletAddress && hasNft ? account.balance : 0;
   const progress = useMemo(() => getLevelProgress(displayBalance), [displayBalance]);
 
-  const runAction = async (path: string, extra: Record<string, string> = {}) => {
+  const mintOnchain = async () => {
     if (!walletAddress) return;
     setBusy(true);
-    setStatusMessage(null);
+    setStatusMessage('CONFIRM IN TONKEEPER');
+    try {
+      const payload = beginCell().storeUint(BUY_PASS_OPCODE, 32).storeUint(0, 64).endCell().toBoc().toString('base64');
+      await tonConnectUI.sendTransaction({
+        validUntil: Math.floor(Date.now() / 1000) + 300,
+        messages: [
+          {
+            address: DRILL_PASS_COLLECTION,
+            amount: toNano('1.05').toString(),
+            payload,
+          },
+        ],
+      });
+      setStatusMessage('TX SENT · WAITING CHAIN');
+      setTimeout(() => void loadState(), 8000);
+    } catch (err) {
+      setStatusMessage(err instanceof Error ? err.message : 'MINT REJECTED');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const runAction = async (path: string) => {
+    if (!walletAddress) return;
+    setBusy(true);
     try {
       const res = await fetch(path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: initData(), walletAddress, ...extra }),
+        body: JSON.stringify({ initData: initData(), walletAddress }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -96,21 +115,19 @@ export default function DrillEngineDashboard() {
         return;
       }
       await loadState();
-      if (path.includes('/mint')) setStatusMessage('TESTNET PASS RECORDED');
       if (path.includes('/start')) setStatusMessage('MINING STARTED');
       if (path.includes('/claim')) setStatusMessage(`CLAIMED +${Number(data.reward || 0).toFixed(4)} $DRILL`);
     } catch {
       setStatusMessage('NETWORK ERROR');
     } finally {
       setBusy(false);
-      setTimeout(() => setStatusMessage(null), 2500);
     }
   };
 
   const action = !walletAddress
     ? { label: 'CONNECT TESTNET WALLET FIRST', disabled: true, onClick: () => undefined }
     : !hasNft
-      ? { label: 'MINT TESTNET PASS', disabled: busy, onClick: () => runAction('/api/nft/mint', { walletAddress }) }
+      ? { label: 'MINT PASS ON-CHAIN · 1 TON', disabled: busy, onClick: mintOnchain }
       : !account.miningActive
         ? { label: 'START MINING', disabled: busy, onClick: () => runAction('/api/mining/start') }
         : { label: 'CLAIM', disabled: busy || unclaimed <= 0, onClick: () => runAction('/api/mining/claim') };
@@ -134,7 +151,7 @@ export default function DrillEngineDashboard() {
 
       <section className="flex flex-col items-center justify-center my-6 text-center">
         <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase mb-1">
-          {!walletAddress ? 'WALLET REQUIRED' : !hasNft ? 'PASS REQUIRED' : 'ENGINE BALANCE'}
+          {!walletAddress ? 'WALLET REQUIRED' : !hasNft ? 'ON-CHAIN PASS REQUIRED' : 'ENGINE BALANCE'}
         </span>
         <div className="flex items-baseline gap-2">
           <span className="text-4xl font-mono font-light tracking-tight text-white">
@@ -148,7 +165,7 @@ export default function DrillEngineDashboard() {
         <div className="flex justify-between items-center text-xs font-mono">
           <div className="flex items-center gap-1.5 text-amber-400 font-medium">
             <Trophy className="w-4 h-4" />
-            <span>LEVEL {walletAddress ? progress.currentLevel : 1}</span>
+            <span>LEVEL {walletAddress && hasNft ? progress.currentLevel : 1}</span>
           </div>
           <div className="flex items-center gap-1 text-emerald-400 font-medium">
             <Zap className="w-4 h-4" />
@@ -156,7 +173,7 @@ export default function DrillEngineDashboard() {
           </div>
         </div>
         <div className="w-full bg-zinc-900 h-2 rounded-full overflow-hidden border border-zinc-800">
-          <motion.div className="h-full bg-gradient-to-r from-emerald-600 via-emerald-400 to-emerald-300" animate={{ width: `${walletAddress ? progress.progressPercent : 0}%` }} />
+          <motion.div className="h-full bg-gradient-to-r from-emerald-600 via-emerald-400 to-emerald-300" animate={{ width: `${walletAddress && hasNft ? progress.progressPercent : 0}%` }} />
         </div>
       </section>
 
@@ -187,14 +204,14 @@ export default function DrillEngineDashboard() {
         </button>
         <p className="text-[10px] text-zinc-500 font-mono text-center">
           {!walletAddress
-            ? 'Connect Tonkeeper Testnet dulu. Mining tidak jalan tanpa wallet.'
+            ? 'Connect Tonkeeper Testnet dulu.'
             : !hasNft
-              ? 'Mint Drill Pass testnet dulu. Baru START MINING.'
+              ? 'Pass dicek on-chain. Mint 1 TON testnet ke collection.'
               : !account.miningActive
-                ? 'Pass aktif. Tekan START MINING.'
-                : 'Mining testnet aktif. Claim mencatat saldo engine.'}
+                ? 'SBT terdeteksi di chain. START MINING.'
+                : 'Pass on-chain aktif. Claim tetap catat engine di backend.'}
         </p>
-        <div className="w-full bg-zinc-950/80 border border-zinc-800/80 rounded-xl p-3 flex flex-col gap-2 mt-4">
+        <div className="w-full bg-zinc-950/80 border border-zinc-800/80 rounded-xl p-3 mt-4">
           <div className="flex justify-between items-center text-[10px] tracking-widest text-zinc-400 font-mono">
             <span className="flex items-center gap-1 text-amber-400/90 font-semibold">
               <Lock className="w-3 h-3" /> WITHDRAWAL LOCKED
