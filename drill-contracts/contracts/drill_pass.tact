@@ -28,12 +28,6 @@ message RevokePass {
     itemIndex: Int as uint64;
 }
 
-message InitPass {
-    queryId: Int as uint64;
-    owner: Address;
-    authority: Address;
-}
-
 message Revoke {
     queryId: Int as uint64;
 }
@@ -45,27 +39,11 @@ message TransferSbt {
 contract DrillPassItem(
     collection: Address,
     index: Int as uint64,
+    owner: Address,
+    authority: Address,
+    revokedAt: Int as uint64,
+    initialized: Bool,
 ) {
-    owner: Address;
-    authority: Address;
-    revokedAt: Int as uint64;
-    initialized: Bool;
-
-    init {
-        self.owner = collection;
-        self.authority = collection;
-        self.revokedAt = 0;
-        self.initialized = false;
-    }
-
-    receive(msg: InitPass) {
-        require(sender() == self.collection, "Only collection");
-        require(!self.initialized, "Already initialized");
-        self.owner = msg.owner;
-        self.authority = msg.authority;
-        self.initialized = true;
-    }
-
     receive(msg: TransferSbt) {
         require(false, "Soulbound: transfer disabled");
     }
@@ -89,7 +67,6 @@ contract DrillPassItem(
     }
 }
 
-/// Soulbound mining pass. One per wallet. Admin can change mint price anytime.
 contract DrillPassCollection(
     admin: Address,
     nextItemIndex: Int as uint64,
@@ -108,12 +85,12 @@ contract DrillPassCollection(
 
     receive(msg: AdminMint) {
         require(sender() == self.admin, "Only admin can admin-mint");
-        self.mintPass(msg.to, msg.queryId);
+        self.mintPass(msg.to);
     }
 
     receive(msg: BuyPass) {
         require(context().value >= self.mintPrice, "Insufficient TON");
-        self.mintPass(sender(), msg.queryId);
+        self.mintPass(sender());
     }
 
     receive(msg: ChangeCollectionAdmin) {
@@ -132,15 +109,16 @@ contract DrillPassCollection(
 
     receive(msg: RevokePass) {
         require(sender() == self.admin, "Only admin");
+        let ownerDummy: Address = self.admin;
         deploy(DeployParameters{
             value: 0,
             mode: SendRemainingValue,
             body: Revoke{ queryId: msg.queryId }.toCell(),
-            init: initOf DrillPassItem(myAddress(), msg.itemIndex),
+            init: initOf DrillPassItem(myAddress(), msg.itemIndex, ownerDummy, self.admin, 0, true),
         });
     }
 
-    fun mintPass(to: Address, queryId: Int) {
+    fun mintPass(to: Address) {
         require(self.minted.get(to) == null, "Wallet already has a pass");
         let index: Int = self.nextItemIndex;
         self.minted.set(to, index);
@@ -149,12 +127,7 @@ contract DrillPassCollection(
         deploy(DeployParameters{
             value: ton("0.05"),
             bounce: false,
-            body: InitPass{
-                queryId: queryId,
-                owner: to,
-                authority: self.admin,
-            }.toCell(),
-            init: initOf DrillPassItem(myAddress(), index),
+            init: initOf DrillPassItem(myAddress(), index, to, self.admin, 0, true),
         });
     }
 
@@ -175,6 +148,6 @@ contract DrillPassCollection(
     }
 
     get fun get_nft_address_by_index(index: Int): Address {
-        return contractAddress(initOf DrillPassItem(myAddress(), index));
+        return contractAddress(initOf DrillPassItem(myAddress(), index, self.admin, self.admin, 0, true));
     }
 }
