@@ -1,4 +1,4 @@
-import { beginCell, toNano } from '@ton/core';
+import { beginCell, Dictionary, toNano } from '@ton/core';
 import { NetworkProvider } from '@ton/blueprint';
 import { DrillPassCollection } from '../build/DrillPassCollection/DrillPassCollection_DrillPassCollection';
 
@@ -13,15 +13,15 @@ export async function run(provider: NetworkProvider) {
   const metadataUrl =
     process.env.PASS_METADATA_URL || 'https://drill-chi-flax.vercel.app/drill-pass.json';
   const price = toNano(process.env.MINT_PRICE_TON || '1');
+  const minted = Dictionary.empty();
 
   const collection = provider.open(
-    await DrillPassCollection.fromInit(admin, price, offchainContent(metadataUrl)),
+    await DrillPassCollection.fromInit(admin, 0n, price, offchainContent(metadataUrl), minted),
   );
 
   await collection.send(provider.sender(), { value: toNano('0.15') }, null);
   await provider.waitForDeploy(collection.address);
 
   console.log('Drill Pass collection:', collection.address.toString());
-  console.log('Mint price (nanoTON):', price.toString());
   console.log('Simpan address ini ke NEXT_PUBLIC_NFT_COLLECTION_ADDRESS');
 }
