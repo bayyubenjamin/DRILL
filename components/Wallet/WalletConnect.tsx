@@ -14,23 +14,6 @@ const QUICK_WALLETS = [
   { appName: 'tonkeeper', label: 'TONKEEPER' },
 ] as const;
 
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp?: {
-        initData?: string;
-        ready?: () => void;
-        expand?: () => void;
-        disableVerticalSwipes?: () => void;
-        openTelegramLink?: (url: string) => void;
-        HapticFeedback?: {
-          impactOccurred?: (style: 'light' | 'medium' | 'heavy') => void;
-        };
-      };
-    };
-  }
-}
-
 export default function WalletConnect() {
   const address = useTonAddress();
   const wallet = useTonWallet();

@@ -5,31 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Battery, Zap, Trophy, RefreshCw, Lock, ShieldCheck } from 'lucide-react';
 import WalletConnect from '@/components/Wallet/WalletConnect';
 
-// Telegram Mini App types (keeps Telegram integration type-safe without changing the UI)
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp?: {
-        initData?: string;
-        HapticFeedback?: {
-          notificationOccurred: (type: 'success' | 'warning' | 'error') => void;
-        };
-      };
-    };
-  }
-}
-
-// --- Constants ---
 // Genesis end timestamp (30 days from project start)
 const GENESIS_END_TIMESTAMP = new Date(Date.now() + 29 * 24 * 60 * 60 * 1000 + 14 * 60 * 60 * 1000).getTime();
 
-// --- Sub-components ---
-
-// Visual Futuristic Drill Engine Animation
 const DrillCoreAnimation = ({ isClaiming }: { isClaiming: boolean }) => {
   return (
     <div className="relative flex items-center justify-center my-8 h-64 w-full">
-      {/* Background Ambient Glow */}
       <motion.div
         animate={{
           scale: [1, 1.2, 1],
@@ -39,14 +20,12 @@ const DrillCoreAnimation = ({ isClaiming }: { isClaiming: boolean }) => {
         className="absolute w-56 h-56 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none"
       />
 
-      {/* Outer Rotating Cyber Grid Ring */}
       <motion.div
         animate={{ rotate: 360 }}
         transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
         className="absolute w-60 h-60 border border-emerald-500/20 rounded-full border-dashed"
       />
 
-      {/* Counter-rotating Inner Precision Ring */}
       <motion.div
         animate={{ rotate: -360 }}
         transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
@@ -55,7 +34,6 @@ const DrillCoreAnimation = ({ isClaiming }: { isClaiming: boolean }) => {
         <div className="w-full h-full rounded-full border-t-2 border-b-2 border-emerald-400/40" />
       </motion.div>
 
-      {/* Core Drill / Industrial Engine Block */}
       <motion.div
         animate={
           isClaiming
@@ -69,13 +47,11 @@ const DrillCoreAnimation = ({ isClaiming }: { isClaiming: boolean }) => {
         }
         className="relative z-10 w-28 h-36 bg-zinc-950 border border-zinc-800 rounded-xl flex flex-col items-center justify-between p-3 overflow-hidden shadow-[0_0_40px_rgba(16,185,129,0.12)]"
       >
-        {/* Top Metallic Cap */}
         <div className="w-full flex justify-between items-center text-[9px] font-mono text-zinc-500 px-1 border-b border-zinc-800/80 pb-1">
           <span>SYS-DRILL</span>
           <span className="text-emerald-400 font-semibold animate-pulse">ACTIVE</span>
         </div>
 
-        {/* Central Kinetic Energy Reactor */}
         <div className="relative flex flex-col items-center justify-center my-auto w-full">
           <motion.div
             animate={
@@ -93,7 +69,6 @@ const DrillCoreAnimation = ({ isClaiming }: { isClaiming: boolean }) => {
           />
         </div>
 
-        {/* Dynamic Equalizer Energy Bars */}
         <div className="flex gap-1 items-end w-full justify-center h-4 pt-1 border-t border-zinc-800/80">
           {[1, 2, 3, 4, 5].map((i) => (
             <motion.div
@@ -110,7 +85,6 @@ const DrillCoreAnimation = ({ isClaiming }: { isClaiming: boolean }) => {
         </div>
       </motion.div>
 
-      {/* Energy Spark Particles during Active Claiming */}
       <AnimatePresence>
         {isClaiming && (
           <>
@@ -136,7 +110,6 @@ const DrillCoreAnimation = ({ isClaiming }: { isClaiming: boolean }) => {
   );
 };
 
-// Genesis Countdown Card
 const GenesisCountdown = () => {
   const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
 
@@ -191,14 +164,12 @@ const GenesisCountdown = () => {
   );
 };
 
-// --- Main Dashboard Component ---
 export default function DrillEngineDashboard() {
-  // Account State Sync
   const [accountState, setAccountState] = useState({
     balance: 12482.42,
-    miningSpeed: 4.82, // $DRILL per minute
+    miningSpeed: 4.82,
     level: 38421,
-    lastClaimAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(), // 15 mins ago default
+    lastClaimAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
     miningActive: true,
   });
 
@@ -210,7 +181,6 @@ export default function DrillEngineDashboard() {
   const lastClaimAtRef = useRef(accountState.lastClaimAt);
   lastClaimAtRef.current = accountState.lastClaimAt;
 
-  // Real-time Off-chain Interpolation Engine
   useEffect(() => {
     let animFrameId: number;
     let lastTimestamp = performance.now();
@@ -220,7 +190,6 @@ export default function DrillEngineDashboard() {
       lastTimestamp = nowTimestamp;
 
       if (accountState.miningActive && accountState.miningSpeed > 0) {
-        // Speed is $DRILL per minute -> divide by 60,000 for per millisecond
         const rewardPerMs = accountState.miningSpeed / 60000;
         const incremental = rewardPerMs * deltaMs;
 
@@ -235,7 +204,6 @@ export default function DrillEngineDashboard() {
     return () => cancelAnimationFrame(animFrameId);
   }, [accountState.miningSpeed, accountState.miningActive]);
 
-  // Execute Server Claim Action
   const handleClaim = async () => {
     if (isClaiming || unclaimedReward < 0.001) return;
 
@@ -243,7 +211,6 @@ export default function DrillEngineDashboard() {
     setStatusMessage(null);
 
     try {
-      // Get Telegram initData if inside TWA environment
       const telegramInitData =
         typeof window !== 'undefined' && window.Telegram?.WebApp?.initData
           ? window.Telegram.WebApp.initData
@@ -258,7 +225,6 @@ export default function DrillEngineDashboard() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Sync state directly from authoritative server response
         setAccountState((prev) => ({
           ...prev,
           balance: data.new_balance,
@@ -267,13 +233,8 @@ export default function DrillEngineDashboard() {
         setDisplayBalance(data.new_balance);
         setUnclaimedReward(0);
         setStatusMessage('ENERGY EXTRACTED SUCCESSFULLY!');
-
-        // Optional Telegram Haptic Feedback
-        if (typeof window !== 'undefined' && window.Telegram?.WebApp?.HapticFeedback) {
-          window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-        }
+        window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success');
       } else {
-        // Fallback for development/testing if backend API is offline or returning error
         console.warn('API Response Notice:', data.error || 'Running in mock mode');
         const fallbackNewBalance = displayBalance;
         setAccountState((prev) => ({
@@ -286,7 +247,6 @@ export default function DrillEngineDashboard() {
       }
     } catch (err) {
       console.error('Claim Execution Error:', err);
-      // Soft fallback for visual demonstration
       setAccountState((prev) => ({
         ...prev,
         balance: displayBalance,
@@ -302,7 +262,6 @@ export default function DrillEngineDashboard() {
 
   return (
     <main className="min-h-screen max-w-md mx-auto bg-black text-white px-4 py-5 flex flex-col justify-between selection:bg-emerald-500 selection:text-black font-sans pb-8">
-      {/* Top Bar Header */}
       <header className="flex justify-between items-center w-full pb-3 border-b border-zinc-900">
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
@@ -327,12 +286,10 @@ export default function DrillEngineDashboard() {
         </div>
       </header>
 
-      {/* Tambahkan Widget Wallet Connect Di Sini */}
       <div className="mt-4 mb-2">
         <WalletConnect />
       </div>
 
-      {/* Main Balance Display Section */}
       <section className="flex flex-col items-center justify-center my-6 text-center">
         <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase mb-1">
           UNCLAIMED + WALLET APP BALANCE
@@ -350,7 +307,6 @@ export default function DrillEngineDashboard() {
         </div>
       </section>
 
-      {/* Level & Mining Speed Stats Bar */}
       <section className="bg-zinc-950/90 border border-zinc-800 p-3.5 rounded-xl flex flex-col gap-2.5">
         <div className="flex justify-between items-center text-xs font-mono">
           <div className="flex items-center gap-1.5 text-amber-400 font-medium">
@@ -363,7 +319,6 @@ export default function DrillEngineDashboard() {
           </div>
         </div>
 
-        {/* Level Progression Bar */}
         <div className="w-full bg-zinc-900 h-2 rounded-full overflow-hidden border border-zinc-800">
           <motion.div
             className="h-full bg-gradient-to-r from-emerald-600 via-emerald-400 to-emerald-300"
@@ -378,10 +333,8 @@ export default function DrillEngineDashboard() {
         </div>
       </section>
 
-      {/* Drill Core Visual Machine */}
       <DrillCoreAnimation isClaiming={isClaiming} />
 
-      {/* Claim Action Control Panel */}
       <section className="flex flex-col items-center w-full gap-2 mt-auto">
         {statusMessage && (
           <motion.div
@@ -422,7 +375,6 @@ export default function DrillEngineDashboard() {
             </>
           )}
 
-          {/* Shine Sweep Effect */}
           {!isClaiming && unclaimedReward >= 0.001 && (
             <motion.div
               animate={{ left: ['-100%', '200%'] }}
@@ -432,7 +384,6 @@ export default function DrillEngineDashboard() {
           )}
         </button>
 
-        {/* Genesis Phase Countdown Widget */}
         <GenesisCountdown />
       </section>
     </main>
