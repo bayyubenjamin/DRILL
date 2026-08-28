@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { validateTelegramWebAppData } from '@/utils/telegram';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { hasOnchainPass } from '@/lib/ton/pass';
+import { activateReferralIfPending } from '@/lib/referral/activate';
 
 export async function POST(request: Request) {
   try {
@@ -17,6 +18,11 @@ export async function POST(request: Request) {
     await supabaseAdmin.from('users').update({ wallet_address: walletAddress }).eq('telegram_user_id', tgUser.id);
 
     const hasNft = await hasOnchainPass(walletAddress);
+    if (hasNft) {
+      const { data: user } = await supabaseAdmin.from('users').select('id').eq('telegram_user_id', tgUser.id).maybeSingle();
+      if (user) await activateReferralIfPending(user.id);
+    }
+
     return NextResponse.json({ success: true, hasNft, access: hasNft ? 'granted' : 'denied' });
   } catch (error) {
     console.error('NFT Verification Error:', error);

@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase/server';
 import { calculateLevel, calculateMiningSpeed } from '@/lib/level/calculator';
 import { hasOnchainPass } from '@/lib/ton/pass';
 import { DRILL_PASS_COLLECTION } from '@/lib/ton/network';
+import { activateReferralIfPending } from '@/lib/referral/activate';
 
 export async function POST(request: Request) {
   try {
@@ -28,6 +29,7 @@ export async function POST(request: Request) {
       },
       { onConflict: 'nft_address' },
     );
+    await activateReferralIfPending(user.id);
 
     let { data: account } = await supabaseAdmin
       .from('mining_accounts')
