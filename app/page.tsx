@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Battery, Zap, Trophy, RefreshCw, Lock, ShieldCheck } from 'lucide-react';
+import WalletConnect from '@/components/Wallet/WalletConnect';
 
 // Telegram Mini App types (keeps Telegram integration type-safe without changing the UI)
 declare global {
@@ -325,6 +326,11 @@ export default function DrillEngineDashboard() {
           </span>
         </div>
       </header>
+
+      {/* Tambahkan Widget Wallet Connect Di Sini */}
+      <div className="mt-4 mb-2">
+        <WalletConnect />
+      </div>
 
       {/* Main Balance Display Section */}
       <section className="flex flex-col items-center justify-center my-6 text-center">

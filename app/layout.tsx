@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import BottomNav from '@/components/UI/BottomNav';
+import TonProvider from '@/components/Wallet/TonProvider'; // Tambahkan import ini
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -22,13 +23,13 @@ export default function RootLayout({
         <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
       </head>
       <body className={inter.className}>
-        {/* Tambahkan div dengan padding bawah (pb-20) agar konten tidak tertutup menu navigasi */}
-        <div className="pb-20">
-          {children}
-        </div>
-        
-        {/* Panggil BottomNav di bawah konten utama */}
-        <BottomNav />
+        {/* Bungkus seluruh aplikasi dengan TonProvider */}
+        <TonProvider>
+          <div className="pb-20">
+            {children}
+          </div>
+          <BottomNav />
+        </TonProvider>
       </body>
     </html>
   );
