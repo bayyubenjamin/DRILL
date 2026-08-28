@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useTonAddress, useTonWallet } from '@tonconnect/ui-react';
 import {
@@ -11,8 +12,24 @@ import {
   User,
   Wallet,
   Zap,
+  History,
+  X,
 } from 'lucide-react';
 import WalletConnect from '@/components/Wallet/WalletConnect';
+import { calculateLevel, getLevelProgress } from '@/lib/level/calculator';
+
+const MIN_WITHDRAW = 500;
+const WITHDRAW_FEE = 70;
+
+type Withdrawal = {
+  id: string;
+  amount: number;
+  fee: number;
+  receive_amount: number;
+  status: string;
+  created_at?: string;
+  wallet_address?: string;
+};
 
 export default function ProfilePage() {
   const address = useTonAddress();
@@ -25,11 +42,63 @@ export default function ProfilePage() {
     username?: string;
     is_premium?: boolean;
   } | null>(null);
+  const [engineBalance, setEngineBalance] = useState(0);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [unclaimed, setUnclaimed] = useState(0);
+  const [miningActive, setMiningActive] = useState(false);
+  const [miningSpeed, setMiningSpeed] = useState(0);
+  const [lastClaimAt, setLastClaimAt] = useState<string | null>(null);
+  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
+  const [wdOpen, setWdOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [wdAmount, setWdAmount] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const initData = () => window.Telegram?.WebApp?.initData || '';
+
+  const loadAssets = async () => {
+    const payload = initData();
+    if (!payload) return;
+    const res = await fetch('/api/user/assets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData: payload }),
+    });
+    const data = await res.json();
+    if (!data.success) return;
+    setEngineBalance(Number(data.engineBalance || 0));
+    setWalletBalance(Number(data.walletBalance || 0));
+    setMiningActive(Boolean(data.miningActive));
+    setMiningSpeed(Number(data.miningSpeed || 0));
+    setLastClaimAt(data.lastClaimAt || null);
+    setWithdrawals(data.withdrawals || []);
+  };
 
   useEffect(() => {
     const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
     if (user) setTgUser(user);
+    void loadAssets();
   }, []);
+
+  useEffect(() => {
+    if (!miningActive || !lastClaimAt) {
+      setUnclaimed(0);
+      return;
+    }
+    const tick = () => {
+      const elapsedMin = Math.max(0, (Date.now() - new Date(lastClaimAt).getTime()) / 60000);
+      setUnclaimed(elapsedMin * miningSpeed);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [miningActive, lastClaimAt, miningSpeed]);
+
+  const liveEngine = engineBalance + unclaimed;
+  const totalAssets = liveEngine + walletBalance;
+  const level = calculateLevel(totalAssets);
+  const progress = getLevelProgress(totalAssets);
 
   const displayName = useMemo(() => {
     if (!tgUser) return 'OPERATOR';
@@ -39,13 +108,33 @@ export default function ProfilePage() {
 
   const handleCopy = async () => {
     if (!address) return;
+    await navigator.clipboard.writeText(address);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  };
+
+  const submitWithdraw = async () => {
+    const amount = Number(wdAmount);
+    setBusy(true);
+    setMessage(null);
     try {
-      await navigator.clipboard.writeText(address);
-      setCopied(true);
-      window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success');
-      setTimeout(() => setCopied(false), 1800);
-    } catch (err) {
-      console.error('Copy address failed:', err);
+      const res = await fetch('/api/withdrawal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: initData(), amount, walletAddress: address }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setMessage(data.error || 'WITHDRAW FAILED');
+        return;
+      }
+      setMessage(`QUEUED. RECEIVE ${Number(data.receiveAmount).toFixed(2)} $DRILL`);
+      setWdAmount('');
+      await loadAssets();
+    } catch {
+      setMessage('NETWORK ERROR');
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -71,15 +160,7 @@ export default function ProfilePage() {
           <p className="text-[10px] text-zinc-500 tracking-widest">
             {tgUser?.username ? `@${tgUser.username}` : 'TELEGRAM IDENTITY NOT LINKED'}
           </p>
-          {tgUser?.id && (
-            <p className="text-[10px] text-zinc-600 mt-1">TG ID {tgUser.id}</p>
-          )}
         </div>
-        {tgUser?.is_premium && (
-          <span className="ml-auto text-[9px] tracking-widest text-amber-400 border border-amber-500/30 px-2 py-1 rounded">
-            PREMIUM
-          </span>
-        )}
       </section>
 
       <section className="mt-4">
@@ -87,61 +168,142 @@ export default function ProfilePage() {
         <WalletConnect />
       </section>
 
-      <section className="mt-4 grid grid-cols-2 gap-2">
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-3">
-          <p className="text-[9px] text-zinc-500 tracking-widest">NETWORK</p>
-          <p className="text-xs text-emerald-400 mt-1">TON</p>
+      <section className="mt-4 bg-zinc-950 border border-zinc-800 rounded-2xl p-4">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[10px] tracking-widest text-zinc-500">ASSETS</p>
+          <button type="button" onClick={() => setHistoryOpen(true)} className="text-zinc-400 hover:text-white">
+            <History className="w-4 h-4" />
+          </button>
         </div>
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-3">
-          <p className="text-[9px] text-zinc-500 tracking-widest">STATUS</p>
-          <p className={`text-xs mt-1 ${address ? 'text-emerald-400' : 'text-zinc-400'}`}>
-            {address ? 'CONNECTED' : 'DISCONNECTED'}
-          </p>
+        <div className="grid grid-cols-1 gap-2">
+          <div className="bg-black border border-zinc-800 rounded-xl p-3 flex justify-between">
+            <span className="text-[10px] text-zinc-500">$DRILL IN WALLET</span>
+            <span className="text-xs text-white">{walletBalance.toFixed(4)}</span>
+          </div>
+          <div className="bg-black border border-zinc-800 rounded-xl p-3 flex justify-between">
+            <span className="text-[10px] text-zinc-500">$DRILL IN ENGINE</span>
+            <span className="text-xs text-emerald-400">{liveEngine.toFixed(4)}</span>
+          </div>
+          <div className="bg-black border border-emerald-500/30 rounded-xl p-3">
+            <div className="flex justify-between">
+              <span className="text-[10px] text-zinc-500">TOTAL / LEVEL</span>
+              <span className="text-xs text-emerald-400">LV {level.toLocaleString()}</span>
+            </div>
+            <p className="text-lg text-white mt-1">{totalAssets.toFixed(4)} $DRILL</p>
+            <div className="w-full bg-zinc-900 h-1.5 rounded-full mt-2 overflow-hidden">
+              <div className="h-full bg-emerald-400" style={{ width: `${progress.progressPercent}%` }} />
+            </div>
+          </div>
         </div>
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-3">
-          <p className="text-[9px] text-zinc-500 tracking-widest">PROVIDER</p>
-          <p className="text-xs text-zinc-200 mt-1 truncate">
-            {wallet?.device.appName || 'NONE'}
-          </p>
-        </div>
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-3">
-          <p className="text-[9px] text-zinc-500 tracking-widest">ACCESS</p>
-          <p className="text-xs text-amber-400 mt-1">GENESIS</p>
-        </div>
+        <button
+          type="button"
+          onClick={() => setWdOpen(true)}
+          disabled={!address || engineBalance < MIN_WITHDRAW}
+          className={`mt-3 w-full py-3 rounded-xl text-[11px] tracking-widest font-bold ${
+            !address || engineBalance < MIN_WITHDRAW
+              ? 'bg-zinc-900 text-zinc-600 border border-zinc-800'
+              : 'bg-emerald-500 text-black'
+          }`}
+        >
+          WITHDRAW ENGINE BALANCE
+        </button>
+        <p className="text-[10px] text-zinc-600 mt-2">Min {MIN_WITHDRAW} $DRILL. Fee {WITHDRAW_FEE} $DRILL.</p>
       </section>
 
       {address && (
         <section className="mt-4 bg-zinc-950 border border-zinc-800 rounded-xl p-3">
           <p className="text-[9px] text-zinc-500 tracking-widest mb-2">FULL ADDRESS</p>
           <div className="flex items-center gap-2">
-            <p className="flex-1 text-[10px] text-zinc-300 break-all leading-relaxed">{address}</p>
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="shrink-0 p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-emerald-400"
-            >
+            <p className="flex-1 text-[10px] text-zinc-300 break-all">{address}</p>
+            <button type="button" onClick={handleCopy} className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-emerald-400">
               {copied ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             </button>
           </div>
         </section>
       )}
 
+      <section className="mt-4 grid grid-cols-2 gap-2">
+        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-3">
+          <p className="text-[9px] text-zinc-500">PROVIDER</p>
+          <p className="text-xs text-zinc-200 mt-1 truncate">{wallet?.device.appName || 'NONE'}</p>
+        </div>
+        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-3">
+          <p className="text-[9px] text-zinc-500">STATUS</p>
+          <p className={`text-xs mt-1 ${address ? 'text-emerald-400' : 'text-zinc-400'}`}>{address ? 'CONNECTED' : 'DISCONNECTED'}</p>
+        </div>
+      </section>
+
       <section className="mt-4 flex flex-col gap-2">
-        <Link
-          href="/referral"
-          className="w-full py-3 px-4 bg-zinc-950 border border-zinc-800 rounded-xl flex items-center justify-between"
-        >
+        <Link href="/referral" className="w-full py-3 px-4 bg-zinc-950 border border-zinc-800 rounded-xl flex items-center justify-between">
           <span className="text-[10px] tracking-widest text-zinc-300">REFERRAL SYSTEM</span>
           <Zap className="w-4 h-4 text-emerald-400" />
         </Link>
-        <Link
-          href="/tasks"
-          className="w-full py-3 px-4 bg-zinc-950 border border-zinc-800 rounded-xl flex items-center justify-between"
-        >
+        <Link href="/tasks" className="w-full py-3 px-4 bg-zinc-950 border border-zinc-800 rounded-xl flex items-center justify-between">
           <span className="text-[10px] tracking-widest text-zinc-300">TASKS PROTOCOL</span>
           <Wallet className="w-4 h-4 text-emerald-400" />
         </Link>
       </section>
+
+      {wdOpen &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] bg-black/80 flex items-end sm:items-center justify-center p-4" onClick={() => setWdOpen(false)}>
+            <div className="w-full max-w-sm bg-zinc-950 border border-zinc-800 rounded-2xl p-4" onClick={(e) => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="text-xs tracking-widest text-emerald-400">WITHDRAW</h2>
+                <button type="button" onClick={() => setWdOpen(false)}><X className="w-4 h-4 text-zinc-500" /></button>
+              </div>
+              <p className="text-[10px] text-zinc-500 mb-2">Engine available: {engineBalance.toFixed(4)} $DRILL</p>
+              <input
+                value={wdAmount}
+                onChange={(e) => setWdAmount(e.target.value)}
+                inputMode="decimal"
+                placeholder="Amount"
+                className="w-full bg-black border border-zinc-800 rounded-xl px-3 py-3 text-sm text-white mb-3"
+              />
+              <p className="text-[10px] text-zinc-500 mb-3">
+                Fee {WITHDRAW_FEE}. Receive {Math.max(0, Number(wdAmount || 0) - WITHDRAW_FEE).toFixed(2)} $DRILL
+              </p>
+              {message && <p className="text-[10px] text-amber-400 mb-3">{message}</p>}
+              <button
+                type="button"
+                disabled={busy || !address}
+                onClick={submitWithdraw}
+                className="w-full py-3 rounded-xl bg-emerald-500 text-black text-xs font-bold tracking-widest disabled:opacity-50"
+              >
+                {busy ? 'QUEUEING...' : 'CONFIRM WITHDRAW'}
+              </button>
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {historyOpen &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] bg-black/80 flex items-end sm:items-center justify-center p-4" onClick={() => setHistoryOpen(false)}>
+            <div className="w-full max-w-sm bg-zinc-950 border border-zinc-800 rounded-2xl p-4 max-h-[70vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="text-xs tracking-widest text-emerald-400">WD HISTORY</h2>
+                <button type="button" onClick={() => setHistoryOpen(false)}><X className="w-4 h-4 text-zinc-500" /></button>
+              </div>
+              {withdrawals.length === 0 ? (
+                <p className="text-[10px] text-zinc-500">Belum ada withdrawal.</p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {withdrawals.map((item) => (
+                    <div key={item.id} className="border border-zinc-800 rounded-xl p-3">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-white">{Number(item.amount).toFixed(2)} $DRILL</span>
+                        <span className="text-emerald-400">{item.status}</span>
+                      </div>
+                      <p className="text-[10px] text-zinc-500 mt-1">Receive {Number(item.receive_amount).toFixed(2)} · Fee {Number(item.fee).toFixed(0)}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>,
+          document.body,
+        )}
     </main>
   );
 }
