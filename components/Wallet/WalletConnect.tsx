@@ -47,13 +47,25 @@ export default function WalletConnect() {
     return <div className="h-12 w-full bg-zinc-900 animate-pulse rounded-xl" />;
   }
 
+  const handleConnectClick = () => {
+    if (tonConnectUI) {
+      tonConnectUI.openModal();
+    }
+  };
+
+  const handleDisconnectClick = () => {
+    if (tonConnectUI) {
+      tonConnectUI.disconnect();
+    }
+  };
+
   return (
     <div className="flex flex-col items-center w-full gap-2">
-      {/* Tombol Kustom yang Diprogram Langsung Memanggil openModal() */}
       {!userFriendlyAddress ? (
         <button
-          onClick={() => tonConnectUI.openModal()}
-          className="w-full py-3 px-4 bg-zinc-900 border border-emerald-500/40 hover:border-emerald-400 rounded-xl font-mono text-xs font-bold tracking-widest text-emerald-400 flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(16,185,129,0.1)] active:scale-[0.98]"
+          type="button"
+          onClick={handleConnectClick}
+          className="w-full py-3 px-4 bg-zinc-900 border border-emerald-500/40 hover:border-emerald-400 rounded-xl font-mono text-xs font-bold tracking-widest text-emerald-400 flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(16,185,129,0.1)] active:scale-[0.98] cursor-pointer"
         >
           <Wallet className="w-4 h-4 text-emerald-400" />
           <span>CONNECT TON WALLET</span>
@@ -67,8 +79,9 @@ export default function WalletConnect() {
             </span>
           </div>
           <button
-            onClick={() => tonConnectUI.disconnect()}
-            className="text-zinc-500 hover:text-red-400 p-1.5 transition-colors"
+            type="button"
+            onClick={handleDisconnectClick}
+            className="text-zinc-500 hover:text-red-400 p-1.5 transition-colors cursor-pointer"
             title="Disconnect Wallet"
           >
             <LogOut className="w-4 h-4" />
@@ -76,7 +89,6 @@ export default function WalletConnect() {
         </div>
       )}
 
-      {/* Status Verifikasi NFT */}
       {userFriendlyAddress && (
         <div className="flex items-center space-x-1.5 text-[10px] font-mono mt-1">
           {isVerifying ? (
