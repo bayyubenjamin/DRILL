@@ -1,9 +1,13 @@
-import Script from 'next/script';
 import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
+import Script from 'next/script';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import BottomNav from '@/components/UI/BottomNav';
-import TonProvider from '@/components/Wallet/TonProvider'; // Tambahkan import ini
+
+const TonProvider = dynamic(() => import('@/components/Wallet/TonProvider'), {
+  ssr: false,
+});
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -23,7 +27,6 @@ export default function RootLayout({
         <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
       </head>
       <body className={inter.className}>
-        {/* Bungkus seluruh aplikasi dengan TonProvider */}
         <TonProvider>
           <div className="pb-20">
             {children}
