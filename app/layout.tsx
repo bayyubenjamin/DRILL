@@ -2,6 +2,7 @@ import Script from 'next/script';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import BottomNav from '@/components/UI/BottomNav'; // <-- Tambahkan import ini
 
 const inter = Inter({ subsets: ['latin'] });
 
