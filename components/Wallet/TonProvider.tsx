@@ -9,13 +9,19 @@ const MANIFEST_URL =
 
 const TWA_RETURN_URL = process.env.NEXT_PUBLIC_TWA_RETURN_URL;
 
+type TelegramWebApp = {
+  ready?: () => void;
+  expand?: () => void;
+  disableVerticalSwipes?: () => void;
+};
+
 function initTelegramWebApp() {
   if (typeof window === 'undefined') return;
-  const tg = window.Telegram?.WebApp;
+  const tg = (window as Window & { Telegram?: { WebApp?: TelegramWebApp } }).Telegram?.WebApp;
   if (!tg) return;
   try {
-    tg.ready();
-    tg.expand();
+    tg.ready?.();
+    tg.expand?.();
     tg.disableVerticalSwipes?.();
   } catch (error) {
     console.warn('Telegram WebApp init failed:', error);
