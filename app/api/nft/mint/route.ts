@@ -1,37 +1,10 @@
 import { NextResponse } from 'next/server';
 import { validateTelegramWebAppData } from '@/utils/telegram';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { Address } from '@ton/ton';
-import { REFERRAL_REWARD } from '@/lib/referral/constants';
-
-async function activateReferral(userId: string) {
-  const { data: pending } = await supabaseAdmin
-    .from('referrals')
-    .select('id, referrer_id, reward, status')
-    .eq('referred_id', userId)
-    .maybeSingle();
-
-  if (!pending) return;
-  if (pending.status === 'valid' || Number(pending.reward || 0) > 0) return;
-
-  await supabaseAdmin
-    .from('referrals')
-    .update({ status: 'valid', reward: REFERRAL_REWARD })
-    .eq('id', pending.id);
-
-  const { data: account } = await supabaseAdmin
-    .from('mining_accounts')
-    .select('balance')
-    .eq('user_id', pending.referrer_id)
-    .maybeSingle();
-
-  if (account) {
-    await supabaseAdmin
-      .from('mining_accounts')
-      .update({ balance: Number(account.balance || 0) + REFERRAL_REWARD })
-      .eq('user_id', pending.referrer_id);
-  }
-}
+import { Address } from '@ton/core';
+import { hasOnchainPass } from '@/lib/ton/pass';
+import { DRILL_PASS_COLLECTION } from '@/lib/ton/network';
+import { activateReferralIfPending } from '@/lib/referral/activate';
 
 export async function POST(request: Request) {
   try {
@@ -53,14 +26,19 @@ export async function POST(request: Request) {
 
     await supabaseAdmin.from('users').update({ wallet_address: walletAddress }).eq('id', user.id);
 
-    const collectionAddress = process.env.NEXT_PUBLIC_NFT_COLLECTION_ADDRESS
-      ? Address.parse(process.env.NEXT_PUBLIC_NFT_COLLECTION_ADDRESS).toString()
-      : 'genesis-collection';
+    const confirmed = await hasOnchainPass(walletAddress);
+    if (!confirmed) {
+      return NextResponse.json(
+        { success: false, minted: false, hasNft: false, error: 'On-chain SBT not found yet' },
+        { status: 409 },
+      );
+    }
 
+    const collectionAddress = Address.parse(DRILL_PASS_COLLECTION).toString();
     const { error: nftError } = await supabaseAdmin.from('mining_nfts').upsert(
       {
         user_id: user.id,
-        nft_address: `minted:${user.id}`,
+        nft_address: `sbt:${walletAddress}`,
         collection_address: collectionAddress,
         is_active: true,
       },
@@ -68,11 +46,11 @@ export async function POST(request: Request) {
     );
     if (nftError) throw nftError;
 
-    await activateReferral(user.id);
+    await activateReferralIfPending(user.id);
 
-    return NextResponse.json({ success: true, minted: true });
+    return NextResponse.json({ success: true, minted: true, hasNft: true });
   } catch (error) {
-    console.error('NFT mint error:', error);
+    console.error('NFT mint confirm error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

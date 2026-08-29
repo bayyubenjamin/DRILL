@@ -7,8 +7,7 @@ import { useTonAddress, useTonConnectUI } from '@tonconnect/ui-react';
 import WalletConnect from '@/components/Wallet/WalletConnect';
 import { getLevelProgress } from '@/lib/level/calculator';
 import { DRILL_PASS_COLLECTION } from '@/lib/ton/network';
-import { BUY_PASS_OPCODE } from '@/lib/ton/pass';
-import { beginCell, toNano } from '@ton/core';
+import { buyPassPayloadBase64, MINT_SEND_NANOTON } from '@/lib/ton/pass';
 
 export default function DrillEngineDashboard() {
   const walletAddress = useTonAddress();
@@ -94,13 +93,34 @@ export default function DrillEngineDashboard() {
     setBusy(true);
     setStatusMessage('CONFIRM IN TONKEEPER');
     try {
-      const payload = beginCell().storeUint(BUY_PASS_OPCODE, 32).storeUint(0, 64).endCell().toBoc().toString('base64');
       await tonConnectUI.sendTransaction({
         validUntil: Math.floor(Date.now() / 1000) + 300,
-        messages: [{ address: DRILL_PASS_COLLECTION, amount: toNano('1.05').toString(), payload }],
+        messages: [{
+          address: DRILL_PASS_COLLECTION,
+          amount: MINT_SEND_NANOTON.toString(),
+          payload: buyPassPayloadBase64(),
+        }],
       });
-      setStatusMessage('TX SENT · WAITING CHAIN');
-      setTimeout(() => void loadState(), 10000);
+      setStatusMessage('TX SENT · CONFIRMING PASS');
+      const payload = initData();
+      for (let i = 0; i < 8; i += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        const confirm = await fetch('/api/nft/mint', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ initData: payload, walletAddress }),
+        });
+        const confirmed = await confirm.json();
+        if (confirm.ok && confirmed.hasNft) {
+          setHasNft(true);
+          setStatusMessage('PASS MINTED ON-CHAIN');
+          await loadState();
+          return;
+        }
+        setStatusMessage(`WAITING CHAIN · ${i + 1}/8`);
+      }
+      setStatusMessage('TX SENT · PASS NOT INDEXED YET · TAP REFRESH');
+      await loadState();
     } catch (err) {
       setStatusMessage(err instanceof Error ? err.message : 'MINT REJECTED');
     } finally {
@@ -135,7 +155,7 @@ export default function DrillEngineDashboard() {
   const action = !walletAddress
     ? { label: 'CONNECT TESTNET WALLET FIRST', disabled: true, onClick: () => undefined }
     : !hasNft
-      ? { label: 'MINT PASS ON-CHAIN \u00b7 1 TON', disabled: busy, onClick: mintOnchain }
+      ? { label: 'MINT PASS ON-CHAIN · 1 TON', disabled: busy, onClick: mintOnchain }
       : !account.miningActive
         ? { label: 'START MINING', disabled: busy, onClick: () => runAction('/api/mining/start') }
         : { label: 'CLAIM TO ENGINE', disabled: busy || liveUnclaimed <= 0, onClick: () => runAction('/api/mining/claim') };
