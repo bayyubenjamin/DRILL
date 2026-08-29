@@ -155,7 +155,7 @@ export default function DrillEngineDashboard() {
   const action = !walletAddress
     ? { label: 'CONNECT TESTNET WALLET FIRST', disabled: true, onClick: () => undefined }
     : !hasNft
-      ? { label: 'MINT PASS ON-CHAIN \u00b7 1 TON', disabled: busy, onClick: mintOnchain }
+      ? { label: 'MINT PASS ON-CHAIN · 1 TON', disabled: busy, onClick: mintOnchain }
       : !account.miningActive
         ? { label: 'START MINING', disabled: busy, onClick: () => runAction('/api/mining/start') }
         : { label: 'CLAIM TO ENGINE', disabled: busy || liveUnclaimed <= 0, onClick: () => runAction('/api/mining/claim') };
