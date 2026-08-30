@@ -46,6 +46,7 @@ export default function AppBackground() {
         ))}
       </div>
       <div className="drill-center-mist" />
+      <div className="drill-center-glow" />
       <div className="drill-center-veil" />
       <div className="drill-bg-scan" />
     </div>
