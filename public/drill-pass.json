@@ -3,11 +3,12 @@
   "description": "Soulbound mining pass. Non-transferable. One pass per wallet.",
   "image": "https://drill-chi-flax.vercel.app/drill-pass.png",
   "cover_image": "https://drill-chi-flax.vercel.app/drill-pass-cover.png",
-  "external_url": "https://drill-chi-flax.vercel.app",
-  "marketplace": "https://drill-chi-flax.vercel.app",
+  "external_url": "https://YOUR_WEBSITE",
+  "website": "https://YOUR_WEBSITE",
+  "twitter": "https://x.com/YOUR_HANDLE",
+  "telegram": "https://t.me/YOUR_CHANNEL",
   "attributes": [
     { "trait_type": "Type", "value": "SBT" },
-    { "trait_type": "Transferable", "value": "No" },
-    { "trait_type": "Network", "value": "EDIT_ME_TESTNET_OR_MAINNET" }
+    { "trait_type": "Transferable", "value": "No" }
   ]
 }
