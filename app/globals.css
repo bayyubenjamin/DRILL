@@ -47,75 +47,86 @@ tc-root {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at 20% 10%, #14201a 0%, transparent 36%),
-    radial-gradient(ellipse at 80% 85%, #0b1220 0%, transparent 40%),
+    radial-gradient(ellipse at 18% 8%, #101820 0%, transparent 34%),
+    radial-gradient(ellipse at 86% 88%, #0c141c 0%, transparent 38%),
     linear-gradient(180deg, #04060c 0%, #020308 100%);
 }
-.space-nebula {
+.galaxy {
   position: absolute;
   border-radius: 50%;
-  filter: blur(40px);
+  filter: blur(28px);
+  mix-blend-mode: screen;
+  animation: galaxy-pulse 10s ease-in-out infinite;
 }
-.space-nebula.n1 {
+.galaxy.g1 {
+  width: 78%;
+  height: 42%;
+  left: -18%;
+  top: 4%;
+  background: radial-gradient(circle, rgba(160, 255, 90, 0.28), rgba(70, 140, 40, 0.08) 46%, transparent 70%);
+  animation-duration: 12s;
+}
+.galaxy.g2 {
+  width: 64%;
+  height: 36%;
+  right: -16%;
+  top: 18%;
+  background: radial-gradient(circle, rgba(120, 190, 255, 0.22), rgba(40, 80, 160, 0.08) 50%, transparent 72%);
+  animation-delay: 1.4s;
+  animation-duration: 14s;
+}
+.galaxy.g3 {
   width: 70%;
-  height: 38%;
-  left: -10%;
-  top: 8%;
-  background: radial-gradient(circle, rgba(90, 160, 80, 0.22), transparent 70%);
-  animation: nebula-drift 18s ease-in-out infinite alternate;
+  height: 40%;
+  left: 20%;
+  bottom: -8%;
+  background: radial-gradient(circle, rgba(200, 255, 58, 0.16), rgba(90, 60, 180, 0.1) 48%, transparent 74%);
+  animation-delay: 2.2s;
+  animation-duration: 16s;
 }
-.space-nebula.n2 {
-  width: 60%;
-  height: 34%;
-  right: -8%;
-  bottom: 12%;
-  background: radial-gradient(circle, rgba(70, 120, 180, 0.16), transparent 70%);
-  animation: nebula-drift 22s ease-in-out infinite alternate-reverse;
+.galaxy.g4 {
+  width: 36%;
+  height: 22%;
+  left: 58%;
+  top: 62%;
+  background: radial-gradient(circle, rgba(255, 210, 120, 0.16), transparent 70%);
+  animation-delay: 0.6s;
 }
-.space-planet {
+.galaxy-band {
   position: absolute;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  animation: planet-float 16s ease-in-out infinite;
-}
-.space-planet.p-a {
-  background: radial-gradient(circle at 32% 30%, #d8f0c4 0%, #5a8a3a 28%, #1a2c14 68%, #050805 100%);
-  box-shadow: inset -14px -10px 20px rgba(0,0,0,.45), 0 0 40px rgba(140, 200, 70, 0.18);
-}
-.space-planet.p-b {
-  background: radial-gradient(circle at 30% 28%, #cfe8ff 0%, #3a6a9a 36%, #0c1a28 100%);
-  box-shadow: inset -10px -8px 16px rgba(0,0,0,.4), 0 0 28px rgba(80, 140, 200, 0.16);
-}
-.space-planet.p-c {
-  background: radial-gradient(circle at 34% 32%, #b8ff6a 0%, #3d6a18 30%, #0c1408 72%, #030402 100%);
-  box-shadow: inset -18px -16px 28px rgba(0,0,0,.5), 0 0 60px rgba(200, 255, 58, 0.12);
-  opacity: 0.55;
-  filter: blur(0.4px);
-}
-.space-planet.p-d {
-  background: radial-gradient(circle at 36% 30%, #fff3c8 0%, #8a6a2a 40%, #1a1408 100%);
-  box-shadow: 0 0 20px rgba(220, 180, 70, 0.16);
+  inset: -20%;
+  background: conic-gradient(from 210deg at 50% 45%, transparent 0 18%, rgba(200,255,58,0.05) 24%, rgba(120,180,255,0.07) 32%, transparent 40%, rgba(180,120,255,0.05) 58%, transparent 70%);
+  filter: blur(18px);
+  animation: galaxy-spin 48s linear infinite;
   opacity: 0.7;
 }
 .space-stars span {
   position: absolute;
   border-radius: 999px;
-  background: #e8ffe8;
-  box-shadow: 0 0 6px rgba(200, 255, 58, 0.8);
+  background: #f2ffe8;
+  box-shadow: 0 0 6px rgba(200, 255, 58, 0.75);
   animation: star-twinkle ease-in-out infinite;
 }
 .space-stars span:nth-child(3n) {
   background: #c8ff3a;
 }
-.space-stars span:nth-child(5n) {
-  background: #9ad4ff;
-  box-shadow: 0 0 6px rgba(140, 200, 255, 0.7);
+.space-stars span:nth-child(4n) {
+  background: #b8d8ff;
+  box-shadow: 0 0 7px rgba(150, 200, 255, 0.8);
+}
+.space-stars span:nth-child(7n) {
+  background: #e0c4ff;
+  box-shadow: 0 0 8px rgba(200, 160, 255, 0.7);
+}
+.space-stars .star-bright {
+  box-shadow: 0 0 10px #c8ff3a, 0 0 18px rgba(200, 255, 58, 0.45);
+  animation-name: star-flare;
 }
 .space-dust span {
   position: absolute;
   bottom: -4%;
   width: 2px;
-  height: 10px;
+  height: 11px;
   border-radius: 999px;
   background: linear-gradient(180deg, #c8ff3a, transparent);
   opacity: 0;
@@ -332,17 +343,21 @@ tc-root {
   animation: emboss-sheen 2.8s ease-in-out infinite;
 }
 
-@keyframes nebula-drift {
-  from { transform: translate(0, 0) scale(1); }
-  to { transform: translate(18px, -12px) scale(1.08); }
+@keyframes galaxy-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1) translate(0, 0); }
+  50% { opacity: 0.95; transform: scale(1.08) translate(8px, -6px); }
 }
-@keyframes planet-float {
-  0%, 100% { transform: translate(-50%, -50%); }
-  50% { transform: translate(-50%, calc(-50% - 10px)); }
+@keyframes galaxy-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 @keyframes star-twinkle {
-  0%, 100% { opacity: 0.25; transform: scale(0.7); }
-  50% { opacity: 1; transform: scale(1.25); }
+  0%, 100% { opacity: 0.2; transform: scale(0.65); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+@keyframes star-flare {
+  0%, 100% { opacity: 0.35; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.45); }
 }
 @keyframes star-fall {
   0% { transform: translateY(0); opacity: 0; }
