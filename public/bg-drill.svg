@@ -2,35 +2,25 @@
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#050605"/>
-      <stop offset="55%" stop-color="#0b1204"/>
-      <stop offset="100%" stop-color="#000000"/>
+      <stop offset="50%" stop-color="#071008"/>
+      <stop offset="100%" stop-color="#000"/>
     </linearGradient>
-    <radialGradient id="core" cx="50%" cy="32%" r="22%">
-      <stop offset="0%" stop-color="#c8ff3a"/>
-      <stop offset="40%" stop-color="#6aa000"/>
-      <stop offset="100%" stop-color="rgba(200,255,58,0)"/>
-    </radialGradient>
-    <linearGradient id="hex" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#c8ff3a" stop-opacity="0.45"/>
-      <stop offset="100%" stop-color="#3a5200" stop-opacity="0.12"/>
+    <linearGradient id="face" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#c8ff3a" stop-opacity=".28"/>
+      <stop offset="100%" stop-color="#1a2a00" stop-opacity=".08"/>
     </linearGradient>
   </defs>
   <rect width="540" height="960" fill="url(#sky)"/>
-  <ellipse cx="270" cy="300" rx="120" ry="54" fill="url(#core)" opacity="0.35"/>
-  <g opacity="0.28" stroke="#c8ff3a" stroke-width="1" fill="none">
-    <path d="M-20 80 L80 20 L180 80 L80 140 Z"/>
-    <path d="M160 40 L260 -10 L360 40 L260 90 Z"/>
-    <path d="M340 90 L440 30 L540 90 L440 150 Z"/>
-    <path d="M20 220 L90 170 L160 220 L90 270 Z"/>
-    <path d="M380 210 L460 160 L540 210 L460 260 Z"/>
-  </g>
-  <g fill="none" stroke="url(#hex)" stroke-width="1.4">
-    <path d="M-40 720 L50 670 L140 720 L50 770 Z"/>
-    <path d="M90 760 L180 710 L270 760 L180 810 Z"/>
-    <path d="M220 800 L310 750 L400 800 L310 850 Z"/>
-    <path d="M350 760 L440 710 L530 760 L440 810 Z"/>
-    <path d="M-10 820 L80 770 L170 820 L80 870 Z"/>
-    <path d="M160 860 L250 810 L340 860 L250 910 Z"/>
-    <path d="M330 820 L420 770 L510 820 L420 870 Z"/>
+  <g fill="none" stroke="#c8ff3a" stroke-opacity=".16" stroke-width="1">
+    <path d="M40 80h64v40H40zM140 70h48v48h-48zM230 88h56v36h-56zM330 64h70v44H330zM440 82h56v38h-56z"/>
+    <path d="M70 160h40v40H70zM170 150h72v46h-72zM280 168h50v34h-50zM370 148h66v48h-66z"/>
+    <path d="M30 250h58v42H30zM120 240h80v50h-80zM230 258h46v32h-46zM320 236h74v52H320zM430 252h64v40h-64z"/>
+    <path d="M80 340h52v36H80zM170 328h68v48h-68zM280 348h54v30h-54zM370 330h70v46h-70z"/>
+    <path d="M24 430h60v44H24zM130 418h76v50h-76zM240 438h50v34h-50zM330 422h80v48H330zM450 436h58v38h-58z"/>
+    <path d="M70 520h48v40H70zM160 508h72v52h-72zM270 528h56v32h-56zM360 512h68v46h-68z"/>
+    <path d="M36 610h62v42H36zM140 598h70v50h-70zM250 618h48v34h-48zM340 602h76v48H340zM450 614h60v40h-60z"/>
+    <path d="M80 700h50v36H80zM170 688h66v48h-66zM280 708h54v30h-54zM370 690h70v46h-70z"/>
+    <path d="M28 790h58v44H28zM130 778h78v50h-78zM240 798h50v34h-50zM340 782h74v48H340zM450 796h58v38h-58z"/>
+    <path d="M104 100 170 173M218 118 170 173M348 108 280 198M400 172 348 108M160 265 200 328M310 284 370 352M120 463 196 534M250 472 330 560M160 634 230 698M360 650 420 722"/>
   </g>
 </svg>
