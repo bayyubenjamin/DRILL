@@ -158,45 +158,72 @@ tc-root {
 .drill-hero {
   position: relative;
   width: 100%;
-  height: 210px;
+  height: 228px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  overflow: visible;
 }
 .drill-hero img {
-  width: min(100%, 360px);
-  height: 210px;
+  width: min(100%, 240px);
+  height: 228px;
   object-fit: contain;
   filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.55));
-  animation: drill-hero-idle 4.8s ease-in-out infinite;
+  transform-origin: 50% 18%;
+  animation: drill-hero-idle 3.6s ease-in-out infinite;
 }
 .drill-hero.is-live img {
-  animation: drill-hero-live 0.55s ease-in-out infinite;
-  filter: drop-shadow(0 0 22px rgba(200, 255, 58, 0.35)) drop-shadow(0 16px 24px rgba(0, 0, 0, 0.5));
+  animation: drill-hero-live 0.28s ease-in-out infinite;
+  filter: drop-shadow(0 0 22px rgba(200, 255, 58, 0.4)) drop-shadow(0 16px 24px rgba(0, 0, 0, 0.5));
 }
 .drill-hero-glow {
   position: absolute;
-  left: 18%;
-  bottom: 18%;
-  width: 42%;
-  height: 34%;
-  background: radial-gradient(circle, rgba(200, 255, 58, 0.38), transparent 70%);
+  left: 50%;
+  bottom: 8%;
+  width: 46%;
+  height: 28%;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(200, 255, 58, 0.42), transparent 70%);
   filter: blur(12px);
   animation: drill-core-pulse 1.4s ease-in-out infinite;
   pointer-events: none;
 }
-.drill-hero.is-idle .drill-hero-glow { opacity: 0.35; animation-duration: 3.2s; }
-.drill-spark-bits span {
+.drill-hero.is-idle .drill-hero-glow { opacity: 0.28; animation-duration: 3.2s; }
+.drill-impact {
   position: absolute;
-  width: 4px;
-  height: 4px;
+  left: 50%;
+  bottom: 6%;
+  width: 18px;
+  height: 18px;
+  transform: translateX(-50%);
   border-radius: 999px;
   background: #c8ff3a;
-  box-shadow: 0 0 8px #c8ff3a;
-  animation: drill-chip 1.1s linear infinite;
+  box-shadow: 0 0 16px #c8ff3a;
   opacity: 0;
+  pointer-events: none;
 }
-.drill-hero.is-live .drill-spark-bits span { opacity: 1; }
+.drill-hero.is-live .drill-impact {
+  animation: drill-impact 0.28s ease-out infinite;
+}
+.drill-spark-bits span {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 1px;
+  background: #c8ff3a;
+  box-shadow: 0 0 10px #c8ff3a, 0 0 2px #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+.drill-hero.is-live .drill-spark-bits span {
+  animation: drill-chip linear infinite;
+}
+.drill-spark-bits span:nth-child(odd) {
+  width: 3px;
+  height: 8px;
+  border-radius: 2px;
+  background: #f7ffb8;
+}
 
 .extract-art {
   position: relative;
@@ -260,16 +287,21 @@ tc-root {
 }
 @keyframes drill-hero-idle {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+  50% { transform: translateY(-6px); }
 }
 @keyframes drill-hero-live {
-  0%, 100% { transform: translate(0, 0) rotate(-0.4deg); }
-  50% { transform: translate(-1px, 2px) rotate(0.5deg); }
+  0% { transform: translateY(-7px) rotate(-0.6deg); }
+  50% { transform: translateY(8px) rotate(0.6deg); }
+  100% { transform: translateY(-7px) rotate(-0.6deg); }
+}
+@keyframes drill-impact {
+  0% { opacity: 0.9; transform: translateX(-50%) scale(0.4); }
+  100% { opacity: 0; transform: translateX(-50%) scale(2.4); }
 }
 @keyframes drill-chip {
-  0% { transform: translate(0, 0) scale(1); opacity: 0; }
-  20% { opacity: 1; }
-  100% { transform: translate(-28px, -46px) scale(0.4); opacity: 0; }
+  0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 0; }
+  12% { opacity: 1; }
+  100% { transform: translate(var(--dx, -20px), var(--dy, -36px)) rotate(120deg) scale(0.2); opacity: 0; }
 }
 @keyframes extract-spin-soft {
   0% { transform: rotate(-2deg) scale(1); }
