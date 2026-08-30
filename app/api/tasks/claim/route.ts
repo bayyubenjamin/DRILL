@@ -3,6 +3,7 @@ import { validateTelegramWebAppData } from '@/utils/telegram';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { calculateLevel, calculateMiningSpeed } from '@/lib/level/calculator';
 import { TASK_REWARD, TASK_WAIT_MS, isClaimedToday } from '@/lib/tasks/constants';
+import { creditFriendShare } from '@/lib/referral/pools';
 
 function detail(error: unknown) {
   if (error && typeof error === 'object' && 'message' in error) return String((error as { message: string }).message);
@@ -69,6 +70,8 @@ export async function POST(request: Request) {
       .select('balance')
       .maybeSingle();
     if (balanceError) return NextResponse.json({ error: balanceError.message }, { status: 500 });
+
+    await creditFriendShare(user.id, TASK_REWARD);
 
     return NextResponse.json({
       success: true,
