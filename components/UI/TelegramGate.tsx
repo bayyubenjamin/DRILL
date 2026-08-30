@@ -66,10 +66,10 @@ export default function TelegramGate({ children }: { children: React.ReactNode }
           <p className="text-[10px] tracking-[0.3em] text-amber-400">ACCESS LOCKED</p>
           <h1 className="mt-2 text-lg tracking-widest text-white">OPEN IN TELEGRAM</h1>
           <p className="mt-3 text-[12px] leading-relaxed text-zinc-400">
-            DRILL ENGINE hanya berjalan sebagai Telegram Mini App. Browser biasa tidak bisa dipakai untuk mining, wallet, atau claim.
+            DRILL ENGINE only runs as a Telegram Mini App. A regular browser cannot be used for mining, wallet, or claims.
           </p>
           <button type="button" onClick={openTelegram} className="emboss-btn mt-6 w-full bg-emerald-500 py-3.5 text-xs font-bold text-black">
-            BUKA DI TELEGRAM
+            OPEN IN TELEGRAM
           </button>
           <p className="mt-3 text-[10px] text-zinc-600">t.me/drillengine_bot</p>
         </div>

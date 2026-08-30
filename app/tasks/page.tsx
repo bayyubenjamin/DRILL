@@ -44,16 +44,16 @@ export default function TasksPage() {
     setIsLoading(true);
     try {
       const defaultTasks: Task[] = [
-        { id: 'daily-login-id', title: 'Daily Drill Login', description: 'Log in setiap hari untuk menjaga core generator tetap aktif.', reward: 100, type: 'daily', is_completed: false },
-        { id: 'wallet-connect-id', title: 'Connect TON Testnet Wallet', description: 'Hubungkan dompet TON Testnet untuk persiapan alokasi $DRILL.', reward: 250, type: 'onchain', is_completed: false },
-        { id: 'tg-channel-id', title: 'Join Drill Telegram Official', description: 'Bergabung dengan saluran Telegram utama untuk informasi Genesis.', reward: 500, type: 'social', is_completed: false, link: 'https://t.me/drillnetwork' },
-        { id: 'twitter-follow-id', title: 'Follow DRILL di X (Twitter)', description: 'Ikuti akun X resmi untuk pembaruan fitur dan event airdrop.', reward: 300, type: 'social', is_completed: false, link: 'https://x.com' },
-        { id: 'mint-nft-id', title: 'Mint Mining NFT Pass (1 TON)', description: 'Dapatkan Akses Minting NFT untuk melipatgandakan kecepatan mining.', reward: 1000, type: 'onchain', is_completed: false },
+        { id: 'daily-login-id', title: 'Daily Drill Login', description: 'Log in every day to keep the core generator online.', reward: 100, type: 'daily', is_completed: false },
+        { id: 'wallet-connect-id', title: 'Connect TON Testnet Wallet', description: 'Connect a TON Testnet wallet to prepare $DRILL allocation.', reward: 250, type: 'onchain', is_completed: false },
+        { id: 'tg-channel-id', title: 'Join Drill Telegram Official', description: 'Join the official Telegram channel for Genesis updates.', reward: 500, type: 'social', is_completed: false, link: 'https://t.me/drillnetwork' },
+        { id: 'twitter-follow-id', title: 'Follow DRILL on X (Twitter)', description: 'Follow the official X account for feature drops and airdrop events.', reward: 300, type: 'social', is_completed: false, link: 'https://x.com' },
+        { id: 'mint-nft-id', title: 'Mint Mining NFT Pass (1 TON)', description: 'Mint the mining NFT pass to unlock and boost mining speed.', reward: 1000, type: 'onchain', is_completed: false },
       ];
       await new Promise((resolve) => setTimeout(resolve, 800));
       setTasks(defaultTasks);
     } catch (err) {
-      console.error('Gagal memuat tugas:', err);
+      console.error('Failed to load tasks:', err);
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +69,7 @@ export default function TasksPage() {
       setUserBalance((prev) => prev + task.reward);
       setRewardToast({ amount: task.reward, title: task.title });
     } catch (err) {
-      console.error('Error saat klaim:', err);
+      console.error('Claim error:', err);
     } finally {
       setClaimingTaskId(null);
       setTimeout(() => setRewardToast(null), 3500);
@@ -119,7 +119,7 @@ export default function TasksPage() {
           <span className="text-2xl font-bold tracking-tight text-white">{userBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
           <span className="text-xs font-bold text-emerald-400">$DRILL</span>
         </div>
-        <p className="text-[10px] text-zinc-400 mt-1 leading-relaxed">Selesaikan tugas ekosistem harian & sosial untuk mengakumulasi energi $DRILL.</p>
+        <p className="text-[10px] text-zinc-400 mt-1 leading-relaxed">Complete daily and social ecosystem tasks to accumulate $DRILL energy.</p>
       </EmbossCard>
 
       <EmbossCard className="mb-4 p-1 grid grid-cols-4 gap-1">
@@ -143,7 +143,7 @@ export default function TasksPage() {
             <span>LOADING TASKS...</span>
           </div>
         ) : filteredTasks.length === 0 ? (
-          <EmbossCard className="text-center py-10 text-xs text-zinc-500">TIDAK ADA TUGAS UNTUK KATEGORI INI</EmbossCard>
+          <EmbossCard className="text-center py-10 text-xs text-zinc-500">NO TASKS IN THIS CATEGORY</EmbossCard>
         ) : (
           filteredTasks.map((task) => (
             <EmbossCard key={task.id} className={`p-3.5 ${task.is_completed ? 'opacity-60' : ''}`} accent={!task.is_completed}>

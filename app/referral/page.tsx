@@ -76,7 +76,7 @@ export default function ReferralPage() {
       )}
 
       <p className="text-[10px] text-zinc-500 leading-relaxed mb-6">
-        Link: t.me/{BOT_USERNAME}. Teman buka link = PENDING. Setelah teman mint SBT = VALID +{REFERRAL_REWARD} $DRILL.
+        Link: t.me/{BOT_USERNAME}. Friend opens the link = PENDING. After they mint the SBT = VALID +{REFERRAL_REWARD} $DRILL.
       </p>
 
       <EmbossCard className="p-4 mt-auto">
