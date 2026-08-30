@@ -5,6 +5,7 @@ import { Address } from '@ton/core';
 import { hasOnchainPass } from '@/lib/ton/pass';
 import { DRILL_PASS_COLLECTION } from '@/lib/ton/network';
 import { activateReferralIfPending } from '@/lib/referral/activate';
+import { bindWalletToUser } from '@/lib/user/wallet-bind';
 
 export async function POST(request: Request) {
   try {
@@ -24,9 +25,12 @@ export async function POST(request: Request) {
       .maybeSingle();
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-    await supabaseAdmin.from('users').update({ wallet_address: walletAddress }).eq('id', user.id);
+    const bound = await bindWalletToUser(user.id, walletAddress);
+    if (!bound.ok) {
+      return NextResponse.json({ success: false, error: bound.error, code: bound.code }, { status: 409 });
+    }
 
-    const confirmed = await hasOnchainPass(walletAddress);
+    const confirmed = await hasOnchainPass(bound.wallet);
     if (!confirmed) {
       return NextResponse.json(
         { success: false, minted: false, hasNft: false, error: 'On-chain SBT not found yet' },
@@ -35,10 +39,19 @@ export async function POST(request: Request) {
     }
 
     const collectionAddress = Address.parse(DRILL_PASS_COLLECTION).toString();
+    const { data: existingNft } = await supabaseAdmin
+      .from('mining_nfts')
+      .select('user_id')
+      .eq('nft_address', `sbt:${bound.wallet}`)
+      .maybeSingle();
+    if (existingNft && existingNft.user_id !== user.id) {
+      return NextResponse.json({ success: false, error: 'This wallet is already bound to another Telegram account', code: 'WALLET_TAKEN' }, { status: 409 });
+    }
+
     const { error: nftError } = await supabaseAdmin.from('mining_nfts').upsert(
       {
         user_id: user.id,
-        nft_address: `sbt:${walletAddress}`,
+        nft_address: `sbt:${bound.wallet}`,
         collection_address: collectionAddress,
         is_active: true,
       },

@@ -5,6 +5,7 @@ import { calculateLevel, calculateMiningSpeed } from '@/lib/level/calculator';
 import { hasOnchainPass } from '@/lib/ton/pass';
 import { DRILL_PASS_COLLECTION } from '@/lib/ton/network';
 import { activateReferralIfPending } from '@/lib/referral/activate';
+import { bindWalletToUser } from '@/lib/user/wallet-bind';
 
 export async function POST(request: Request) {
   try {
@@ -20,10 +21,15 @@ export async function POST(request: Request) {
     const { data: user } = await supabaseAdmin.from('users').select('id').eq('telegram_user_id', tgUser.id).maybeSingle();
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
+    const bound = await bindWalletToUser(user.id, walletAddress);
+    if (!bound.ok) {
+      return NextResponse.json({ error: bound.error, code: bound.code }, { status: 409 });
+    }
+
     await supabaseAdmin.from('mining_nfts').upsert(
       {
         user_id: user.id,
-        nft_address: `sbt:${walletAddress}`,
+        nft_address: `sbt:${bound.wallet}`,
         collection_address: DRILL_PASS_COLLECTION,
         is_active: true,
       },

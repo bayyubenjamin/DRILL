@@ -3,6 +3,7 @@ import { validateTelegramWebAppData } from '@/utils/telegram';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { hasOnchainPass } from '@/lib/ton/pass';
 import { activateReferralIfPending } from '@/lib/referral/activate';
+import { bindWalletToUser } from '@/lib/user/wallet-bind';
 
 export async function POST(request: Request) {
   try {
@@ -15,13 +16,19 @@ export async function POST(request: Request) {
     }
 
     const tgUser = JSON.parse(new URLSearchParams(initData).get('user')!);
-    await supabaseAdmin.from('users').update({ wallet_address: walletAddress }).eq('telegram_user_id', tgUser.id);
+    const { data: user } = await supabaseAdmin.from('users').select('id').eq('telegram_user_id', tgUser.id).maybeSingle();
+    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-    const hasNft = await hasOnchainPass(walletAddress);
-    if (hasNft) {
-      const { data: user } = await supabaseAdmin.from('users').select('id').eq('telegram_user_id', tgUser.id).maybeSingle();
-      if (user) await activateReferralIfPending(user.id);
+    const bound = await bindWalletToUser(user.id, walletAddress);
+    if (!bound.ok) {
+      return NextResponse.json(
+        { success: false, hasNft: false, access: 'denied', error: bound.error, code: bound.code },
+        { status: 409 },
+      );
     }
+
+    const hasNft = await hasOnchainPass(bound.wallet);
+    if (hasNft) await activateReferralIfPending(user.id);
 
     return NextResponse.json({ success: true, hasNft, access: hasNft ? 'granted' : 'denied' });
   } catch (error) {

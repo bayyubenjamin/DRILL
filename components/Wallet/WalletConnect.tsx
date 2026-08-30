@@ -33,17 +33,25 @@ export default function WalletConnect() {
     }
     setOpen(false);
     void persistWallet(address);
-    void verifyNFT(address);
   }, [address]);
 
   const persistWallet = async (walletAddress: string) => {
     const initData = window.Telegram?.WebApp?.initData || '';
     if (!initData) return;
-    await fetch('/api/user/wallet', {
+    const res = await fetch('/api/user/wallet', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ initData, walletAddress }),
-    }).catch(console.error);
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.success === false) {
+      setError(data.error || 'Wallet already bound to another account');
+      setNftActive(false);
+      await tonConnectUI.disconnect();
+      return;
+    }
+    setError(null);
+    void verifyNFT(walletAddress);
   };
 
   const verifyNFT = async (walletAddress: string) => {
@@ -56,6 +64,11 @@ export default function WalletConnect() {
         body: JSON.stringify({ initData, walletAddress }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Wallet rejected');
+        setNftActive(false);
+        return;
+      }
       setNftActive(Boolean(data.hasNft));
     } catch (err) {
       console.error(err);
@@ -114,7 +127,7 @@ export default function WalletConnect() {
           )}
         </div>
       )}
-      {error && <p className="text-[10px] font-mono text-red-400">{error}</p>}
+      {error && <p className="text-[10px] font-mono text-red-400 text-center">{error}</p>}
       {open && createPortal(
         <div className="fixed inset-0 flex items-end sm:items-center justify-center p-4" style={{ zIndex: 2147483647, background: 'rgba(0,0,0,0.78)' }} onClick={() => setOpen(false)}>
           <div className="w-full max-w-sm bg-zinc-950 border border-zinc-800 rounded-2xl p-4" onClick={(e) => e.stopPropagation()}>

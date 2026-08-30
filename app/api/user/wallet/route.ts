@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { validateTelegramWebAppData } from '@/utils/telegram';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { bindWalletToUser } from '@/lib/user/wallet-bind';
 
 export async function POST(request: Request) {
   try {
@@ -36,14 +37,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const { error: updateError } = await supabaseAdmin
-      .from('users')
-      .update({ wallet_address: walletAddress })
-      .eq('id', user.id);
+    const bound = await bindWalletToUser(user.id, walletAddress);
+    if (!bound.ok) {
+      return NextResponse.json(
+        { success: false, error: bound.error, code: bound.code, boundWallet: bound.boundWallet },
+        { status: 409 },
+      );
+    }
 
-    if (updateError) throw updateError;
-
-    return NextResponse.json({ success: true, userId: user.id, walletAddress });
+    return NextResponse.json({ success: true, userId: user.id, walletAddress: bound.wallet });
   } catch (error) {
     console.error('Wallet sync error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
