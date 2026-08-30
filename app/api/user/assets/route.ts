@@ -27,12 +27,20 @@ export async function POST(request: Request) {
       .eq('user_id', user.id)
       .maybeSingle();
 
-    const { data: withdrawals } = await supabaseAdmin
+    let withdrawalsQuery = await supabaseAdmin
       .from('withdrawals')
-      .select('id, amount, fee, receive_amount, status, created_at, wallet_address')
+      .select('id, amount, fee, receive_amount, status, created_at, updated_at, wallet_address, tx_hash')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(50);
+    if (withdrawalsQuery.error) {
+      withdrawalsQuery = await supabaseAdmin
+        .from('withdrawals')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+    }
 
     const engineBalance = Number(account?.balance || 0);
     const miningActive = hasNft && Boolean(account?.mining_active);
@@ -53,7 +61,7 @@ export async function POST(request: Request) {
       miningActive,
       miningSpeed,
       lastClaimAt,
-      withdrawals: withdrawals || [],
+      withdrawals: withdrawalsQuery.data || [],
     });
   } catch (error) {
     console.error('Assets error:', error);

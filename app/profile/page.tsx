@@ -12,7 +12,17 @@ import { calculateLevel, getLevelProgress } from '@/lib/level/calculator';
 const MIN_WITHDRAW = 500;
 const WITHDRAW_FEE = 70;
 
-type Withdrawal = { id: string; amount: number; fee: number; receive_amount: number; status: string };
+type Withdrawal = {
+  id: string;
+  amount: number;
+  fee: number;
+  receive_amount: number;
+  status: string;
+  created_at?: string;
+  updated_at?: string;
+  wallet_address?: string;
+  tx_hash?: string | null;
+};
 
 function Row({ label, value, tone = 'white' }: { label: string; value: string; tone?: 'white' | 'emerald' | 'amber' }) {
   const color = tone === 'emerald' ? 'text-emerald-400' : tone === 'amber' ? 'text-amber-400' : 'text-zinc-100';
@@ -22,6 +32,25 @@ function Row({ label, value, tone = 'white' }: { label: string; value: string; t
       <span className={`text-[12px] tabular-nums tracking-wide ${color}`}>{value}</span>
     </div>
   );
+}
+
+function formatTime(value?: string) {
+  if (!value) return '-';
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Jakarta',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(value));
+}
+
+function statusLabel(status?: string) {
+  const raw = String(status || 'PENDING').toUpperCase();
+  if (['SUCCESS', 'VALID', 'SENT', 'COMPLETED', 'PAID'].includes(raw)) return { text: 'VALID', tone: 'text-emerald-400' };
+  if (['FAILED', 'REJECTED', 'CANCELLED'].includes(raw)) return { text: 'FAILED', tone: 'text-red-400' };
+  return { text: 'PENDING', tone: 'text-amber-400' };
 }
 
 export default function ProfilePage() {
@@ -47,13 +76,7 @@ export default function ProfilePage() {
 
   const loadAssets = async () => {
     const payload = initData();
-    if (!payload || !address) {
-      setHasNft(false);
-      setEngineBalance(0);
-      setUnclaimed(0);
-      setMiningActive(false);
-      return;
-    }
+    if (!payload) return;
     const res = await fetch('/api/user/assets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -140,9 +163,6 @@ export default function ProfilePage() {
     <main className="min-h-screen max-w-md mx-auto text-white px-4 pt-4 pb-28 flex flex-col gap-2.5 font-mono">
       <header className="h-8 flex items-center justify-between">
         <h1 className="text-[11px] tracking-[0.28em] text-zinc-300">PROFILE</h1>
-        <button type="button" onClick={() => setHistoryOpen(true)} className="h-8 w-8 emboss flex items-center justify-center text-zinc-400">
-          <History className="w-3.5 h-3.5" />
-        </button>
       </header>
 
       <EmbossCard className="px-4 py-4" accent>
@@ -182,9 +202,14 @@ export default function ProfilePage() {
         </div>
       </EmbossCard>
 
-      <button type="button" onClick={() => setWdOpen(true)} disabled={!canWithdraw} className={`emboss-btn w-full h-11 text-[11px] font-bold ${canWithdraw ? 'bg-emerald-500 text-black' : 'bg-zinc-900 text-zinc-600'}`}>
-        WITHDRAW ENGINE
-      </button>
+      <div className="flex items-center gap-2">
+        <button type="button" onClick={() => setWdOpen(true)} disabled={!canWithdraw} className={`emboss-btn flex-1 h-11 text-[11px] font-bold ${canWithdraw ? 'bg-emerald-500 text-black' : 'bg-zinc-900 text-zinc-600'}`}>
+          WITHDRAW ENGINE
+        </button>
+        <button type="button" onClick={() => setHistoryOpen(true)} className="emboss h-11 w-11 flex items-center justify-center text-zinc-300">
+          <History className="w-4 h-4" />
+        </button>
+      </div>
       <p className="text-center text-[9px] tracking-[0.16em] text-zinc-600">MIN {MIN_WITHDRAW} · FEE {WITHDRAW_FEE}</p>
 
       {address && (
@@ -227,14 +252,29 @@ export default function ProfilePage() {
 
       {historyOpen && createPortal(
         <div className="fixed inset-0 z-[9999] bg-black/80 flex items-end sm:items-center justify-center p-4" onClick={() => setHistoryOpen(false)}>
-          <div className="emboss w-full max-w-sm p-4 max-h-[70vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-3"><h2 className="text-xs tracking-widest text-emerald-400">WD HISTORY</h2><button type="button" onClick={() => setHistoryOpen(false)}><X className="w-4 h-4 text-zinc-500" /></button></div>
-            {withdrawals.length === 0 ? <p className="text-[10px] text-zinc-500">No withdrawals yet.</p> : withdrawals.map((item) => (
-              <div key={item.id} className="border-b border-white/5 py-3 last:border-0">
-                <div className="flex justify-between text-xs"><span className="text-white">{Number(item.amount).toFixed(2)} $DRILL</span><span className="text-emerald-400">{item.status}</span></div>
-                <p className="text-[10px] text-zinc-500 mt-1">Receive {Number(item.receive_amount).toFixed(2)} · Fee {Number(item.fee).toFixed(0)}</p>
-              </div>
-            ))}
+          <div className="emboss w-full max-w-sm p-4 max-h-[74vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="text-xs tracking-widest text-emerald-400">WD HISTORY</h2>
+              <button type="button" onClick={() => setHistoryOpen(false)}><X className="w-4 h-4 text-zinc-500" /></button>
+            </div>
+            {withdrawals.length === 0 ? (
+              <p className="text-[10px] text-zinc-500">No withdrawals yet.</p>
+            ) : withdrawals.map((item) => {
+              const st = statusLabel(item.status);
+              const hash = item.tx_hash || (item as { txhash?: string }).txhash || '';
+              return (
+                <div key={item.id} className="border-b border-white/5 py-3 last:border-0">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-white">{Number(item.amount).toFixed(2)} $DRILL</span>
+                    <span className={`${st.tone} tracking-widest text-[10px] font-bold`}>{st.text}</span>
+                  </div>
+                  <p className="text-[10px] text-zinc-500 mt-1">Receive {Number(item.receive_amount).toFixed(2)} · Fee {Number(item.fee).toFixed(0)}</p>
+                  <p className="text-[10px] text-zinc-500 mt-1">{formatTime(item.created_at)}</p>
+                  {item.wallet_address && <p className="text-[10px] text-zinc-600 mt-1 break-all">{item.wallet_address}</p>}
+                  <p className="text-[10px] text-zinc-400 mt-1 break-all">TX {hash || '-'}</p>
+                </div>
+              );
+            })}
           </div>
         </div>, document.body)}
     </main>
