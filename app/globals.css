@@ -79,7 +79,7 @@ tc-root {
   --my: 0%;
   position: relative;
   overflow: hidden;
-  border-radius: 1.05rem;
+  border-radius: 1rem;
   transform: perspective(920px) rotateX(var(--rx)) rotateY(var(--ry));
   transform-style: preserve-3d;
   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
@@ -92,7 +92,7 @@ tc-root {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.2),
     inset 0 -3px 0 rgba(0, 0, 0, 0.55),
-    0 12px 28px rgba(0, 0, 0, 0.42);
+    0 10px 22px rgba(0, 0, 0, 0.38);
 }
 .emboss-accent {
   border-color: rgba(52, 211, 153, 0.42);
@@ -100,7 +100,10 @@ tc-root {
     inset 0 1px 0 rgba(167, 243, 208, 0.28),
     inset 0 -3px 0 rgba(0, 0, 0, 0.5),
     0 0 24px rgba(16, 185, 129, 0.18),
-    0 12px 28px rgba(0, 0, 0, 0.42);
+    0 10px 22px rgba(0, 0, 0, 0.38);
+}
+.emboss-pulse {
+  animation: emboss-breathe 3.2s ease-in-out infinite;
 }
 .emboss-inset {
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.62), rgba(14, 15, 18, 0.92));
@@ -113,6 +116,9 @@ tc-root {
   inset: 0;
   background: linear-gradient(115deg, transparent 26%, rgba(255, 255, 255, 0.14) 48%, transparent 66%);
   transform: translateX(-130%);
+}
+.emboss-sheen-idle {
+  animation: emboss-sheen 4.8s ease-in-out infinite;
 }
 .emboss:hover .emboss-sheen,
 .emboss:active .emboss-sheen { animation: emboss-sheen 0.85s ease; }
@@ -133,7 +139,7 @@ tc-root {
 .emboss-btn:disabled { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), inset 0 -1px 0 rgba(0, 0, 0, 0.4); }
 
 .drill3d {
-  height: 280px;
+  height: 196px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -142,8 +148,8 @@ tc-root {
 }
 .drill3d-stage {
   position: relative;
-  width: 220px;
-  height: 240px;
+  width: 180px;
+  height: 176px;
   transform-style: preserve-3d;
   transform: rotateX(18deg) rotateY(-18deg);
   animation: drill3d-yaw 8s ease-in-out infinite alternate;
@@ -151,52 +157,52 @@ tc-root {
 .drill3d.is-live .drill3d-stage { animation-duration: 4.8s; }
 .drill3d-floor {
   position: absolute;
-  left: 30px;
-  top: 148px;
-  width: 160px;
-  height: 160px;
+  left: 22px;
+  top: 108px;
+  width: 136px;
+  height: 136px;
   border: 1px solid rgba(52, 211, 153, 0.35);
   background:
     radial-gradient(circle at center, rgba(16,185,129,0.28), transparent 55%),
     repeating-conic-gradient(from 0deg, rgba(52,211,153,0.08) 0 30deg, transparent 30deg 60deg);
   transform: rotateX(72deg) translateZ(-8px);
-  box-shadow: 0 30px 40px rgba(0,0,0,0.45), 0 0 40px rgba(16,185,129,0.18);
+  box-shadow: 0 24px 32px rgba(0,0,0,0.45), 0 0 32px rgba(16,185,129,0.18);
 }
 .drill3d-ring {
   position: absolute;
   left: 50%;
-  top: 168px;
+  top: 124px;
   border: 1px solid rgba(52,211,153,0.28);
   border-radius: 999px;
   transform-style: preserve-3d;
 }
 .drill3d-ring-a {
-  width: 132px;
-  height: 42px;
-  margin-left: -66px;
+  width: 108px;
+  height: 34px;
+  margin-left: -54px;
   animation: drill3d-spin 6s linear infinite;
 }
 .drill3d-ring-b {
-  width: 176px;
-  height: 56px;
-  margin-left: -88px;
+  width: 148px;
+  height: 46px;
+  margin-left: -74px;
   border-color: rgba(52,211,153,0.16);
   animation: drill3d-spin 11s linear infinite reverse;
 }
 .drill3d-core {
   position: absolute;
   left: 50%;
-  top: 142px;
-  width: 54px;
-  height: 54px;
-  margin-left: -27px;
+  top: 102px;
+  width: 42px;
+  height: 42px;
+  margin-left: -21px;
   transform-style: preserve-3d;
   animation: drill3d-gem 3.2s ease-in-out infinite;
 }
 .drill3d.is-live .drill3d-core { animation-duration: 1.15s; }
 .drill3d-facet {
   position: absolute;
-  inset: 8px;
+  inset: 6px;
   background: linear-gradient(145deg, #ecfdf5, #059669 55%, #022c22);
   clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
   box-shadow: 0 0 18px rgba(16,185,129,0.55);
@@ -206,14 +212,14 @@ tc-root {
 .drill3d-orbit {
   position: absolute;
   left: 50%;
-  top: 164px;
-  width: 5px;
-  height: 5px;
+  top: 122px;
+  width: 4px;
+  height: 4px;
   margin-left: -2px;
   border-radius: 999px;
   background: #6ee7b7;
   box-shadow: 0 0 8px #34d399;
-  transform: rotateY(var(--a)) translateZ(78px) translateY(-10px);
+  transform: rotateY(var(--a)) translateZ(64px);
   animation: drill3d-orbit 2.8s linear infinite;
   opacity: 0.15;
 }
@@ -221,34 +227,34 @@ tc-root {
 .drill3d-rig {
   position: absolute;
   left: 50%;
-  top: 8px;
-  width: 72px;
-  margin-left: -36px;
+  top: 0;
+  width: 58px;
+  margin-left: -29px;
   transform-style: preserve-3d;
   transform-origin: 50% 100%;
 }
 .drill3d.is-live .drill3d-rig { animation: drill3d-pump 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) infinite; }
 .drill3d-head {
-  height: 52px;
-  border-radius: 10px;
+  height: 40px;
+  border-radius: 8px;
   background: linear-gradient(180deg, #52525b, #09090b);
   border: 1px solid rgba(52,211,153,0.35);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 8px 18px rgba(0,0,0,0.4);
   transform: translateZ(18px);
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  padding: 10px;
+  gap: 5px;
+  padding: 8px;
 }
 .drill3d-head i {
   display: block;
-  height: 8px;
+  height: 6px;
   border-radius: 2px;
   background: #3f3f46;
 }
 .drill3d.is-live .drill3d-head i { background: #34d399; box-shadow: 0 0 8px #34d399; }
 .drill3d-auger {
-  height: 92px;
+  height: 70px;
   position: relative;
   transform-style: preserve-3d;
   animation: drill3d-spin 1.6s linear infinite;
@@ -258,28 +264,28 @@ tc-root {
 .drill3d-auger b {
   position: absolute;
   left: 50%;
-  width: 42px;
-  height: 16px;
-  margin-left: -21px;
+  width: 34px;
+  height: 13px;
+  margin-left: -17px;
   border-radius: 50%;
   border: 1px solid rgba(212,212,216,0.55);
   background: linear-gradient(90deg, #27272a, #d4d4d8, #27272a);
-  top: calc(8px + (var(--i) * 11px));
+  top: calc(6px + (var(--i) * 8px));
   transform: rotateX(68deg) rotateZ(calc(var(--i) * 22deg)) translateZ(8px);
 }
 .drill3d-tip {
   width: 0;
   height: 0;
-  margin: -4px auto 0;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-top: 22px solid #34d399;
+  margin: -2px auto 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 16px solid #34d399;
   filter: drop-shadow(0 0 10px #34d399);
   transform: translateZ(10px);
 }
 .drill3d-label {
-  margin-top: 6px;
-  font-size: 9px;
+  margin-top: 4px;
+  font-size: 8px;
   letter-spacing: 0.35em;
   color: #71717a;
 }
@@ -302,6 +308,10 @@ tc-root {
   from { transform: translateX(-130%); }
   to { transform: translateX(130%); }
 }
+@keyframes emboss-breathe {
+  0%, 100% { box-shadow: inset 0 1px 0 rgba(167,243,208,0.28), inset 0 -3px 0 rgba(0,0,0,0.5), 0 0 16px rgba(16,185,129,0.12), 0 10px 22px rgba(0,0,0,0.38); }
+  50% { box-shadow: inset 0 1px 0 rgba(167,243,208,0.4), inset 0 -3px 0 rgba(0,0,0,0.5), 0 0 28px rgba(16,185,129,0.32), 0 10px 22px rgba(0,0,0,0.38); }
+}
 @keyframes drill3d-yaw {
   from { transform: rotateX(16deg) rotateY(-22deg); }
   to { transform: rotateX(20deg) rotateY(16deg); }
@@ -312,12 +322,12 @@ tc-root {
   50% { transform: rotateY(180deg) translateZ(18px) scale(1.08); }
 }
 @keyframes drill3d-orbit {
-  from { transform: rotateY(var(--a)) translateZ(78px); }
-  to { transform: rotateY(calc(var(--a) + 360deg)) translateZ(78px); }
+  from { transform: rotateY(var(--a)) translateZ(64px); }
+  to { transform: rotateY(calc(var(--a) + 360deg)) translateZ(64px); }
 }
 @keyframes drill3d-pump {
   0%, 100% { transform: translateY(0) translateZ(0); }
-  45% { transform: translateY(10px) translateZ(-8px); }
-  58% { transform: translateY(18px) translateZ(-14px); }
-  72% { transform: translateY(6px) translateZ(-4px); }
+  45% { transform: translateY(8px) translateZ(-6px); }
+  58% { transform: translateY(14px) translateZ(-10px); }
+  72% { transform: translateY(5px) translateZ(-3px); }
 }
