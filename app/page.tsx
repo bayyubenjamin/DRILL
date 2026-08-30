@@ -12,6 +12,7 @@ import { getLevelProgress } from '@/lib/level/calculator';
 import { DRILL_PASS_COLLECTION } from '@/lib/ton/network';
 import { buyPassPayloadBase64, MINT_SEND_NANOTON } from '@/lib/ton/pass';
 import { useLevelUpPopup } from '@/hooks/useLevelUpPopup';
+import { impact, notify, startClaimPulse } from '@/lib/telegram/haptic';
 
 export default function DrillEngineDashboard() {
   const walletAddress = useTonAddress();
@@ -110,6 +111,7 @@ export default function DrillEngineDashboard() {
 
   const mintOnchain = async () => {
     if (!walletAddress || checkingPass || busy) return;
+    impact('medium');
     setBusy(true);
     setStatusMessage('CONFIRM IN TONKEEPER');
     try {
@@ -121,6 +123,7 @@ export default function DrillEngineDashboard() {
           payload: buyPassPayloadBase64(),
         }],
       });
+      notify('success');
       setStatusMessage('TX SENT · CONFIRMING PASS');
       const payload = initData();
       for (let i = 0; i < 8; i += 1) {
@@ -133,15 +136,19 @@ export default function DrillEngineDashboard() {
         const confirmed = await confirm.json();
         if (confirm.ok && confirmed.hasNft) {
           setHasNft(true);
+          notify('success');
           setStatusMessage('PASS MINTED ON-CHAIN');
           await loadState();
           return;
         }
+        impact('light');
         setStatusMessage(`WAITING CHAIN · ${i + 1}/8`);
       }
+      notify('warning');
       setStatusMessage('TX SENT · PASS NOT INDEXED YET · TAP REFRESH');
       await loadState();
     } catch (err) {
+      notify('error');
       setStatusMessage(err instanceof Error ? err.message : 'MINT REJECTED');
     } finally {
       setBusy(false);
@@ -150,6 +157,8 @@ export default function DrillEngineDashboard() {
 
   const runAction = async (path: string) => {
     if (!canMine || busy) return;
+    const claiming = path.includes('/claim');
+    const stopPulse = claiming ? startClaimPulse() : (impact('medium'), () => undefined);
     setBusy(true);
     try {
       const res = await fetch(path, {
@@ -159,16 +168,26 @@ export default function DrillEngineDashboard() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
+        notify('error');
         setStatusMessage(data.error || 'ACTION FAILED');
         return;
       }
-      if (path.includes('/claim')) armAfterClaim();
+      if (claiming) armAfterClaim();
       await loadState();
-      if (path.includes('/start')) setStatusMessage('MINING STARTED');
-      if (path.includes('/claim')) setStatusMessage(`CLAIMED +${Number(data.reward || 0).toFixed(4)} $DRILL`);
+      if (path.includes('/start')) {
+        impact('rigid');
+        setStatusMessage('MINING STARTED');
+      }
+      if (claiming) {
+        notify('success');
+        impact('heavy');
+        setStatusMessage(`CLAIMED +${Number(data.reward || 0).toFixed(4)} $DRILL`);
+      }
     } catch {
+      notify('error');
       setStatusMessage('NETWORK ERROR');
     } finally {
+      stopPulse();
       setBusy(false);
     }
   };
@@ -237,7 +256,12 @@ export default function DrillEngineDashboard() {
             +{liveUnclaimed.toFixed(4)} $DRILL
           </motion.span>
         </EmbossCard>
-        <button onClick={action.onClick} disabled={action.disabled} className={`emboss-btn relative w-full py-3 font-mono text-xs font-bold flex items-center justify-center gap-2 ${action.disabled ? 'bg-zinc-900 text-zinc-600 border border-zinc-800' : 'bg-emerald-500 text-black'}`}>
+        <button
+          onPointerDown={() => { if (!action.disabled) impact('medium'); }}
+          onClick={action.onClick}
+          disabled={action.disabled}
+          className={`emboss-btn relative w-full py-3 font-mono text-xs font-bold flex items-center justify-center gap-2 ${action.disabled ? 'bg-zinc-900 text-zinc-600 border border-zinc-800' : 'bg-emerald-500 text-black'}`}
+        >
           {busy || checkingPass ? <RefreshCw className="w-4 h-4 animate-spin" /> : live ? <Battery className="w-4 h-4" /> : <Pickaxe className="w-4 h-4" />}
           <span>{busy ? 'PROCESSING...' : action.label}</span>
         </button>
