@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     if (!account) {
       const { data: created } = await supabaseAdmin
         .from('mining_accounts')
-        .insert({ user_id: user.id, balance: 0, mining_speed: 0.01, level: 1, mining_active: false })
+        .insert({ user_id: user.id, balance: 0, mining_speed: 0.05, level: 1, mining_active: false })
         .select('id, balance, mining_active')
         .single();
       account = created;
