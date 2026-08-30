@@ -112,9 +112,7 @@ tc-root {
     0 0 28px rgba(200, 255, 58, 0.16),
     0 10px 22px rgba(0, 0, 0, 0.38);
 }
-.emboss-pulse {
-  animation: emboss-breathe 3.2s ease-in-out infinite;
-}
+.emboss-pulse { animation: emboss-breathe 3.2s ease-in-out infinite; }
 .emboss-inset {
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.62), rgba(10, 12, 10, 0.92));
   box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.66), inset 0 -1px 0 rgba(255, 255, 255, 0.06);
@@ -127,9 +125,7 @@ tc-root {
   background: linear-gradient(115deg, transparent 26%, rgba(200, 255, 58, 0.12) 48%, transparent 66%);
   transform: translateX(-130%);
 }
-.emboss-sheen-idle {
-  animation: emboss-sheen 4.8s ease-in-out infinite;
-}
+.emboss-sheen-idle { animation: emboss-sheen 4.8s ease-in-out infinite; }
 .emboss:hover .emboss-sheen,
 .emboss:active .emboss-sheen { animation: emboss-sheen 0.85s ease; }
 .emboss-btn {
@@ -161,34 +157,46 @@ tc-root {
   height: 228px;
   overflow: visible;
 }
-.drill-machine {
-  position: absolute;
-  left: 50%;
-  bottom: 34px;
-  width: min(72%, 210px);
-  height: 196px;
-  object-fit: contain;
-  transform: translateX(-50%);
-  transform-origin: 50% 12%;
-  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.45));
-  animation: drill-hero-idle 3.6s ease-in-out infinite;
-  z-index: 2;
-}
-.drill-hero.is-live .drill-machine {
-  animation: drill-hero-live 0.28s ease-in-out infinite;
-  filter: drop-shadow(0 0 18px rgba(200, 255, 58, 0.38)) drop-shadow(0 10px 16px rgba(0, 0, 0, 0.45));
-}
-.drill-ground {
+.auger-rig {
   position: absolute;
   left: 50%;
   bottom: 0;
-  width: min(92%, 280px);
-  height: 72px;
-  object-fit: contain;
+  width: min(78%, 230px);
+  height: 228px;
   transform: translateX(-50%);
-  z-index: 1;
-  pointer-events: none;
+  z-index: 2;
+  filter: drop-shadow(0 10px 16px rgba(0,0,0,.5));
 }
+.drill-hero.is-live .auger-stack {
+  animation: auger-plunge 0.55s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 0%;
+}
+.drill-hero.is-live .auger-bit {
+  animation: auger-spin 0.45s linear infinite;
+  transform-box: fill-box;
+  transform-origin: 38px 130px;
+}
+.drill-hero.is-idle .auger-stack {
+  animation: auger-idle 3.4s ease-in-out infinite;
+}
+.drill-hero.is-live .dirt-bit {
+  animation: dirt-burst 0.7s linear infinite;
+}
+.dirt-bit { opacity: 0; }
+.d1 { animation-delay: .05s; }
+.d2 { animation-delay: .1s; }
+.d3 { animation-delay: .15s; }
+.d4 { animation-delay: .2s; }
+.d5 { animation-delay: .25s; }
+.d6 { animation-delay: .3s; }
+.d7 { animation-delay: .35s; }
+.d8 { animation-delay: .4s; }
+.d9 { animation-delay: .12s; }
+.d10 { animation-delay: .22s; }
+.d11 { animation-delay: .32s; }
+.d12 { animation-delay: .18s; }
+.d13 { animation-delay: .28s; }
 .drill-hero-glow {
   position: absolute;
   left: 50%;
@@ -203,43 +211,6 @@ tc-root {
   z-index: 0;
 }
 .drill-hero.is-idle .drill-hero-glow { opacity: 0.28; animation-duration: 3.2s; }
-.drill-impact {
-  position: absolute;
-  left: 50%;
-  bottom: 22px;
-  width: 16px;
-  height: 16px;
-  transform: translateX(-50%);
-  border-radius: 999px;
-  background: #c8ff3a;
-  box-shadow: 0 0 16px #c8ff3a;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 3;
-}
-.drill-hero.is-live .drill-impact {
-  animation: drill-impact 0.28s ease-out infinite;
-}
-.drill-spark-bits span {
-  position: absolute;
-  width: 5px;
-  height: 5px;
-  border-radius: 1px;
-  background: #c8ff3a;
-  box-shadow: 0 0 10px #c8ff3a, 0 0 2px #fff;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 4;
-}
-.drill-hero.is-live .drill-spark-bits span {
-  animation: drill-chip linear infinite;
-}
-.drill-spark-bits span:nth-child(odd) {
-  width: 3px;
-  height: 8px;
-  border-radius: 2px;
-  background: #f7ffb8;
-}
 
 .extract-art {
   position: relative;
@@ -249,11 +220,7 @@ tc-root {
   align-items: center;
   justify-content: center;
 }
-.extract-art img {
-  height: 92px;
-  width: auto;
-  object-fit: contain;
-}
+.extract-art img { height: 92px; width: auto; object-fit: contain; }
 .extract-art.is-live img {
   animation: extract-spin-soft 2.8s linear infinite;
   filter: drop-shadow(0 0 16px rgba(200, 255, 58, 0.4));
@@ -301,23 +268,22 @@ tc-root {
   0%, 100% { box-shadow: inset 0 1px 0 rgba(230,255,138,0.28), inset 0 -3px 0 rgba(0,0,0,0.5), 0 0 16px rgba(200,255,58,0.12), 0 10px 22px rgba(0,0,0,0.38); }
   50% { box-shadow: inset 0 1px 0 rgba(230,255,138,0.4), inset 0 -3px 0 rgba(0,0,0,0.5), 0 0 32px rgba(200,255,58,0.3), 0 10px 22px rgba(0,0,0,0.38); }
 }
-@keyframes drill-hero-idle {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(-6px); }
+@keyframes auger-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
-@keyframes drill-hero-live {
-  0% { transform: translateX(-50%) translateY(-8px); }
-  50% { transform: translateX(-50%) translateY(7px); }
-  100% { transform: translateX(-50%) translateY(-8px); }
+@keyframes auger-plunge {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(10px); }
 }
-@keyframes drill-impact {
-  0% { opacity: 0.9; transform: translateX(-50%) scale(0.4); }
-  100% { opacity: 0; transform: translateX(-50%) scale(2.4); }
+@keyframes auger-idle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }
-@keyframes drill-chip {
-  0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 0; }
-  12% { opacity: 1; }
-  100% { transform: translate(var(--dx, -20px), var(--dy, -36px)) rotate(120deg) scale(0.2); opacity: 0; }
+@keyframes dirt-burst {
+  0% { opacity: 0; transform: translate(0,0) scale(1); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx, -16px), -28px) scale(.4); }
 }
 @keyframes extract-spin-soft {
   0% { transform: rotate(-2deg) scale(1); }
