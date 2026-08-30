@@ -7,6 +7,7 @@ import { useTonAddress, useTonWallet } from '@tonconnect/ui-react';
 import { Copy, CheckCircle2, History, User, X } from 'lucide-react';
 import WalletConnect from '@/components/Wallet/WalletConnect';
 import EmbossCard from '@/components/UI/EmbossCard';
+import SocialLinks from '@/components/UI/SocialLinks';
 import { calculateLevel, getLevelProgress } from '@/lib/level/calculator';
 
 const MIN_WITHDRAW = 500;
@@ -219,7 +220,7 @@ export default function ProfilePage() {
             <button type="button" onClick={handleCopy} className="text-emerald-400">{copied ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}</button>
           </div>
           <p className="mt-1 text-[10px] leading-5 text-zinc-300 break-all">{address}</p>
-          <p className="mt-2 text-[9px] tracking-[0.16em] text-zinc-600">{wallet?.device.appName || 'WALLET'} · TESTNET</p>
+          <p className="mt-2 text-[9px] tracking-[0.16em] text-zinc-600">{wallet?.device.appName || 'WALLET'}</p>
         </EmbossCard>
       )}
 
@@ -237,6 +238,8 @@ export default function ProfilePage() {
           </EmbossCard>
         </Link>
       </div>
+
+      <SocialLinks />
 
       {wdOpen && createPortal(
         <div className="fixed inset-0 z-[9999] bg-black/80 flex items-end sm:items-center justify-center p-4" onClick={() => setWdOpen(false)}>
