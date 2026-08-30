@@ -49,18 +49,18 @@ export default function ReferralPage() {
         <h1 className="text-xl tracking-widest text-emerald-500">REFERRAL SYSTEM</h1>
       </header>
 
-      <EmbossCard className="flex items-center justify-between p-6 mb-6" accent>
-        <div className="flex flex-col items-center">
+      <EmbossCard className="p-6 mb-6 flex items-center justify-between gap-3">
+        <div className="flex flex-col items-center shrink-0">
           <div className="w-12 h-12 rounded-full emboss flex items-center justify-center"><Users className="text-emerald-500" size={20} /></div>
-          <span className="text-xs mt-2 text-zinc-400">FRIEND</span>
+          <span className="text-[10px] mt-2 text-zinc-400">FRIEND</span>
         </div>
-        <div className="flex-1 h-[2px] bg-zinc-800 mx-4 relative flex items-center justify-center">
-          <motion.div animate={{ left: ['0%', '100%'] }} transition={{ duration: 1.5, repeat: Infinity }} className="absolute w-3 h-3 rounded-full bg-emerald-500" />
-          <span className="absolute -top-4 text-[10px] text-emerald-500 font-bold">+{REFERRAL_REWARD} $DRILL</span>
+        <div className="flex-1 h-[2px] bg-zinc-800 relative flex items-center justify-center min-w-0">
+          <motion.div animate={{ left: ['0%', '92%'] }} transition={{ duration: 1.5, repeat: Infinity }} className="absolute w-3 h-3 rounded-full bg-emerald-500" />
+          <span className="absolute -top-4 text-[10px] text-emerald-500 font-bold">+{REFERRAL_REWARD}</span>
         </div>
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center shrink-0">
           <div className="w-12 h-12 rounded-full emboss flex items-center justify-center"><Zap className="text-emerald-500" size={20} /></div>
-          <span className="text-xs mt-2 text-emerald-400 font-bold">YOU</span>
+          <span className="text-[10px] mt-2 text-emerald-400 font-bold">YOU</span>
         </div>
       </EmbossCard>
 

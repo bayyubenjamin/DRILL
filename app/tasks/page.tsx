@@ -15,6 +15,7 @@ import {
   Cpu,
   RefreshCw,
 } from 'lucide-react';
+import Link from 'next/link';
 import EmbossCard from '@/components/UI/EmbossCard';
 
 interface Task {
@@ -93,10 +94,10 @@ export default function TasksPage() {
   return (
     <main className="min-h-screen max-w-md mx-auto text-white px-4 py-5 flex flex-col font-mono pb-12">
       <header className="flex items-center justify-between pb-4 border-b border-white/10">
-        <button onClick={() => console.log('Navigate to Dashboard')} className="flex items-center gap-2 text-xs text-zinc-400">
+        <Link href="/" className="flex items-center gap-2 text-xs text-zinc-400">
           <ArrowLeft className="w-4 h-4" />
           <span>DASHBOARD</span>
-        </button>
+        </Link>
         <div className="emboss emboss-accent px-2.5 py-1 rounded-md flex items-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
           <span className="text-[10px] tracking-widest text-zinc-300 font-semibold uppercase">TASKS PROTOCOL</span>
@@ -112,7 +113,7 @@ export default function TasksPage() {
         )}
       </AnimatePresence>
 
-      <EmbossCard className="my-4 p-4" accent>
+      <EmbossCard className="my-4 p-4">
         <span className="text-[9px] tracking-widest text-emerald-400 font-bold uppercase">CURRENT DRILL BALANCE</span>
         <div className="flex items-baseline gap-2 mt-1">
           <span className="text-2xl font-bold tracking-tight text-white">{userBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
@@ -121,9 +122,15 @@ export default function TasksPage() {
         <p className="text-[10px] text-zinc-400 mt-1 leading-relaxed">Selesaikan tugas ekosistem harian & sosial untuk mengakumulasi energi $DRILL.</p>
       </EmbossCard>
 
-      <EmbossCard className="grid grid-cols-4 gap-1 p-1 mb-4 text-[10px]">
+      <EmbossCard className="mb-4 p-1 grid grid-cols-4 gap-1">
         {(['all', 'daily', 'social', 'onchain'] as const).map((tab) => (
-          <button key={tab} onClick={() => setActiveTab(tab)} className={`py-2 rounded-lg font-bold tracking-wider uppercase ${activeTab === tab ? 'bg-emerald-500 text-black' : 'text-zinc-400'}`}>
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`py-2 rounded-lg text-[9px] font-bold tracking-wider uppercase ${
+              activeTab === tab ? 'bg-emerald-500 text-black' : 'text-zinc-400'
+            }`}
+          >
             {tab}
           </button>
         ))}
@@ -141,9 +148,9 @@ export default function TasksPage() {
           filteredTasks.map((task) => (
             <EmbossCard key={task.id} className={`p-3.5 ${task.is_completed ? 'opacity-60' : ''}`} accent={!task.is_completed}>
               <div className="flex items-center justify-between gap-3">
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-3 min-w-0">
                   <div className="emboss emboss-inset p-2.5 rounded-lg shrink-0">{getTaskIcon(task.type)}</div>
-                  <div className="flex flex-col">
+                  <div className="flex flex-col min-w-0">
                     <span className="text-xs font-bold text-zinc-100">{task.title}</span>
                     <p className="text-[10px] text-zinc-400 mt-0.5 leading-normal">{task.description}</p>
                     <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 mt-1.5">

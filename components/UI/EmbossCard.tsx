@@ -38,7 +38,7 @@ export default function EmbossCard({
   return (
     <motion.div
       ref={ref}
-      className={`emboss ${accent ? 'emboss-accent' : ''} ${inset ? 'emboss-inset' : ''} ${className}`}
+      className={`emboss ${accent ? 'emboss-accent' : ''} ${inset ? 'emboss-inset' : ''}`}
       initial={{ opacity: 0, y: 12, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       whileTap={{ scale: 0.978 }}
@@ -49,7 +49,7 @@ export default function EmbossCard({
     >
       <span className="emboss-ridge" />
       <span className="emboss-sheen" />
-      <div className="relative z-[1]">{children}</div>
+      <div className={`relative z-[1] ${className}`}>{children}</div>
     </motion.div>
   );
 }
