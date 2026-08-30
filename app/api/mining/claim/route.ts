@@ -3,6 +3,7 @@ import { validateTelegramWebAppData } from '@/utils/telegram';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { calculateLevel, calculateMiningSpeed } from '@/lib/level/calculator';
 import { hasOnchainPass } from '@/lib/ton/pass';
+import { creditFriendShare } from '@/lib/referral/pools';
 
 export async function POST(request: Request) {
   try {
@@ -55,6 +56,8 @@ export async function POST(request: Request) {
     if (updateError || !updatedAccount) {
       return NextResponse.json({ error: 'Claim failed. Try again.' }, { status: 409 });
     }
+
+    await creditFriendShare(user.id, rewardAmount);
 
     const { data: claimRow, error: claimError } = await supabaseAdmin
       .from('mining_claims')
