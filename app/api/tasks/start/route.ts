@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { validateTelegramWebAppData } from '@/utils/telegram';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { TASK_WAIT_MS } from '@/lib/tasks/constants';
+import { TASK_WAIT_MS, isClaimedToday, isDailyTask } from '@/lib/tasks/constants';
 
 function detail(error: unknown) {
   if (error && typeof error === 'object' && 'message' in error) return String((error as { message: string }).message);
@@ -30,11 +30,12 @@ export async function POST(request: Request) {
       .eq('task_id', taskId)
       .maybeSingle();
 
-    if (existing?.status === 'completed' || existing?.claimed_at) {
+    const alreadyToday = isClaimedToday(existing?.claimed_at, task.type);
+    if (alreadyToday) {
       return NextResponse.json({ success: true, started: false, completed: true, remainingMs: 0 });
     }
 
-    const startedAt = existing?.started_at || new Date().toISOString();
+    const startedAt = new Date().toISOString();
     if (!existing) {
       const insert = await supabaseAdmin.from('user_tasks').insert({
         user_id: user.id,
@@ -50,10 +51,17 @@ export async function POST(request: Request) {
         });
         if (fallback.error) return NextResponse.json({ error: fallback.error.message }, { status: 500 });
       }
+    } else if (isDailyTask(task.type) && existing.claimed_at) {
+      const reset = await supabaseAdmin
+        .from('user_tasks')
+        .update({ status: 'started', started_at: startedAt, claimed_at: null })
+        .eq('id', existing.id);
+      if (reset.error) return NextResponse.json({ error: reset.error.message }, { status: 500 });
     }
 
-    const remainingMs = Math.max(0, TASK_WAIT_MS - (Date.now() - new Date(startedAt).getTime()));
-    return NextResponse.json({ success: true, started: true, completed: false, startedAt, remainingMs });
+    const usedStart = !existing || (isDailyTask(task.type) && existing.claimed_at) ? startedAt : existing.started_at || startedAt;
+    const remainingMs = Math.max(0, TASK_WAIT_MS - (Date.now() - new Date(usedStart).getTime()));
+    return NextResponse.json({ success: true, started: true, completed: false, startedAt: usedStart, remainingMs });
   } catch (error) {
     console.error('Start task error:', error);
     return NextResponse.json({ error: detail(error) }, { status: 500 });

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { validateTelegramWebAppData } from '@/utils/telegram';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { calculateLevel, calculateMiningSpeed } from '@/lib/level/calculator';
-import { TASK_REWARD, TASK_WAIT_MS } from '@/lib/tasks/constants';
+import { TASK_REWARD, TASK_WAIT_MS, isClaimedToday } from '@/lib/tasks/constants';
 
 function detail(error: unknown) {
   if (error && typeof error === 'object' && 'message' in error) return String((error as { message: string }).message);
@@ -31,13 +31,13 @@ export async function POST(request: Request) {
       .eq('task_id', taskId)
       .maybeSingle();
 
-    if (!progress) return NextResponse.json({ error: 'Open the task link first' }, { status: 400 });
-    if (progress.status === 'completed' || progress.claimed_at) {
-      return NextResponse.json({ error: 'Task already claimed' }, { status: 409 });
+    if (!progress) return NextResponse.json({ error: 'Open the task first' }, { status: 400 });
+    if (isClaimedToday(progress.claimed_at, task.type)) {
+      return NextResponse.json({ error: 'Already claimed today' }, { status: 409 });
     }
 
-    const startedAt = progress.started_at || progress.created_at;
-    if (!startedAt) return NextResponse.json({ error: 'Open the task link first' }, { status: 400 });
+    const startedAt = progress.started_at;
+    if (!startedAt) return NextResponse.json({ error: 'Open the task first' }, { status: 400 });
     const elapsed = Date.now() - new Date(startedAt).getTime();
     if (elapsed < TASK_WAIT_MS) {
       return NextResponse.json({ error: 'Wait before claiming', remainingMs: TASK_WAIT_MS - elapsed }, { status: 429 });

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { validateTelegramWebAppData } from '@/utils/telegram';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { TASK_REWARD, TASK_WAIT_MS } from '@/lib/tasks/constants';
+import { TASK_REWARD, TASK_WAIT_MS, isClaimedToday, isDailyTask } from '@/lib/tasks/constants';
 
 function detail(error: unknown) {
   if (error && typeof error === 'object' && 'message' in error) return String((error as { message: string }).message);
@@ -26,9 +26,7 @@ export async function POST(request: Request) {
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
     let tasksQuery = await supabaseAdmin.from('tasks').select('*').eq('is_active', true);
-    if (tasksQuery.error) {
-      tasksQuery = await supabaseAdmin.from('tasks').select('*');
-    }
+    if (tasksQuery.error) tasksQuery = await supabaseAdmin.from('tasks').select('*');
     if (tasksQuery.error) {
       return NextResponse.json({
         error: tasksQuery.error.message,
@@ -49,9 +47,9 @@ export async function POST(request: Request) {
 
     const tasks = (tasksQuery.data || []).map((task) => {
       const row = progress.get(String(task.id));
-      const startedAtRaw = row?.started_at || row?.created_at || null;
+      const completed = isClaimedToday(row?.claimed_at, task.type) || (!isDailyTask(task.type) && row?.status === 'completed');
+      const startedAtRaw = completed ? null : row?.started_at || null;
       const startedAt = startedAtRaw ? new Date(startedAtRaw).getTime() : null;
-      const completed = row?.status === 'completed' || Boolean(row?.claimed_at);
       const remainingMs = startedAt && !completed ? Math.max(0, TASK_WAIT_MS - (now - startedAt)) : TASK_WAIT_MS;
       return {
         id: task.id,
@@ -65,6 +63,7 @@ export async function POST(request: Request) {
         started_at: startedAtRaw,
         can_claim: Boolean(startedAt) && !completed && remainingMs === 0,
         remaining_ms: completed ? 0 : startedAt ? remainingMs : TASK_WAIT_MS,
+        resets_daily: isDailyTask(task.type),
       };
     });
 
