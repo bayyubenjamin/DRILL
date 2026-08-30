@@ -22,8 +22,8 @@ export default function EmbossCard({
     const box = el.getBoundingClientRect();
     const x = (clientX - box.left) / box.width - 0.5;
     const y = (clientY - box.top) / box.height - 0.5;
-    el.style.setProperty('--rx', `${(-y * 7).toFixed(2)}deg`);
-    el.style.setProperty('--ry', `${(x * 9).toFixed(2)}deg`);
+    el.style.setProperty('--rx', `${(-y * 8).toFixed(2)}deg`);
+    el.style.setProperty('--ry', `${(x * 10).toFixed(2)}deg`);
     el.style.setProperty('--mx', `${clientX - box.left}px`);
     el.style.setProperty('--my', `${clientY - box.top}px`);
   };
@@ -39,12 +39,15 @@ export default function EmbossCard({
     <motion.div
       ref={ref}
       className={`emboss ${accent ? 'emboss-accent' : ''} ${inset ? 'emboss-inset' : ''} ${className}`}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileTap={{ scale: 0.985 }}
+      initial={{ opacity: 0, y: 12, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      whileTap={{ scale: 0.978 }}
+      transition={{ type: 'spring', stiffness: 260, damping: 22 }}
       onPointerMove={(e) => tilt(e.clientX, e.clientY)}
       onPointerLeave={reset}
+      onPointerDown={() => window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.('light')}
     >
+      <span className="emboss-ridge" />
       <span className="emboss-sheen" />
       <div className="relative z-[1]">{children}</div>
     </motion.div>

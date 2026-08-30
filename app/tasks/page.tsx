@@ -15,8 +15,8 @@ import {
   Cpu,
   RefreshCw,
 } from 'lucide-react';
+import EmbossCard from '@/components/UI/EmbossCard';
 
-// Tipe Data Tugas
 interface Task {
   id: string;
   title: string;
@@ -28,7 +28,6 @@ interface Task {
 }
 
 export default function TasksPage() {
-  // --- State Utama ---
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activeTab, setActiveTab] = useState<'all' | 'daily' | 'social' | 'onchain'>('all');
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -36,7 +35,6 @@ export default function TasksPage() {
   const [rewardToast, setRewardToast] = useState<{ amount: number; title: string } | null>(null);
   const [userBalance, setUserBalance] = useState<number>(12482.42);
 
-  // Load Data Tugas saat Halaman Dibuka
   useEffect(() => {
     fetchTasks();
   }, []);
@@ -44,56 +42,15 @@ export default function TasksPage() {
   const fetchTasks = async () => {
     setIsLoading(true);
     try {
-      // Data Default (Fallback jika API Backend belum berjalan)
       const defaultTasks: Task[] = [
-        {
-          id: 'daily-login-id',
-          title: 'Daily Drill Login',
-          description: 'Log in setiap hari untuk menjaga core generator tetap aktif.',
-          reward: 100,
-          type: 'daily',
-          is_completed: false,
-        },
-        {
-          id: 'wallet-connect-id',
-          title: 'Connect TON Testnet Wallet',
-          description: 'Hubungkan dompet TON Testnet untuk persiapan alokasi $DRILL.',
-          reward: 250,
-          type: 'onchain',
-          is_completed: false,
-        },
-        {
-          id: 'tg-channel-id',
-          title: 'Join Drill Telegram Official',
-          description: 'Bergabung dengan saluran Telegram utama untuk informasi Genesis.',
-          reward: 500,
-          type: 'social',
-          is_completed: false,
-          link: 'https://t.me/drillnetwork',
-        },
-        {
-          id: 'twitter-follow-id',
-          title: 'Follow DRILL di X (Twitter)',
-          description: 'Ikuti akun X resmi untuk pembaruan fitur dan event airdrop.',
-          reward: 300,
-          type: 'social',
-          is_completed: false,
-          link: 'https://x.com',
-        },
-        {
-          id: 'mint-nft-id',
-          title: 'Mint Mining NFT Pass (1 TON)',
-          description: 'Dapatkan Akses Minting NFT untuk melipatgandakan kecepatan mining.',
-          reward: 1000,
-          type: 'onchain',
-          is_completed: false,
-        },
+        { id: 'daily-login-id', title: 'Daily Drill Login', description: 'Log in setiap hari untuk menjaga core generator tetap aktif.', reward: 100, type: 'daily', is_completed: false },
+        { id: 'wallet-connect-id', title: 'Connect TON Testnet Wallet', description: 'Hubungkan dompet TON Testnet untuk persiapan alokasi $DRILL.', reward: 250, type: 'onchain', is_completed: false },
+        { id: 'tg-channel-id', title: 'Join Drill Telegram Official', description: 'Bergabung dengan saluran Telegram utama untuk informasi Genesis.', reward: 500, type: 'social', is_completed: false, link: 'https://t.me/drillnetwork' },
+        { id: 'twitter-follow-id', title: 'Follow DRILL di X (Twitter)', description: 'Ikuti akun X resmi untuk pembaruan fitur dan event airdrop.', reward: 300, type: 'social', is_completed: false, link: 'https://x.com' },
+        { id: 'mint-nft-id', title: 'Mint Mining NFT Pass (1 TON)', description: 'Dapatkan Akses Minting NFT untuk melipatgandakan kecepatan mining.', reward: 1000, type: 'onchain', is_completed: false },
       ];
-
-      // Simulasi fetch delay
       await new Promise((resolve) => setTimeout(resolve, 800));
       setTasks(defaultTasks);
-      
     } catch (err) {
       console.error('Gagal memuat tugas:', err);
     } finally {
@@ -101,32 +58,15 @@ export default function TasksPage() {
     }
   };
 
-  // Handler Klaim Tugas dengan Anti Double-Claim
   const handleClaimTask = async (task: Task) => {
-    // 1. Cegah klaim ulang jika tugas sudah selesai atau sedang diverifikasi
     if (task.is_completed || claimingTaskId !== null) return;
-
-    // Buka link tugas di tab baru jika ada
-    if (task.link && typeof window !== 'undefined') {
-      window.open(task.link, '_blank');
-    }
-
+    if (task.link && typeof window !== 'undefined') window.open(task.link, '_blank');
     setClaimingTaskId(task.id);
-
     try {
-      // Simulasi proses klaim
       await new Promise((resolve) => setTimeout(resolve, 1200));
-
-      // Update status tugas secara lokal
-      setTasks((prev) =>
-        prev.map((t) => (t.id === task.id ? { ...t, is_completed: true } : t))
-      );
+      setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, is_completed: true } : t)));
       setUserBalance((prev) => prev + task.reward);
       setRewardToast({ amount: task.reward, title: task.title });
-
-      // Haptic Feedback Simulasi
-      console.log('Haptic: success');
-      
     } catch (err) {
       console.error('Error saat klaim:', err);
     } finally {
@@ -135,10 +75,8 @@ export default function TasksPage() {
     }
   };
 
-  // Filter Tugas Berdasarkan Tab yang Aktif
   const filteredTasks = tasks.filter((t) => (activeTab === 'all' ? true : t.type === activeTab));
 
-  // Ikon Kategori Tugas (Pure SVG / Lucide Icons - TANPA CANVAS)
   const getTaskIcon = (type: string) => {
     switch (type) {
       case 'daily':
@@ -153,79 +91,44 @@ export default function TasksPage() {
   };
 
   return (
-    <main className="min-h-screen max-w-md mx-auto bg-black text-white px-4 py-5 flex flex-col font-mono selection:bg-emerald-500 selection:text-black pb-12">
-      {/* 1. Header Navigation */}
-      <header className="flex items-center justify-between pb-4 border-b border-zinc-900">
-        <button
-          onClick={() => console.log('Navigate to Dashboard')}
-          className="flex items-center gap-2 text-xs text-zinc-400 hover:text-white transition-colors cursor-pointer"
-        >
+    <main className="min-h-screen max-w-md mx-auto text-white px-4 py-5 flex flex-col font-mono pb-12">
+      <header className="flex items-center justify-between pb-4 border-b border-white/10">
+        <button onClick={() => console.log('Navigate to Dashboard')} className="flex items-center gap-2 text-xs text-zinc-400">
           <ArrowLeft className="w-4 h-4" />
           <span>DASHBOARD</span>
         </button>
-
-        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-950 border border-zinc-800 rounded-md">
+        <div className="emboss emboss-accent px-2.5 py-1 rounded-md flex items-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          <span className="text-[10px] tracking-widest text-zinc-300 font-semibold uppercase">
-            TASKS PROTOCOL
-          </span>
+          <span className="text-[10px] tracking-widest text-zinc-300 font-semibold uppercase">TASKS PROTOCOL</span>
         </div>
       </header>
 
-      {/* 2. Notification Toast (Reward Alert) */}
       <AnimatePresence>
         {rewardToast && (
-          <motion.div
-            initial={{ opacity: 0, y: -20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.9 }}
-            className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-emerald-500 text-black px-4 py-2.5 rounded-xl shadow-[0_0_30px_rgba(16,185,129,0.5)] flex items-center gap-2 font-mono text-xs font-bold"
-          >
+          <motion.div initial={{ opacity: 0, y: -20, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -20 }} className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-emerald-500 text-black px-4 py-2.5 rounded-xl flex items-center gap-2 font-mono text-xs font-bold">
             <Sparkles className="w-4 h-4 fill-black" />
-            <span>
-              TASK COMPLETED! +{rewardToast.amount} $DRILL
-            </span>
+            <span>TASK COMPLETED! +{rewardToast.amount} $DRILL</span>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* 3. Hero / User Balance Card */}
-      <section className="my-4 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border border-zinc-800 rounded-2xl p-4 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
-        <div className="relative z-10 flex flex-col gap-1">
-          <span className="text-[9px] tracking-widest text-emerald-400 font-bold uppercase">
-            CURRENT DRILL BALANCE
-          </span>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold tracking-tight text-white">
-              {userBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-            </span>
-            <span className="text-xs font-bold text-emerald-400">$DRILL</span>
-          </div>
-          <p className="text-[10px] text-zinc-400 mt-1 leading-relaxed">
-            Selesaikan tugas ekosistem harian & sosial untuk mengakumulasi energi $DRILL sebelum Genesis Season berakhir.
-          </p>
+      <EmbossCard className="my-4 p-4" accent>
+        <span className="text-[9px] tracking-widest text-emerald-400 font-bold uppercase">CURRENT DRILL BALANCE</span>
+        <div className="flex items-baseline gap-2 mt-1">
+          <span className="text-2xl font-bold tracking-tight text-white">{userBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+          <span className="text-xs font-bold text-emerald-400">$DRILL</span>
         </div>
-      </section>
+        <p className="text-[10px] text-zinc-400 mt-1 leading-relaxed">Selesaikan tugas ekosistem harian & sosial untuk mengakumulasi energi $DRILL.</p>
+      </EmbossCard>
 
-      {/* 4. Filter Tab Navigation */}
-      <div className="grid grid-cols-4 gap-1 p-1 bg-zinc-950 border border-zinc-900 rounded-xl mb-4 text-[10px]">
+      <EmbossCard className="grid grid-cols-4 gap-1 p-1 mb-4 text-[10px]">
         {(['all', 'daily', 'social', 'onchain'] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`py-2 rounded-lg font-bold tracking-wider uppercase transition-all ${
-              activeTab === tab
-                ? 'bg-emerald-500 text-black shadow-md'
-                : 'text-zinc-400 hover:text-white'
-            }`}
-          >
+          <button key={tab} onClick={() => setActiveTab(tab)} className={`py-2 rounded-lg font-bold tracking-wider uppercase ${activeTab === tab ? 'bg-emerald-500 text-black' : 'text-zinc-400'}`}>
             {tab}
           </button>
         ))}
-      </div>
+      </EmbossCard>
 
-      {/* 5. Daftar Tugas (Task List) */}
       <section className="flex flex-col gap-2.5">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-12 gap-2 text-zinc-500 text-xs">
@@ -233,69 +136,27 @@ export default function TasksPage() {
             <span>LOADING TASKS...</span>
           </div>
         ) : filteredTasks.length === 0 ? (
-          <div className="text-center py-10 text-xs text-zinc-500 bg-zinc-950 border border-zinc-900 rounded-xl">
-            TIDAK ADA TUGAS UNTUK KATEGORI INI
-          </div>
+          <EmbossCard className="text-center py-10 text-xs text-zinc-500">TIDAK ADA TUGAS UNTUK KATEGORI INI</EmbossCard>
         ) : (
           filteredTasks.map((task) => (
-            <motion.div
-              key={task.id}
-              layout
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 transition-all ${
-                task.is_completed
-                  ? 'bg-zinc-950/40 border-zinc-900 opacity-60'
-                  : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'
-              }`}
-            >
-              {/* Detail Tugas */}
-              <div className="flex items-start gap-3">
-                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 shrink-0 mt-0.5">
-                  {getTaskIcon(task.type)}
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-zinc-100">{task.title}</span>
-                  <p className="text-[10px] text-zinc-400 mt-0.5 leading-normal">
-                    {task.description}
-                  </p>
-                  <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 mt-1.5">
-                    <Zap className="w-3 h-3 fill-emerald-500/20" />
-                    <span>+{task.reward} $DRILL</span>
+            <EmbossCard key={task.id} className={`p-3.5 ${task.is_completed ? 'opacity-60' : ''}`} accent={!task.is_completed}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="emboss emboss-inset p-2.5 rounded-lg shrink-0">{getTaskIcon(task.type)}</div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-zinc-100">{task.title}</span>
+                    <p className="text-[10px] text-zinc-400 mt-0.5 leading-normal">{task.description}</p>
+                    <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 mt-1.5">
+                      <Zap className="w-3 h-3" />
+                      <span>+{task.reward} $DRILL</span>
+                    </div>
                   </div>
                 </div>
+                <button onClick={() => handleClaimTask(task)} disabled={task.is_completed || claimingTaskId === task.id} className={`emboss-btn shrink-0 px-3 py-2 text-[10px] font-bold ${task.is_completed ? 'bg-zinc-900 text-emerald-400' : claimingTaskId === task.id ? 'bg-zinc-800 text-zinc-500' : 'bg-emerald-500 text-black'}`}>
+                  {task.is_completed ? <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> DONE</span> : claimingTaskId === task.id ? <span className="flex items-center gap-1"><RefreshCw className="w-3 h-3 animate-spin" /> VERIFY</span> : <span className="flex items-center gap-1">CLAIM <ExternalLink className="w-3 h-3" /></span>}
+                </button>
               </div>
-
-              {/* Tombol Action Klaim */}
-              <button
-                onClick={() => handleClaimTask(task)}
-                disabled={task.is_completed || claimingTaskId === task.id}
-                className={`shrink-0 px-3 py-2 rounded-lg text-[10px] font-bold tracking-wider flex items-center gap-1.5 transition-all ${
-                  task.is_completed
-                    ? 'bg-zinc-900 text-emerald-400 border border-emerald-500/20 cursor-default'
-                    : claimingTaskId === task.id
-                    ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
-                    : 'bg-emerald-500 text-black hover:bg-emerald-400 active:scale-95 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
-                }`}
-              >
-                {task.is_completed ? (
-                  <>
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>DONE</span>
-                  </>
-                ) : claimingTaskId === task.id ? (
-                  <>
-                    <RefreshCw className="w-3 h-3 animate-spin" />
-                    <span>VERIFY...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>CLAIM</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </>
-                )}
-              </button>
-            </motion.div>
+            </EmbossCard>
           ))
         )}
       </section>

@@ -54,12 +54,7 @@ tc-root {
 .drill-bg-scan {
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent 0px,
-    transparent 3px,
-    rgba(0, 0, 0, 0.18) 4px
-  );
+  background: repeating-linear-gradient(to bottom, transparent 0px, transparent 3px, rgba(0, 0, 0, 0.18) 4px);
   opacity: 0.25;
 }
 
@@ -87,43 +82,53 @@ tc-root {
   --my: 0%;
   position: relative;
   overflow: hidden;
-  border-radius: 1rem;
-  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry));
+  border-radius: 1.05rem;
+  transform: perspective(920px) rotateX(var(--rx)) rotateY(var(--ry));
   transform-style: preserve-3d;
-  transition: transform 180ms ease, box-shadow 180ms ease;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
   background:
-    radial-gradient(420px circle at var(--mx) var(--my), rgba(52, 211, 153, 0.1), transparent 42%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0) 28%),
-    linear-gradient(180deg, #17181b 0%, #0b0b0d 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+    radial-gradient(420px circle at var(--mx) var(--my), rgba(110, 231, 183, 0.14), transparent 46%),
+    linear-gradient(165deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 22%, transparent 42%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, #1c1e22 0%, #0c0d10 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    inset 0 -2px 0 rgba(0, 0, 0, 0.55),
-    0 10px 28px rgba(0, 0, 0, 0.38);
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.55),
+    inset 8px 0 16px rgba(255, 255, 255, 0.02),
+    0 12px 28px rgba(0, 0, 0, 0.42);
 }
 
 .emboss-accent {
-  border-color: rgba(52, 211, 153, 0.38);
+  border-color: rgba(52, 211, 153, 0.42);
   box-shadow:
-    inset 0 1px 0 rgba(167, 243, 208, 0.24),
-    inset 0 -2px 0 rgba(0, 0, 0, 0.5),
-    0 0 22px rgba(16, 185, 129, 0.16),
-    0 10px 28px rgba(0, 0, 0, 0.38);
+    inset 0 1px 0 rgba(167, 243, 208, 0.28),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.5),
+    0 0 24px rgba(16, 185, 129, 0.18),
+    0 12px 28px rgba(0, 0, 0, 0.42);
 }
 
 .emboss-inset {
   background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(12, 12, 14, 0.9));
+    linear-gradient(180deg, rgba(0, 0, 0, 0.62), rgba(14, 15, 18, 0.92));
   box-shadow:
-    inset 0 2px 8px rgba(0, 0, 0, 0.62),
+    inset 0 3px 10px rgba(0, 0, 0, 0.66),
     inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.emboss-ridge {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .emboss-sheen {
   pointer-events: none;
   position: absolute;
   inset: 0;
-  background: linear-gradient(115deg, transparent 28%, rgba(255, 255, 255, 0.1) 48%, transparent 64%);
+  background: linear-gradient(115deg, transparent 26%, rgba(255, 255, 255, 0.14) 48%, transparent 66%);
   transform: translateX(-130%);
 }
 
@@ -135,21 +140,21 @@ tc-root {
 .emboss-btn {
   position: relative;
   overflow: hidden;
-  border-radius: 0.9rem;
+  border-radius: 0.95rem;
   font-family: inherit;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.35),
-    inset 0 -2px 0 rgba(0, 0, 0, 0.25),
-    0 8px 20px rgba(16, 185, 129, 0.22);
+    inset 0 1px 0 rgba(255, 255, 255, 0.38),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.22),
+    0 10px 22px rgba(16, 185, 129, 0.22);
 }
 
 .emboss-btn:not(:disabled):active {
   transform: translateY(1px) scale(0.985);
   box-shadow:
-    inset 0 2px 6px rgba(0, 0, 0, 0.28),
+    inset 0 3px 8px rgba(0, 0, 0, 0.3),
     0 3px 10px rgba(16, 185, 129, 0.16);
 }
 
@@ -157,12 +162,6 @@ tc-root {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     inset 0 -1px 0 rgba(0, 0, 0, 0.4);
-}
-
-.app-shell button,
-.app-shell a.rounded-xl,
-.app-shell a.rounded-2xl {
-  transition: transform 140ms ease, box-shadow 140ms ease;
 }
 
 .app-shell button:active:not(:disabled),
