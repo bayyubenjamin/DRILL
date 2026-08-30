@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { REFERRAL_REWARD } from '@/lib/referral/constants';
+import { addValidRefPool } from '@/lib/referral/pools';
 
 export async function activateReferralIfPending(userId: string) {
   const { data: pending } = await supabaseAdmin
@@ -18,18 +19,6 @@ export async function activateReferralIfPending(userId: string) {
     .update({ status: 'valid', reward: REFERRAL_REWARD })
     .eq('id', pending.id);
 
-  const { data: account } = await supabaseAdmin
-    .from('mining_accounts')
-    .select('balance')
-    .eq('user_id', pending.referrer_id)
-    .maybeSingle();
-
-  if (account) {
-    await supabaseAdmin
-      .from('mining_accounts')
-      .update({ balance: Number(account.balance || 0) + REFERRAL_REWARD })
-      .eq('user_id', pending.referrer_id);
-  }
-
+  await addValidRefPool(pending.referrer_id, REFERRAL_REWARD);
   return { activated: true };
 }
