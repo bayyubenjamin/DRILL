@@ -17,8 +17,9 @@ export default function MiningDrill({ active }: { active: boolean }) {
   return (
     <div className={`drill-hero ${active ? 'is-live' : 'is-idle'}`} aria-hidden>
       <span className="drill-hero-glow" />
+      <img className="drill-machine" src="/drill-hero.svg" alt="" />
+      <img className="drill-ground" src="/drill-ground.svg" alt="" />
       <span className="drill-impact" />
-      <img src="/drill-hero.svg" alt="" />
       <div className="drill-spark-bits">
         {sparks.map((s, i) => (
           <span

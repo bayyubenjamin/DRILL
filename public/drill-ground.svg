@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 90" fill="none">
+  <defs>
+    <radialGradient id="pit" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#d8ff4a"/>
+      <stop offset="40%" stop-color="#7cff00" stop-opacity=".28"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur"><feGaussianBlur stdDeviation="6"/></filter>
+  </defs>
+  <ellipse cx="180" cy="48" rx="118" ry="28" fill="url(#pit)" filter="url(#blur)"/>
+  <ellipse cx="180" cy="54" rx="78" ry="12" fill="#050605"/>
+  <path d="M70 58 128 28 180 62 118 82Z" fill="#16180f"/>
+  <path d="M88 64 136 42 168 66 124 80Z" fill="#22261a"/>
+  <path d="M232 28 292 56 236 84 180 62Z" fill="#12140e"/>
+  <path d="M248 40 286 58 244 76 210 62Z" fill="#1c2014"/>
+  <path d="M40 70 78 52 96 68 62 84Z" fill="#0e100c"/>
+  <path d="M280 68 328 52 348 70 300 86Z" fill="#10120c"/>
+</svg>
