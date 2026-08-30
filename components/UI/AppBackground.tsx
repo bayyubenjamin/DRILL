@@ -46,7 +46,9 @@ export default function AppBackground() {
       <div className="chain-depth" />
       <div className="mist-core" />
       <div className="mist-soft" />
-      <div className="mist-ring" />
+      <div className="mist-bloom" />
+      <div className="mist-ring r1" />
+      <div className="mist-ring r2" />
       <svg className="chain-wires" viewBox="0 0 100 100" preserveAspectRatio="none">
         {LINKS.map(([a, b], i) => (
           <line
@@ -56,7 +58,7 @@ export default function AppBackground() {
             x2={CUBES[b].x + 3}
             y2={CUBES[b].y + 3}
             className="chain-wire"
-            style={{ animationDelay: `${i * 0.35}s` }}
+            style={{ animationDelay: `${i * 0.4}s` }}
           />
         ))}
       </svg>
@@ -70,13 +72,13 @@ export default function AppBackground() {
       <div className="chain-packet p1" />
       <div className="chain-packet p2" />
       <div className="mist-motes">
-        {Array.from({ length: 16 }).map((_, i) => (
+        {Array.from({ length: 18 }).map((_, i) => (
           <span
             key={i}
             style={{
-              left: `${28 + (i * 3.1) % 44}%`,
-              animationDelay: `${i * 0.4}s`,
-              animationDuration: `${7 + (i % 5)}s`,
+              left: `${26 + (i * 2.8) % 48}%`,
+              animationDelay: `${i * 0.35}s`,
+              animationDuration: `${6.5 + (i % 5)}s`,
             }}
           />
         ))}
