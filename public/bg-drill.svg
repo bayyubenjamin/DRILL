@@ -1,33 +1,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 960" preserveAspectRatio="xMidYMid slice">
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#000000"/>
-      <stop offset="55%" stop-color="#02140c"/>
+      <stop offset="0%" stop-color="#050605"/>
+      <stop offset="55%" stop-color="#0b1204"/>
       <stop offset="100%" stop-color="#000000"/>
     </linearGradient>
-    <radialGradient id="core" cx="50%" cy="46%" r="18%">
-      <stop offset="0%" stop-color="#86efac"/>
-      <stop offset="40%" stop-color="#10b981"/>
-      <stop offset="100%" stop-color="rgba(16,185,129,0)"/>
+    <radialGradient id="core" cx="50%" cy="32%" r="22%">
+      <stop offset="0%" stop-color="#c8ff3a"/>
+      <stop offset="40%" stop-color="#6aa000"/>
+      <stop offset="100%" stop-color="rgba(200,255,58,0)"/>
     </radialGradient>
     <linearGradient id="hex" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#34d399" stop-opacity="0.55"/>
-      <stop offset="100%" stop-color="#064e3b" stop-opacity="0.15"/>
+      <stop offset="0%" stop-color="#c8ff3a" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#3a5200" stop-opacity="0.12"/>
     </linearGradient>
   </defs>
   <rect width="540" height="960" fill="url(#sky)"/>
-  <g opacity="0.35" stroke="#34d399" stroke-width="1" fill="none">
+  <ellipse cx="270" cy="300" rx="120" ry="54" fill="url(#core)" opacity="0.35"/>
+  <g opacity="0.28" stroke="#c8ff3a" stroke-width="1" fill="none">
     <path d="M-20 80 L80 20 L180 80 L80 140 Z"/>
     <path d="M160 40 L260 -10 L360 40 L260 90 Z"/>
     <path d="M340 90 L440 30 L540 90 L440 150 Z"/>
     <path d="M20 220 L90 170 L160 220 L90 270 Z"/>
     <path d="M380 210 L460 160 L540 210 L460 260 Z"/>
-  </g>
-  <ellipse cx="270" cy="430" rx="90" ry="40" fill="url(#core)"/>
-  <circle cx="270" cy="430" r="10" fill="#6ee7b7"/>
-  <g fill="#111" stroke="#34d399" stroke-opacity="0.45" stroke-width="1.2">
-    <path d="M255 180 L285 180 L292 300 L270 430 L248 300 Z"/>
-    <path d="M258 250 C280 270 250 300 280 330 C250 360 280 390 270 410 C260 390 290 360 260 330 C290 300 260 270 258 250Z" fill="#1f2933"/>
   </g>
   <g fill="none" stroke="url(#hex)" stroke-width="1.4">
     <path d="M-40 720 L50 670 L140 720 L50 770 Z"/>
@@ -37,8 +32,5 @@
     <path d="M-10 820 L80 770 L170 820 L80 870 Z"/>
     <path d="M160 860 L250 810 L340 860 L250 910 Z"/>
     <path d="M330 820 L420 770 L510 820 L420 870 Z"/>
-    <path d="M40 900 L130 850 L220 900 L130 950 Z"/>
-    <path d="M250 920 L340 870 L430 920 L340 970 Z"/>
   </g>
-  <rect width="540" height="960" fill="url(#sky)" opacity="0.18"/>
 </svg>

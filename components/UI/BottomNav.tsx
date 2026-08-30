@@ -16,7 +16,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-black/80 backdrop-blur-md border-t border-zinc-900 pb-safe z-50">
+    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-black/82 backdrop-blur-md border-t border-emerald-500/15 pb-safe z-50">
       <div className="flex justify-around items-end h-16">
         {navItems.map((item) => {
           const isActive = pathname === item.path;
@@ -28,8 +28,8 @@ export default function BottomNav() {
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center border ${
                     isActive
-                      ? 'bg-emerald-500 border-emerald-300 text-black shadow-[0_0_20px_rgba(16,185,129,0.45)]'
-                      : 'bg-zinc-950 border-emerald-500/40 text-emerald-400'
+                      ? 'bg-emerald-500 border-emerald-300 text-black shadow-[0_0_22px_rgba(200,255,58,0.5)]'
+                      : 'bg-zinc-950 border-emerald-500/45 text-emerald-400'
                   }`}
                 >
                   <Icon size={22} />
@@ -49,7 +49,7 @@ export default function BottomNav() {
                 isActive ? 'text-emerald-400' : 'text-zinc-600 hover:text-zinc-400'
               }`}
             >
-              <Icon size={20} className={isActive ? 'drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]' : ''} />
+              <Icon size={20} className={isActive ? 'drop-shadow-[0_0_8px_rgba(200,255,58,0.9)]' : ''} />
               <span className="text-[9px] font-mono tracking-widest font-bold">{item.name}</span>
             </Link>
           );
