@@ -1,5 +1,10 @@
 {
   "name": "DRILL Pass",
-  "description": "Soulbound mining pass. Non-transferable.",
-  "image": "https://drill-chi-flax.vercel.app/drill-pass.svg"
+  "description": "You are human. Soulbound antibot mining pass. Non-transferable.",
+  "image": "https://drill-chi-flax.vercel.app/drill-pass.svg",
+  "attributes": [
+    { "trait_type": "Type", "value": "Antibot SBT" },
+    { "trait_type": "Status", "value": "You are human" },
+    { "trait_type": "Transferable", "value": "No" }
+  ]
 }

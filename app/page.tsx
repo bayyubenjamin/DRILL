@@ -202,12 +202,7 @@ export default function DrillEngineDashboard() {
       <EmbossCard className="px-4 py-3 text-center" accent>
         <span className="text-[9px] font-mono tracking-[0.28em] text-zinc-500 uppercase block">ENGINE BALANCE</span>
         <div className="mt-1 flex items-baseline justify-center gap-1.5">
-          <motion.span
-            key={engineBalance.toFixed(2)}
-            initial={{ opacity: 0.4, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-[28px] leading-none font-mono font-light tracking-tight text-white"
-          >
+          <motion.span key={engineBalance.toFixed(2)} initial={{ opacity: 0.4, y: 4 }} animate={{ opacity: 1, y: 0 }} className="text-[28px] leading-none font-mono font-light tracking-tight text-white">
             {engineBalance.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
           </motion.span>
           <span className="text-sm font-bold text-emerald-400">$DRILL</span>
@@ -230,9 +225,11 @@ export default function DrillEngineDashboard() {
         </div>
       </EmbossCard>
 
-      <MiningDrill active={live} />
+      <div className="flex-1 min-h-[210px] flex items-end justify-center -mb-1">
+        <MiningDrill active={live} />
+      </div>
 
-      <section className="flex flex-col w-full gap-2 mt-auto">
+      <section className="flex flex-col w-full gap-2">
         {statusMessage && <div className="emboss emboss-accent text-[10px] font-mono text-emerald-400 px-3 py-1 text-center">{statusMessage}</div>}
         <EmbossCard className="px-3 py-2 flex items-center justify-between gap-3" inset>
           <span className="text-[11px] font-mono text-zinc-500">UNCLAIMED</span>

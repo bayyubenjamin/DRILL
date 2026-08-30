@@ -1,31 +1,54 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 960" width="640" height="960">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#050505"/>
-      <stop offset="100%" stop-color="#0a1f16"/>
+    <radialGradient id="bg" cx="50%" cy="42%" r="70%">
+      <stop offset="0%" stop-color="#10261c"/>
+      <stop offset="55%" stop-color="#07090b"/>
+      <stop offset="100%" stop-color="#000"/>
+    </radialGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f4f4f5"/>
+      <stop offset="45%" stop-color="#73737a"/>
+      <stop offset="100%" stop-color="#18181b"/>
     </linearGradient>
-    <linearGradient id="bit" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#e4e4e7"/>
-      <stop offset="50%" stop-color="#71717a"/>
-      <stop offset="100%" stop-color="#27272a"/>
+    <linearGradient id="house" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3f3f46"/>
+      <stop offset="100%" stop-color="#09090b"/>
     </linearGradient>
-    <linearGradient id="energy" x1="0.5" y1="0" x2="0.5" y2="1">
-      <stop offset="0%" stop-color="#a7f3d0"/>
-      <stop offset="100%" stop-color="#059669"/>
-    </linearGradient>
+    <radialGradient id="gem" cx="50%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#ecfdf5"/>
+      <stop offset="40%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#064e3b"/>
+    </radialGradient>
     <filter id="glow">
       <feGaussianBlur stdDeviation="8" result="b"/>
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
-  <rect width="640" height="960" fill="url(#bg)"/>
-  <rect x="28" y="28" width="584" height="904" rx="36" fill="none" stroke="#34d399" stroke-opacity="0.35" stroke-width="3"/>
-  <rect x="48" y="48" width="544" height="864" rx="28" fill="none" stroke="#10b981" stroke-opacity="0.2"/>
-  <text x="320" y="120" text-anchor="middle" font-family="ui-monospace, monospace" font-size="42" font-weight="700" letter-spacing="8" fill="#e4e4e7">DRILL PASS</text>
-  <polygon points="320,210 470,296 470,468 320,554 170,468 170,296" fill="#04110c" stroke="#34d399" stroke-width="4" filter="url(#glow)"/>
-  <path d="M320 250 C360 300 280 350 360 400 C280 450 360 500 320 540 C280 500 360 450 280 400 C360 350 280 300 320 250Z" fill="url(#bit)"/>
-  <rect x="306" y="260" width="28" height="250" rx="8" fill="url(#energy)" opacity="0.9"/>
-  <path d="M292 540 L348 540 L320 690 Z" fill="url(#bit)" stroke="#6ee7b7" stroke-width="2"/>
-  <text x="320" y="820" text-anchor="middle" font-family="ui-monospace, monospace" font-size="22" letter-spacing="6" fill="#34d399">SOULBOUND · TESTNET</text>
-  <text x="320" y="860" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" letter-spacing="4" fill="#52525b">NON-TRANSFERABLE SBT</text>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <rect x="48" y="48" width="928" height="928" rx="48" fill="none" stroke="#34d399" stroke-opacity="0.28" stroke-width="3"/>
+  <rect x="72" y="72" width="880" height="880" rx="36" fill="none" stroke="#ffffff" stroke-opacity="0.08"/>
+
+  <text x="512" y="168" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="42" letter-spacing="14" fill="#6ee7b7">YOU ARE HUMAN</text>
+  <text x="512" y="208" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="18" letter-spacing="8" fill="#71717a">ANTIBOT ACCESS GRANTED</text>
+
+  <ellipse cx="512" cy="760" rx="210" ry="28" fill="#000" opacity="0.55"/>
+  <polygon points="512,700 620,740 512,790 404,740" fill="#0b1220" stroke="#34d399" stroke-opacity="0.4"/>
+  <polygon points="512,718 580,742 512,772 444,742" fill="url(#gem)" filter="url(#glow)"/>
+
+  <rect x="456" y="250" width="112" height="86" rx="14" fill="url(#house)" stroke="#34d399" stroke-opacity="0.5"/>
+  <rect x="474" y="268" width="24" height="12" rx="2" fill="#34d399"/>
+  <rect x="526" y="268" width="24" height="12" rx="2" fill="#34d399"/>
+  <rect x="486" y="292" width="52" height="16" rx="3" fill="#09090b"/>
+
+  <path d="M512 340 C560 380 464 420 560 460 C464 500 560 540 512 580 C464 540 560 500 464 460 C560 420 464 380 512 340Z" fill="url(#steel)"/>
+  <rect x="500" y="348" width="24" height="230" rx="8" fill="#6ee7b7" opacity="0.85"/>
+  <path d="M488 580 L536 580 L512 680 Z" fill="url(#steel)" stroke="#34d399" stroke-opacity="0.7"/>
+
+  <circle cx="180" cy="320" r="4" fill="#34d399" opacity="0.6"/>
+  <circle cx="844" cy="380" r="3" fill="#6ee7b7" opacity="0.5"/>
+  <circle cx="210" cy="780" r="3" fill="#34d399" opacity="0.4"/>
+  <circle cx="820" cy="760" r="4" fill="#6ee7b7" opacity="0.45"/>
+
+  <text x="512" y="880" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="28" letter-spacing="10" fill="#e4e4e7">DRILL PASS</text>
+  <text x="512" y="918" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="16" letter-spacing="6" fill="#34d399">SOULBOUND · NON-TRANSFERABLE</text>
 </svg>
