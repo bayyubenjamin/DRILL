@@ -15,11 +15,11 @@ const WITHDRAW_FEE = 70;
 type Withdrawal = { id: string; amount: number; fee: number; receive_amount: number; status: string };
 
 function Row({ label, value, tone = 'white' }: { label: string; value: string; tone?: 'white' | 'emerald' | 'amber' }) {
-  const color = tone === 'emerald' ? 'text-emerald-400' : tone === 'amber' ? 'text-amber-400' : 'text-white';
+  const color = tone === 'emerald' ? 'text-emerald-400' : tone === 'amber' ? 'text-amber-400' : 'text-zinc-100';
   return (
-    <div className="flex items-center justify-between py-2.5 border-b border-white/5 last:border-0">
-      <span className="text-[10px] tracking-widest text-zinc-500">{label}</span>
-      <span className={`text-[11px] tabular-nums ${color}`}>{value}</span>
+    <div className="grid grid-cols-[1fr_auto] items-center gap-3 h-9">
+      <span className="text-[10px] tracking-[0.18em] text-zinc-500">{label}</span>
+      <span className={`text-[12px] tabular-nums tracking-wide ${color}`}>{value}</span>
     </div>
   );
 }
@@ -137,73 +137,80 @@ export default function ProfilePage() {
   const canWithdraw = Boolean(address && hasNft && engineBalance >= MIN_WITHDRAW);
 
   return (
-    <main className="min-h-screen max-w-md mx-auto text-white px-4 pt-3 pb-24 flex flex-col gap-3 font-mono">
-      <header className="flex items-end justify-between">
-        <div>
-          <p className="text-[9px] tracking-[0.28em] text-zinc-500">OPERATOR</p>
-          <h1 className="text-sm tracking-[0.18em] text-zinc-100 mt-0.5">PROFILE</h1>
-        </div>
-        <button type="button" onClick={() => setHistoryOpen(true)} className="text-zinc-500 p-1">
-          <History className="w-4 h-4" />
+    <main className="min-h-screen max-w-md mx-auto text-white px-4 pt-4 pb-28 flex flex-col gap-2.5 font-mono">
+      <header className="h-8 flex items-center justify-between">
+        <h1 className="text-[11px] tracking-[0.28em] text-zinc-300">PROFILE</h1>
+        <button type="button" onClick={() => setHistoryOpen(true)} className="h-8 w-8 emboss flex items-center justify-center text-zinc-400">
+          <History className="w-3.5 h-3.5" />
         </button>
       </header>
 
-      <EmbossCard className="px-4 py-3.5" accent>
+      <EmbossCard className="px-4 py-4" accent>
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-full emboss emboss-inset flex items-center justify-center shrink-0">
-            <User className="w-5 h-5 text-emerald-400" />
+          <div className="w-10 h-10 rounded-full emboss emboss-inset flex items-center justify-center shrink-0">
+            <User className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold tracking-wide truncate">{displayName}</p>
-            <p className="text-[10px] text-zinc-500 tracking-widest">{tgUser?.username ? `@${tgUser.username}` : 'TELEGRAM IDENTITY'}</p>
+            <p className="text-[13px] font-bold tracking-[0.08em] truncate uppercase">{displayName}</p>
+            <p className="text-[10px] text-zinc-500 tracking-widest mt-0.5">{tgUser?.username ? `@${tgUser.username}` : 'TELEGRAM'}</p>
           </div>
-          <span className={`text-[9px] tracking-widest px-2 py-1 rounded border ${hasNft ? 'text-emerald-400 border-emerald-500/30' : 'text-amber-400 border-amber-500/30'}`}>
+          <span className={`text-[9px] tracking-[0.18em] px-2 py-1 rounded border ${hasNft ? 'text-emerald-400 border-emerald-500/35' : 'text-amber-400 border-amber-500/35'}`}>
             {hasNft ? 'SBT' : 'NO SBT'}
           </span>
         </div>
-        <div className="mt-3 pt-3 border-t border-white/8">
-          <WalletConnect compact />
+        <div className="mt-3 pt-3 border-t border-white/10">
+          {address ? <WalletConnect compact /> : <WalletConnect />}
         </div>
       </EmbossCard>
 
-      <EmbossCard className="px-4 py-3">
-        <div className="flex items-center justify-between mb-1">
+      <EmbossCard className="px-4 py-3.5">
+        <div className="h-6 flex items-center justify-between mb-1">
           <p className="text-[9px] tracking-[0.28em] text-zinc-500">ASSETS</p>
-          <p className="text-[9px] tracking-widest text-emerald-400">LV {level.toLocaleString()}</p>
+          <p className="text-[9px] tracking-[0.2em] text-emerald-400">LV {level.toLocaleString()}</p>
         </div>
         <Row label="WALLET" value={walletBalance.toFixed(4)} />
         <Row label="ENGINE" value={engineBalance.toFixed(4)} tone="emerald" />
         <Row label="UNCLAIMED" value={`+${liveUnclaimed.toFixed(4)}`} tone="amber" />
-        <div className="pt-3">
-          <div className="flex items-end justify-between">
-            <p className="text-[9px] tracking-widest text-zinc-500">LEVEL BASE</p>
-            <p className="text-lg leading-none text-white tabular-nums">{claimedTotal.toFixed(4)}</p>
+        <div className="mt-2 pt-3 border-t border-white/10">
+          <div className="flex items-end justify-between gap-3">
+            <p className="text-[9px] tracking-[0.18em] text-zinc-500 leading-4">LEVEL BASE<br />WALLET + CLAIMED</p>
+            <p className="text-[18px] leading-none text-white tabular-nums">{claimedTotal.toFixed(4)}</p>
           </div>
-          <div className="w-full h-1.5 rounded-full mt-2 overflow-hidden emboss-inset">
+          <div className="w-full h-1.5 rounded-full mt-2.5 overflow-hidden emboss-inset">
             <div className="h-full bg-emerald-400" style={{ width: `${progress.progressPercent}%` }} />
           </div>
         </div>
       </EmbossCard>
 
-      <button type="button" onClick={() => setWdOpen(true)} disabled={!canWithdraw} className={`emboss-btn w-full py-3 text-[11px] font-bold ${canWithdraw ? 'bg-emerald-500 text-black' : 'bg-zinc-900 text-zinc-600'}`}>
+      <button type="button" onClick={() => setWdOpen(true)} disabled={!canWithdraw} className={`emboss-btn w-full h-11 text-[11px] font-bold ${canWithdraw ? 'bg-emerald-500 text-black' : 'bg-zinc-900 text-zinc-600'}`}>
         WITHDRAW ENGINE
       </button>
-      <p className="text-center text-[9px] tracking-widest text-zinc-600 -mt-1">MIN {MIN_WITHDRAW} · FEE {WITHDRAW_FEE} $DRILL</p>
+      <p className="text-center text-[9px] tracking-[0.16em] text-zinc-600">MIN {MIN_WITHDRAW} · FEE {WITHDRAW_FEE}</p>
 
       {address && (
         <EmbossCard className="px-4 py-3">
-          <div className="flex items-center justify-between mb-2">
+          <div className="h-6 flex items-center justify-between">
             <p className="text-[9px] tracking-[0.28em] text-zinc-500">ADDRESS</p>
             <button type="button" onClick={handleCopy} className="text-emerald-400">{copied ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}</button>
           </div>
-          <p className="text-[10px] leading-relaxed text-zinc-300 break-all">{address}</p>
-          <p className="text-[9px] text-zinc-600 mt-2 tracking-widest">{wallet?.device.appName || 'WALLET'} · TESTNET</p>
+          <p className="mt-1 text-[10px] leading-5 text-zinc-300 break-all">{address}</p>
+          <p className="mt-2 text-[9px] tracking-[0.16em] text-zinc-600">{wallet?.device.appName || 'WALLET'} · TESTNET</p>
         </EmbossCard>
       )}
 
-      <div className="grid grid-cols-2 gap-2">
-        <Link href="/referral"><EmbossCard className="px-3 py-3 text-center"><p className="text-[9px] tracking-widest text-zinc-500">REFERRAL</p><p className="text-[11px] text-zinc-200 mt-1">SYSTEM</p></EmbossCard></Link>
-        <Link href="/tasks"><EmbossCard className="px-3 py-3 text-center"><p className="text-[9px] tracking-widest text-zinc-500">TASKS</p><p className="text-[11px] text-zinc-200 mt-1">PROTOCOL</p></EmbossCard></Link>
+      <div className="grid grid-cols-2 gap-2.5">
+        <Link href="/referral" className="block">
+          <EmbossCard className="h-16 px-3 flex flex-col items-center justify-center">
+            <p className="text-[9px] tracking-[0.22em] text-zinc-500">REFERRAL</p>
+            <p className="text-[11px] text-zinc-200 mt-1 tracking-widest">SYSTEM</p>
+          </EmbossCard>
+        </Link>
+        <Link href="/tasks" className="block">
+          <EmbossCard className="h-16 px-3 flex flex-col items-center justify-center">
+            <p className="text-[9px] tracking-[0.22em] text-zinc-500">TASKS</p>
+            <p className="text-[11px] text-zinc-200 mt-1 tracking-widest">PROTOCOL</p>
+          </EmbossCard>
+        </Link>
       </div>
 
       {wdOpen && createPortal(
