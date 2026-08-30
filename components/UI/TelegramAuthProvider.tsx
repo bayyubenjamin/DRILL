@@ -3,8 +3,9 @@
 import { ReactNode } from 'react';
 import { useTelegramAuth } from '@/hooks/useTelegramAuth';
 import { useUserStore } from '@/store/useUserStore';
+import TelegramGate from '@/components/UI/TelegramGate';
 
-export default function TelegramAuthProvider({ children }: { children: ReactNode }) {
+function AuthenticatedShell({ children }: { children: ReactNode }) {
   useTelegramAuth();
   const { isLoading } = useUserStore();
 
@@ -19,4 +20,12 @@ export default function TelegramAuthProvider({ children }: { children: ReactNode
   }
 
   return <>{children}</>;
+}
+
+export default function TelegramAuthProvider({ children }: { children: ReactNode }) {
+  return (
+    <TelegramGate>
+      <AuthenticatedShell>{children}</AuthenticatedShell>
+    </TelegramGate>
+  );
 }
