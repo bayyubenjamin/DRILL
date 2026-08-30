@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Battery, Zap, Trophy, RefreshCw, Pickaxe, Hexagon } from 'lucide-react';
+import { Zap, Trophy, RefreshCw } from 'lucide-react';
 import { useTonAddress, useTonConnectUI } from '@tonconnect/ui-react';
 import WalletConnect from '@/components/Wallet/WalletConnect';
 import MiningDrill from '@/components/UI/MiningDrill';
@@ -38,10 +38,13 @@ export default function DrillEngineDashboard() {
   });
   const [unclaimed, setUnclaimed] = useState(0);
   const [busy, setBusy] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [processLog, setProcessLog] = useState<string[]>(['ENGINE IDLE']);
   const [now, setNow] = useState(Date.now());
 
   const initData = () => window.Telegram?.WebApp?.initData || '';
+  const pushLog = (line: string) => {
+    setProcessLog((prev) => [line, ...prev].slice(0, 4));
+  };
 
   const resetIdle = () => {
     setHasNft(false);
@@ -127,7 +130,7 @@ export default function DrillEngineDashboard() {
     if (!walletAddress || checkingPass || busy) return;
     impact('medium');
     setBusy(true);
-    setStatusMessage('CONFIRM IN TONKEEPER');
+    pushLog('CONFIRM IN TONKEEPER');
     try {
       await tonConnectUI.sendTransaction({
         validUntil: Math.floor(Date.now() / 1000) + 300,
@@ -138,7 +141,7 @@ export default function DrillEngineDashboard() {
         }],
       });
       notify('success');
-      setStatusMessage('TX SENT · CONFIRMING PASS');
+      pushLog('TX SENT · CONFIRMING PASS');
       const payload = initData();
       for (let i = 0; i < 8; i += 1) {
         await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -151,19 +154,19 @@ export default function DrillEngineDashboard() {
         if (confirm.ok && confirmed.hasNft) {
           setHasNft(true);
           notify('success');
-          setStatusMessage('PASS MINTED ON-CHAIN');
+          pushLog('PASS MINTED ON-CHAIN');
           await loadState();
           return;
         }
         impact('light');
-        setStatusMessage(`WAITING CHAIN · ${i + 1}/8`);
+        pushLog(`WAITING CHAIN · ${i + 1}/8`);
       }
       notify('warning');
-      setStatusMessage('TX SENT · PASS NOT INDEXED YET · TAP REFRESH');
+      pushLog('TX SENT · PASS NOT INDEXED YET');
       await loadState();
     } catch (err) {
       notify('error');
-      setStatusMessage(err instanceof Error ? err.message : 'MINT REJECTED');
+      pushLog(err instanceof Error ? err.message : 'MINT REJECTED');
     } finally {
       setBusy(false);
     }
@@ -174,6 +177,7 @@ export default function DrillEngineDashboard() {
     const claiming = path.includes('/claim');
     const stopPulse = claiming ? startClaimPulse() : (impact('medium'), () => undefined);
     setBusy(true);
+    pushLog(claiming ? 'CLAIMING $DRILL...' : 'STARTING ENGINE...');
     try {
       const res = await fetch(path, {
         method: 'POST',
@@ -183,23 +187,23 @@ export default function DrillEngineDashboard() {
       const data = await res.json();
       if (!res.ok || !data.success) {
         notify('error');
-        setStatusMessage(data.error || 'ACTION FAILED');
+        pushLog(data.error || 'ACTION FAILED');
         return;
       }
       if (claiming) armAfterClaim();
       await loadState();
       if (path.includes('/start')) {
         impact('rigid');
-        setStatusMessage('MINING STARTED');
+        pushLog('MINING STARTED');
       }
       if (claiming) {
         notify('success');
         impact('heavy');
-        setStatusMessage(`CLAIMED +${Number(data.reward || 0).toFixed(4)} $DRILL`);
+        pushLog(`CLAIMED +${Number(data.reward || 0).toFixed(4)} $DRILL`);
       }
     } catch {
       notify('error');
-      setStatusMessage('NETWORK ERROR');
+      pushLog('NETWORK ERROR');
     } finally {
       stopPulse();
       setBusy(false);
@@ -207,23 +211,18 @@ export default function DrillEngineDashboard() {
   };
 
   const action = !walletAddress
-    ? { label: 'CONNECT TESTNET WALLET FIRST', disabled: true, onClick: () => undefined }
+    ? { label: 'Claim $Drill', disabled: true, onClick: () => undefined }
     : checkingPass
-      ? { label: 'CHECKING PASS...', disabled: true, onClick: () => undefined }
+      ? { label: 'Claim $Drill', disabled: true, onClick: () => undefined }
       : !hasNft
-        ? { label: 'MINT PASS ON-CHAIN · 1 TON', disabled: busy, onClick: mintOnchain }
+        ? { label: 'Claim $Drill', disabled: busy, onClick: mintOnchain }
         : !account.miningActive
-          ? { label: 'START MINING', disabled: busy, onClick: () => runAction('/api/mining/start') }
-          : { label: 'CLAIM TO ENGINE', disabled: busy || liveUnclaimed <= 0, onClick: () => runAction('/api/mining/claim') };
+          ? { label: 'Claim $Drill', disabled: busy, onClick: () => runAction('/api/mining/start') }
+          : { label: 'Claim $Drill', disabled: busy || liveUnclaimed <= 0, onClick: () => runAction('/api/mining/claim') };
 
   return (
     <main className="min-h-screen max-w-md mx-auto text-white px-4 pt-3 pb-6 flex flex-col gap-2.5 font-sans">
       <LevelUpModal open={Boolean(popup)} level={popup?.to || 0} title={popup?.title || ''} onClose={closePopup} />
-
-      <header className="flex flex-col items-center w-full -mb-0.5">
-        <h1 className="text-[13px] font-bold tracking-[0.28em] text-white font-mono">DRILL ENGINE</h1>
-        <span className="text-[9px] text-zinc-500 font-mono tracking-[0.22em]">mini app</span>
-      </header>
 
       <WalletConnect />
 
@@ -302,34 +301,31 @@ export default function DrillEngineDashboard() {
           </div>
           <button
             type="button"
-            disabled={action.disabled || !live}
-            onClick={() => runAction('/api/mining/claim')}
+            disabled={action.disabled}
+            onPointerDown={() => { if (!action.disabled) impact('medium'); }}
+            onClick={action.onClick}
             className={`emboss-btn mt-auto w-full py-2 text-[9px] font-bold ${
-              live && liveUnclaimed > 0 ? 'claim-cta' : 'bg-zinc-900 text-zinc-600 border border-zinc-800'
+              !action.disabled ? 'claim-cta' : 'bg-zinc-900 text-zinc-600 border border-zinc-800'
             }`}
           >
-            CLAIM REWARD
+            {busy ? 'PROCESSING...' : 'Claim $Drill'}
           </button>
         </EmbossCard>
       </section>
 
-      {statusMessage && (
-        <div className="emboss emboss-accent text-[10px] font-mono text-emerald-400 px-3 py-1 text-center">
-          {statusMessage}
+      <div className="emboss emboss-inset w-full px-3 py-2.5 font-mono">
+        <div className="flex items-center justify-between mb-1.5">
+          <p className="text-[8px] tracking-[0.28em] text-zinc-500">PROCESS LOG</p>
+          {busy || checkingPass ? <RefreshCw className="w-3 h-3 animate-spin text-emerald-400" /> : <span className="status-dot" />}
         </div>
-      )}
-
-      <button
-        onPointerDown={() => { if (!action.disabled) impact('medium'); }}
-        onClick={action.onClick}
-        disabled={action.disabled}
-        className={`emboss-btn relative w-full py-3.5 font-mono text-xs font-bold flex items-center justify-center gap-2 ${
-          action.disabled ? 'bg-zinc-900 text-zinc-600 border border-zinc-800' : 'claim-cta'
-        }`}
-      >
-        {busy || checkingPass ? <RefreshCw className="w-4 h-4 animate-spin" /> : live ? <Hexagon className="w-4 h-4" /> : action.label.includes('MINT') ? <Battery className="w-4 h-4" /> : <Pickaxe className="w-4 h-4" />}
-        <span>{busy ? 'PROCESSING...' : action.label}</span>
-      </button>
+        <div className="flex flex-col gap-0.5 min-h-[52px]">
+          {processLog.map((line, i) => (
+            <p key={`${line}-${i}`} className={`text-[10px] tracking-wide ${i === 0 ? 'text-emerald-400' : 'text-zinc-500'}`}>
+              {i === 0 ? '› ' : '  '}{line}
+            </p>
+          ))}
+        </div>
+      </div>
     </main>
   );
 }

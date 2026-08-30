@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTonAddress, useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
-import { LogOut, ShieldAlert, ShieldCheck, Wallet, X } from 'lucide-react';
+import { LogOut, ShieldAlert, ShieldCheck, User, Wallet, X } from 'lucide-react';
 import { isTonTestnet } from '@/lib/ton/network';
 
 const WALLETS = [
@@ -22,9 +22,17 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [tgName, setTgName] = useState('OPERATOR');
   const testnet = isTonTestnet(wallet?.account?.chain);
 
   useEffect(() => setIsClient(true), []);
+
+  useEffect(() => {
+    const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+    if (!user) return;
+    const full = [user.first_name, user.last_name].filter(Boolean).join(' ');
+    setTgName(full || (user.username ? `@${user.username}` : 'OPERATOR'));
+  }, []);
 
   useEffect(() => {
     if (!address) {
@@ -96,6 +104,8 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
     )
   );
 
+  const shortWallet = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'NO WALLET';
+
   return (
     <div className="flex flex-col w-full gap-2">
       {!address ? (
@@ -107,7 +117,7 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
         <div className="flex items-center justify-between gap-2 text-[10px] font-mono text-zinc-400">
           <span className="flex items-center gap-2 text-zinc-200">
             <span className={`w-1.5 h-1.5 rounded-full ${testnet ? 'bg-emerald-500' : 'bg-amber-400'}`} />
-            {address.slice(0, 6)}...{address.slice(-4)}
+            {shortWallet}
           </span>
           <span className="flex items-center gap-2">
             {passLine}
@@ -119,18 +129,16 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-9 h-9 rounded-lg border border-emerald-500/35 flex items-center justify-center bg-black/40">
-                <ShieldCheck className={`w-4 h-4 ${nftActive ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                <User className="w-4 h-4 text-emerald-400" />
               </div>
               <div className="min-w-0">
-                <p className="text-[8px] tracking-[0.28em] text-zinc-500">JARINGAN</p>
-                <p className="text-[11px] tracking-widest text-white truncate">TON TESTNET</p>
-                <div className="mt-0.5 text-[10px] tracking-widest">{passLine}</div>
+                <p className="text-[8px] tracking-[0.28em] text-zinc-500">TELEGRAM</p>
+                <p className="text-[11px] tracking-widest text-white truncate uppercase">{tgName}</p>
+                <p className="mt-0.5 text-[10px] tracking-widest text-zinc-400 truncate">{shortWallet}</p>
               </div>
             </div>
             <div className="flex flex-col items-end gap-1.5 shrink-0">
-              <span className={`text-[8px] tracking-widest px-2 py-1 rounded-full border ${testnet ? 'text-emerald-400 border-emerald-500/40 bg-emerald-500/5' : 'text-amber-400 border-amber-500/40'}`}>
-                {testnet ? 'LIVE TESTNET' : 'WRONG NETWORK'}
-              </span>
+              <div className="text-[10px] tracking-widest">{passLine}</div>
               <button type="button" onClick={() => tonConnectUI.disconnect()} className="text-zinc-500 p-1">
                 <LogOut className="w-3.5 h-3.5" />
               </button>
