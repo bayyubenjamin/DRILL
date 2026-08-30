@@ -6,6 +6,7 @@ import { useTonAddress } from '@tonconnect/ui-react';
 import { calculateLevel, getLevelProgress, MAX_LEVEL } from '@/lib/level/calculator';
 import { getLevelTitle, getVisibleLevelCards } from '@/lib/level/ranks';
 import DrillPassCard from '@/components/UI/DrillPassCard';
+import EmbossCard from '@/components/UI/EmbossCard';
 
 export default function DrillPage() {
   const walletAddress = useTonAddress();
@@ -75,15 +76,13 @@ export default function DrillPage() {
   const cards = getVisibleLevelCards(claimedTotal);
 
   return (
-    <main className="min-h-screen max-w-md mx-auto bg-black text-white px-4 py-5 font-mono pb-24">
-      <header className="flex items-center justify-between pb-4 border-b border-zinc-900">
+    <main className="min-h-screen max-w-md mx-auto text-white px-4 py-5 font-mono pb-24">
+      <header className="flex items-center justify-between pb-4 border-b border-white/10">
         <h1 className="text-sm tracking-widest text-emerald-400">DRILL PROTOCOL</h1>
-        <span className="text-[10px] text-zinc-500">
-          LV {level}/{MAX_LEVEL}
-        </span>
+        <span className="text-[10px] text-zinc-500">LV {level}/{MAX_LEVEL}</span>
       </header>
 
-      <section className="mt-4 bg-zinc-950 border border-emerald-500/30 rounded-2xl p-4">
+      <EmbossCard className="mt-4 p-4" accent={hasNft}>
         <div className="flex items-center gap-3">
           <DrillPassCard active={hasNft} compact />
           <div>
@@ -95,9 +94,9 @@ export default function DrillPage() {
         <div className="mt-4 flex justify-center">
           <DrillPassCard active={hasNft} />
         </div>
-      </section>
+      </EmbossCard>
 
-      <section className="mt-4 bg-zinc-950 border border-zinc-800 rounded-2xl p-4">
+      <EmbossCard className="mt-4 p-4">
         <div className="flex items-center justify-between">
           <span className="text-[10px] text-zinc-500 tracking-widest">MINING LEVEL</span>
           <Trophy className="w-4 h-4 text-amber-400" />
@@ -106,60 +105,40 @@ export default function DrillPage() {
           {level} <span className="text-sm text-zinc-500">/ {MAX_LEVEL}</span>
         </p>
         <p className="text-[10px] text-emerald-400 mt-1">{getLevelTitle(level)}</p>
-        <div className="w-full bg-zinc-900 h-2 rounded-full mt-3 overflow-hidden">
+        <div className="w-full h-2 rounded-full mt-3 overflow-hidden emboss-inset">
           <div className="h-full bg-emerald-400" style={{ width: `${progress.progressPercent}%` }} />
         </div>
-        <p className="text-[10px] text-zinc-500 mt-2">
-          Next LV {progress.nextLevel}: {progress.nextLevelMinBalance.toFixed(2)} $DRILL
-        </p>
+        <p className="text-[10px] text-zinc-500 mt-2">Next LV {progress.nextLevel}: {progress.nextLevelMinBalance.toFixed(2)} $DRILL</p>
         <div className="grid grid-cols-2 gap-2 mt-3 text-[10px]">
-          <div className="bg-black border border-zinc-800 rounded-lg p-2 flex justify-between">
-            <span className="text-zinc-500">WALLET</span>
-            <span>{walletBalance.toFixed(4)}</span>
-          </div>
-          <div className="bg-black border border-zinc-800 rounded-lg p-2 flex justify-between">
-            <span className="text-zinc-500">ENGINE</span>
-            <span className="text-emerald-400">{engineBalance.toFixed(4)}</span>
-          </div>
+          <div className="emboss emboss-inset rounded-lg p-2 flex justify-between"><span className="text-zinc-500">WALLET</span><span>{walletBalance.toFixed(4)}</span></div>
+          <div className="emboss emboss-inset rounded-lg p-2 flex justify-between"><span className="text-zinc-500">ENGINE</span><span className="text-emerald-400">{engineBalance.toFixed(4)}</span></div>
         </div>
-        <div className="bg-black border border-zinc-800 rounded-lg p-2 flex justify-between text-[10px] mt-2">
+        <div className="emboss emboss-inset rounded-lg p-2 flex justify-between text-[10px] mt-2">
           <span className="text-zinc-500">UNCLAIMED</span>
           <span className="text-amber-400">+{liveUnclaimed.toFixed(4)}</span>
         </div>
         <p className="text-[10px] text-zinc-400 mt-3 flex items-center gap-1">
           <Wallet className="w-3 h-3" /> LEVEL TOTAL {claimedTotal.toFixed(4)} $DRILL
         </p>
-        <p className="text-[10px] text-zinc-600 mt-1">Level = wallet + claimed. Unclaimed tidak dihitung.</p>
-      </section>
+      </EmbossCard>
 
       <section className="mt-5">
         <p className="text-[10px] tracking-widest text-zinc-500 mb-3">LEVEL CARDS</p>
         <div className="flex flex-col gap-2">
           {cards.map((card) => (
-            <div
-              key={card.level}
-              className={`rounded-xl border p-3 ${
-                card.current
-                  ? 'border-emerald-400 bg-emerald-500/10'
-                  : card.unlocked
-                    ? 'border-zinc-700 bg-zinc-950'
-                    : 'border-zinc-900 bg-black opacity-50'
-              }`}
-            >
+            <EmbossCard key={card.level} className={`p-3 ${card.unlocked ? '' : 'opacity-50'}`} accent={card.current}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] text-zinc-500">LV {card.level}</span>
                   <span className="text-xs text-white tracking-widest">{card.title}</span>
                 </div>
                 {card.current ? (
-                  <span className="text-[9px] text-emerald-400 flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3" /> CURRENT
-                  </span>
+                  <span className="text-[9px] text-emerald-400 flex items-center gap-1"><ShieldCheck className="w-3 h-3" /> CURRENT</span>
                 ) : (
                   <span className="text-[9px] text-zinc-500">{card.required.toFixed(1)} $DRILL</span>
                 )}
               </div>
-            </div>
+            </EmbossCard>
           ))}
         </div>
       </section>

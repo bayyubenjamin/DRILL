@@ -78,25 +78,17 @@ export default function WalletConnect() {
     }
   };
 
-  if (!isClient) return <div className="h-12 w-full bg-zinc-900 animate-pulse rounded-xl" />;
+  if (!isClient) return <div className="h-12 w-full emboss animate-pulse" />;
 
   return (
     <div className="flex flex-col items-center w-full gap-2">
       {!address ? (
-        <button
-          type="button"
-          onClick={() => {
-            setError(null);
-            window.Telegram?.WebApp?.expand?.();
-            setOpen(true);
-          }}
-          className="w-full py-3 px-4 bg-zinc-900 border border-emerald-500/40 rounded-xl font-mono text-xs font-bold tracking-widest text-emerald-400 flex items-center justify-center gap-2"
-        >
+        <button type="button" onClick={() => { setError(null); window.Telegram?.WebApp?.expand?.(); setOpen(true); }} className="emboss emboss-accent emboss-btn w-full py-3 px-4 font-mono text-xs font-bold tracking-widest text-emerald-400 flex items-center justify-center gap-2">
           <Wallet className="w-4 h-4" />
           CONNECT TON TESTNET
         </button>
       ) : (
-        <div className="w-full p-3 bg-zinc-950 border border-emerald-500/30 rounded-xl font-mono text-xs">
+        <div className="emboss emboss-accent w-full p-3 font-mono text-xs">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 overflow-hidden">
               <span className={`w-2 h-2 rounded-full ${testnet ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`} />
@@ -130,28 +122,16 @@ export default function WalletConnect() {
       {error && <p className="text-[10px] font-mono text-red-400 text-center">{error}</p>}
       {open && createPortal(
         <div className="fixed inset-0 flex items-end sm:items-center justify-center p-4" style={{ zIndex: 2147483647, background: 'rgba(0,0,0,0.78)' }} onClick={() => setOpen(false)}>
-          <div className="w-full max-w-sm bg-zinc-950 border border-zinc-800 rounded-2xl p-4" onClick={(e) => e.stopPropagation()}>
+          <div className="emboss w-full max-w-sm p-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-mono text-xs tracking-widest text-emerald-400">TON TESTNET</h2>
               <button type="button" onClick={() => setOpen(false)}><X className="w-4 h-4 text-zinc-500" /></button>
             </div>
             {WALLETS.map((item) => (
-              <button
-                key={item.appName}
-                type="button"
-                disabled={Boolean(busy)}
-                onClick={async () => {
-                  setBusy(item.appName);
-                  try {
-                    await tonConnectUI.openSingleWalletModal(item.appName);
-                  } catch (err) {
-                    setError(err instanceof Error ? err.message : 'Failed');
-                  } finally {
-                    setBusy(null);
-                  }
-                }}
-                className="w-full mb-2 flex items-center justify-between px-3 py-3 rounded-xl bg-zinc-900 border border-zinc-800"
-              >
+              <button key={item.appName} type="button" disabled={Boolean(busy)} onClick={async () => {
+                setBusy(item.appName);
+                try { await tonConnectUI.openSingleWalletModal(item.appName); } catch (err) { setError(err instanceof Error ? err.message : 'Failed'); } finally { setBusy(null); }
+              }} className="emboss w-full mb-2 flex items-center justify-between px-3 py-3">
                 <span className="font-mono text-xs text-white">{item.label}</span>
                 <span className="font-mono text-[10px] text-zinc-500">{busy === item.appName ? 'OPENING...' : item.hint}</span>
               </button>
