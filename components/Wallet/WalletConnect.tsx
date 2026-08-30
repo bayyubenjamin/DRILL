@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTonAddress, useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import { LogOut, ShieldAlert, ShieldCheck, User, Wallet, X } from 'lucide-react';
-import { isTonTestnet } from '@/lib/ton/network';
+import { IS_MAINNET, isTonMainnet, isTonTestnet, networkLabel } from '@/lib/ton/network';
 
 const WALLETS = [
   { appName: 'telegram-wallet', label: 'Wallet', hint: 'Telegram' },
@@ -23,7 +23,7 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tgName, setTgName] = useState('OPERATOR');
-  const testnet = isTonTestnet(wallet?.account?.chain);
+  const chainOk = IS_MAINNET ? isTonMainnet(wallet?.account?.chain) : isTonTestnet(wallet?.account?.chain);
 
   useEffect(() => setIsClient(true), []);
 
@@ -94,14 +94,12 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
 
   if (!isClient) return <div className="h-12 w-full emboss animate-pulse" />;
 
-  const passLine = testnet && (
-    isVerifying ? (
-      <span className="text-amber-400">CHECKING PASS</span>
-    ) : nftActive ? (
-      <span className="text-emerald-400 flex items-center gap-1"><ShieldCheck size={12} /> PASS</span>
-    ) : (
-      <span className="text-amber-400 flex items-center gap-1"><ShieldAlert size={12} /> NO PASS</span>
-    )
+  const passLine = isVerifying ? (
+    <span className="text-amber-400">CHECKING PASS</span>
+  ) : nftActive ? (
+    <span className="text-emerald-400 flex items-center gap-1"><ShieldCheck size={12} /> PASS</span>
+  ) : (
+    <span className="text-amber-400 flex items-center gap-1"><ShieldAlert size={12} /> NO PASS</span>
   );
 
   const shortWallet = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'NO WALLET';
@@ -111,12 +109,12 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
       {!address ? (
         <button type="button" onClick={() => { setError(null); window.Telegram?.WebApp?.expand?.(); setOpen(true); }} className="emboss emboss-accent emboss-btn w-full py-3 px-4 font-mono text-xs font-bold tracking-widest text-emerald-400 flex items-center justify-center gap-2">
           <Wallet className="w-4 h-4" />
-          CONNECT TON TESTNET
+          CONNECT TON {networkLabel()}
         </button>
       ) : compact ? (
         <div className="flex items-center justify-between gap-2 text-[10px] font-mono text-zinc-400">
           <span className="flex items-center gap-2 text-zinc-200">
-            <span className={`w-1.5 h-1.5 rounded-full ${testnet ? 'bg-emerald-500' : 'bg-amber-400'}`} />
+            <span className={`w-1.5 h-1.5 rounded-full ${chainOk ? 'bg-emerald-500' : 'bg-amber-400'}`} />
             {shortWallet}
           </span>
           <span className="flex items-center gap-2">
@@ -132,7 +130,7 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
                 <User className="w-4 h-4 text-emerald-400" />
               </div>
               <div className="min-w-0">
-                <p className="text-[8px] tracking-[0.28em] text-zinc-500">TELEGRAM</p>
+                <p className="text-[8px] tracking-[0.28em] text-zinc-500">TELEGRAM · {networkLabel()}</p>
                 <p className="text-[11px] tracking-widest text-white truncate uppercase">{tgName}</p>
                 <p className="mt-0.5 text-[10px] tracking-widest text-zinc-400 truncate">{shortWallet}</p>
               </div>
@@ -151,7 +149,7 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
         <div className="fixed inset-0 flex items-end sm:items-center justify-center p-4" style={{ zIndex: 2147483647, background: 'rgba(0,0,0,0.78)' }} onClick={() => setOpen(false)}>
           <div className="emboss w-full max-w-sm p-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-mono text-xs tracking-widest text-emerald-400">TON TESTNET</h2>
+              <h2 className="font-mono text-xs tracking-widest text-emerald-400">TON {networkLabel()}</h2>
               <button type="button" onClick={() => setOpen(false)}><X className="w-4 h-4 text-zinc-500" /></button>
             </div>
             {WALLETS.map((item) => (
