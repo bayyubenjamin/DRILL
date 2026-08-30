@@ -41,120 +41,107 @@ tc-root {
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  background: #050605;
+  background: radial-gradient(ellipse at 30% 20%, #102018 0%, #050605 42%, #020302 100%);
 }
 .chain-aurora {
   position: absolute;
-  inset: -20%;
+  inset: -15%;
   background:
-    radial-gradient(ellipse at 50% 18%, rgba(200, 255, 58, 0.16), transparent 42%),
-    radial-gradient(ellipse at 18% 72%, rgba(90, 140, 10, 0.12), transparent 36%),
-    radial-gradient(ellipse at 82% 64%, rgba(200, 255, 58, 0.08), transparent 32%);
-  animation: chain-aurora 10s ease-in-out infinite alternate;
+    radial-gradient(ellipse at 62% 18%, rgba(90, 220, 180, 0.16), transparent 36%),
+    radial-gradient(ellipse at 20% 70%, rgba(200, 255, 58, 0.1), transparent 34%);
+  animation: chain-aurora 12s ease-in-out infinite alternate;
 }
-.chain-grid {
+.chain-depth {
   position: absolute;
-  inset: -12%;
-  background-image:
-    linear-gradient(rgba(200, 255, 58, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(200, 255, 58, 0.04) 1px, transparent 1px),
-    url('/bg-drill.svg');
-  background-size: 42px 42px, 42px 42px, cover;
-  background-position: center;
-  transform: perspective(1100px) rotateX(22deg) scale(1.2);
-  transform-origin: 50% 10%;
-  animation: chain-grid-drift 22s linear infinite;
-  opacity: 0.85;
+  inset: -8%;
+  background:
+    radial-gradient(circle at 70% 30%, rgba(80, 160, 120, 0.12), transparent 28%),
+    repeating-linear-gradient(125deg, transparent 0 18px, rgba(200,255,58,0.015) 18px 19px);
+  filter: blur(10px);
+  transform: perspective(900px) rotateX(28deg) rotateZ(-12deg) scale(1.2);
+  transform-origin: 50% 0%;
+}
+.chain-wires {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.55;
+}
+.chain-wire {
+  stroke: #9fe8c4;
+  stroke-width: 0.35;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 1.2px #7dffb0);
 }
 .chain-field {
   position: absolute;
   inset: 0;
+  perspective: 900px;
 }
-.iso-cube {
-  --s: 1;
+.cube-slot {
   position: absolute;
-  width: calc(36px * var(--s));
-  height: calc(32px * var(--s));
-  animation: cube-float 4.2s ease-in-out infinite;
-  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.45));
+  transform: translate(-50%, -50%);
 }
-.iso-cube i {
-  position: absolute;
+.cube-slot.z1 { filter: blur(2.4px) saturate(0.8); opacity: 0.45; }
+.cube-slot.z2 { filter: blur(0.6px); opacity: 0.78; }
+.cube-slot.z3 { filter: none; opacity: 1; }
+.cube-slot.z4 { filter: none; opacity: 1; z-index: 2; }
+.cube3d {
+  --sz: 40px;
+  --tilt: -18deg;
+  position: relative;
   display: block;
+  transform-style: preserve-3d;
+  transform: rotateX(-24deg) rotateY(var(--tilt));
+  animation: cube-orbit 7.5s ease-in-out infinite;
 }
-.iso-top {
-  width: calc(22px * var(--s));
-  height: calc(13px * var(--s));
-  left: calc(7px * var(--s));
-  top: 0;
-  background: linear-gradient(135deg, rgba(230, 255, 138, 0.55), rgba(142, 196, 0, 0.22));
-  border: 1px solid rgba(200, 255, 58, 0.45);
-  transform: rotate(-30deg) skewX(-30deg) scaleY(0.86);
-  transform-origin: center;
-}
-.iso-left {
-  width: calc(16px * var(--s));
-  height: calc(18px * var(--s));
-  left: calc(1px * var(--s));
-  top: calc(8px * var(--s));
-  background: linear-gradient(180deg, rgba(70, 96, 12, 0.7), rgba(10, 14, 4, 0.55));
-  border: 1px solid rgba(200, 255, 58, 0.18);
-  transform: rotate(30deg) skewY(30deg) scaleX(0.86);
-  transform-origin: top left;
-}
-.iso-right {
-  width: calc(16px * var(--s));
-  height: calc(18px * var(--s));
-  left: calc(17px * var(--s));
-  top: calc(8px * var(--s));
-  background: linear-gradient(180deg, rgba(200, 255, 58, 0.32), rgba(26, 42, 0, 0.5));
-  border: 1px solid rgba(200, 255, 58, 0.28);
-  transform: rotate(-30deg) skewY(-30deg) scaleX(0.86);
-  transform-origin: top right;
-}
-.chain-node {
+.c-face {
   position: absolute;
-  width: 6px;
-  height: 6px;
-  margin: -3px 0 0 -3px;
-  border-radius: 999px;
-  background: #c8ff3a;
-  box-shadow: 0 0 10px #c8ff3a;
-  animation: chain-node-blink 2.8s ease-in-out infinite;
+  inset: 0;
+  width: var(--sz);
+  height: var(--sz);
+  backface-visibility: hidden;
+  border: 1px solid rgba(180, 255, 210, 0.18);
+}
+.c-front {
+  background: linear-gradient(160deg, #8fd4b0 0%, #1c3a2c 55%, #0b1610 100%);
+}
+.c-back {
+  background: #08110c;
+}
+.c-right {
+  background: linear-gradient(180deg, #c8ff3a 0%, #4d7a18 48%, #15220a 100%);
+}
+.c-left {
+  background: linear-gradient(180deg, #2a4a38 0%, #0c1612 100%);
+}
+.c-top {
+  background: linear-gradient(135deg, #e8ffe8 0%, #7ec8a0 42%, #234634 100%);
+}
+.c-bottom {
+  background: #050a07;
 }
 .chain-packet {
   position: absolute;
-  top: 8%;
-  left: -12%;
-  width: 18%;
+  top: 12%;
+  left: -10%;
+  width: 16%;
   height: 2px;
   background: linear-gradient(90deg, transparent, #c8ff3a, transparent);
-  box-shadow: 0 0 18px rgba(200, 255, 58, 0.7);
-  animation: chain-packet 5.6s linear infinite;
-  opacity: 0.7;
+  box-shadow: 0 0 16px #c8ff3a;
+  animation: chain-packet 6s linear infinite;
 }
 .drill-bg-fog {
   position: absolute;
   inset: -10%;
-  background: radial-gradient(circle at 50% 36%, rgba(200, 255, 58, 0.12), transparent 38%);
-  animation: drill-core-pulse 3.6s ease-in-out infinite;
+  background: radial-gradient(circle at 50% 40%, rgba(200, 255, 58, 0.08), transparent 42%);
 }
 .drill-bg-scan {
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(to bottom, transparent 0px, transparent 3px, rgba(0, 0, 0, 0.18) 4px);
-  opacity: 0.18;
-}
-.drill-bg-particles span {
-  position: absolute;
-  bottom: 8%;
-  width: 3px;
-  height: 3px;
-  border-radius: 999px;
-  background: #c8ff3a;
-  box-shadow: 0 0 10px #c8ff3a;
-  opacity: 0;
-  animation: drill-spark-up linear infinite;
+  background: repeating-linear-gradient(to bottom, transparent 0px, transparent 3px, rgba(0, 0, 0, 0.16) 4px);
+  opacity: 0.16;
 }
 .app-shell { position: relative; z-index: 1; }
 
@@ -341,34 +328,21 @@ tc-root {
 }
 
 @keyframes chain-aurora {
-  from { transform: scale(1) translateY(0); opacity: 0.85; }
-  to { transform: scale(1.08) translateY(-16px); opacity: 1; }
+  from { transform: scale(1) translateY(0); }
+  to { transform: scale(1.07) translateY(-14px); }
 }
-@keyframes chain-grid-drift {
-  from { background-position: 0 0, 0 0, center; }
-  to { background-position: 42px 42px, 42px 42px, center; }
-}
-@keyframes cube-float {
-  0%, 100% { transform: translateY(0); opacity: 0.55; }
-  50% { transform: translateY(-6px); opacity: 1; filter: drop-shadow(0 10px 14px rgba(200, 255, 58, 0.18)); }
-}
-@keyframes chain-node-blink {
-  0%, 100% { opacity: 0.25; transform: scale(0.8); }
-  50% { opacity: 1; transform: scale(1.25); }
+@keyframes cube-orbit {
+  0%, 100% { transform: rotateX(-24deg) rotateY(var(--tilt)) translateZ(0); }
+  50% { transform: rotateX(-18deg) rotateY(calc(var(--tilt) + 10deg)) translateZ(8px); }
 }
 @keyframes chain-packet {
   0% { transform: translateX(0) translateY(0); opacity: 0; }
-  12% { opacity: 0.8; }
-  100% { transform: translateX(620%) translateY(220%); opacity: 0; }
+  12% { opacity: 0.85; }
+  100% { transform: translateX(620%) translateY(240%); opacity: 0; }
 }
 @keyframes drill-core-pulse {
   0%, 100% { opacity: 0.45; transform: scale(1); }
   50% { opacity: 0.95; transform: scale(1.08); }
-}
-@keyframes drill-spark-up {
-  0% { transform: translateY(0); opacity: 0; }
-  15% { opacity: 0.9; }
-  100% { transform: translateY(-70vh); opacity: 0; }
 }
 @keyframes emboss-sheen {
   from { transform: translateX(-130%); }
