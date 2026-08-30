@@ -5,6 +5,7 @@ import './globals.css';
 import BottomNav from '@/components/UI/BottomNav';
 import TonProvider from '@/components/Wallet/TonProvider';
 import TelegramAuthProvider from '@/components/UI/TelegramAuthProvider';
+import AppBackground from '@/components/UI/AppBackground';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -26,7 +27,8 @@ export default function RootLayout({
       <body className={inter.className}>
         <TonProvider>
           <TelegramAuthProvider>
-            <div className="pb-20">{children}</div>
+            <AppBackground />
+            <div className="app-shell pb-20">{children}</div>
             <BottomNav />
           </TelegramAuthProvider>
         </TonProvider>

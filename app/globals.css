@@ -7,10 +7,10 @@
 
 html,
 body {
-  background-color: var(--background);
+  background-color: #000;
   color: var(--foreground);
   min-height: 100%;
-overflow-x: hidden;
+  overflow-x: hidden;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
@@ -20,7 +20,78 @@ tc-root {
   pointer-events: auto !important;
 }
 
-@keyframes drill-spark {
-  0% { transform: translateY(0); opacity: 0.8; }
-  100% { transform: translateY(16px); opacity: 0; }
+.app-shell main,
+.app-shell .min-h-screen {
+  background-color: transparent !important;
+}
+
+.drill-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: #000;
+}
+
+.drill-bg-image {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(16, 185, 129, 0.18), transparent 42%),
+    url('/bg-drill.svg') center / cover no-repeat;
+  transform: scale(1.04);
+  animation: drill-bg-drift 18s ease-in-out infinite alternate;
+}
+
+.drill-bg-fog {
+  position: absolute;
+  inset: -10%;
+  background: radial-gradient(circle at 50% 48%, rgba(16, 185, 129, 0.16), transparent 36%);
+  animation: drill-core-pulse 3.6s ease-in-out infinite;
+}
+
+.drill-bg-scan {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(0, 0, 0, 0.18) 4px
+  );
+  opacity: 0.25;
+}
+
+.drill-bg-particles span {
+  position: absolute;
+  bottom: 8%;
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: #6ee7b7;
+  box-shadow: 0 0 8px #34d399;
+  opacity: 0;
+  animation: drill-spark-up linear infinite;
+}
+
+.app-shell {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes drill-bg-drift {
+  from { transform: scale(1.04) translateY(0); }
+  to { transform: scale(1.08) translateY(-12px); }
+}
+
+@keyframes drill-core-pulse {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.08); }
+}
+
+@keyframes drill-spark-up {
+  0% { transform: translateY(0); opacity: 0; }
+  15% { opacity: 0.9; }
+  100% { transform: translateY(-70vh); opacity: 0; }
 }

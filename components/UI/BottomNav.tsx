@@ -16,7 +16,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-black border-t border-zinc-900 pb-safe z-50">
+    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-black/80 backdrop-blur-md border-t border-zinc-900 pb-safe z-50">
       <div className="flex justify-around items-end h-16">
         {navItems.map((item) => {
           const isActive = pathname === item.path;
