@@ -1,10 +1,13 @@
 {
   "name": "DRILL Pass",
-  "description": "You are human. Soulbound antibot mining pass. Non-transferable.",
-  "image": "https://drill-chi-flax.vercel.app/drill-pass.svg",
+  "description": "Soulbound mining pass. Non-transferable. One pass per wallet.",
+  "image": "https://drill-chi-flax.vercel.app/drill-pass.png",
+  "cover_image": "https://drill-chi-flax.vercel.app/drill-pass-cover.png",
+  "external_url": "https://drill-chi-flax.vercel.app",
+  "marketplace": "https://drill-chi-flax.vercel.app",
   "attributes": [
-    { "trait_type": "Type", "value": "Antibot SBT" },
-    { "trait_type": "Status", "value": "You are human" },
-    { "trait_type": "Transferable", "value": "No" }
+    { "trait_type": "Type", "value": "SBT" },
+    { "trait_type": "Transferable", "value": "No" },
+    { "trait_type": "Network", "value": "EDIT_ME_TESTNET_OR_MAINNET" }
   ]
 }
