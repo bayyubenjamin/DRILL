@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Battery, Zap, Trophy, RefreshCw, Lock, ShieldCheck, Pickaxe } from 'lucide-react';
 import { useTonAddress, useTonConnectUI } from '@tonconnect/ui-react';
@@ -8,9 +8,9 @@ import WalletConnect from '@/components/Wallet/WalletConnect';
 import MiningDrill from '@/components/UI/MiningDrill';
 import LevelUpModal from '@/components/UI/LevelUpModal';
 import { getLevelProgress } from '@/lib/level/calculator';
-import { getLevelTitle } from '@/lib/level/ranks';
 import { DRILL_PASS_COLLECTION } from '@/lib/ton/network';
 import { buyPassPayloadBase64, MINT_SEND_NANOTON } from '@/lib/ton/pass';
+import { useLevelUpPopup } from '@/hooks/useLevelUpPopup';
 
 export default function DrillEngineDashboard() {
   const walletAddress = useTonAddress();
@@ -29,8 +29,6 @@ export default function DrillEngineDashboard() {
   const [unclaimed, setUnclaimed] = useState(0);
   const [busy, setBusy] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [levelUp, setLevelUp] = useState<{ to: number; title: string } | null>(null);
-  const lastLevel = useRef<number | null>(null);
 
   const initData = () => window.Telegram?.WebApp?.initData || '';
 
@@ -40,7 +38,6 @@ export default function DrillEngineDashboard() {
     setUnclaimed(0);
     setWalletBalance(0);
     setAccount({ balance: 0, miningSpeed: 0, level: 1, lastClaimAt: null, miningActive: false, progressPercent: 0 });
-    lastLevel.current = null;
   };
 
   const loadState = async () => {
@@ -100,23 +97,15 @@ export default function DrillEngineDashboard() {
 
   const canMine = Boolean(walletAddress && hasNft && !checkingPass);
   const live = Boolean(canMine && account.miningActive);
-  const engineBalance = canMine ? account.balance : 0;
+  const engineBalance = walletAddress ? Number(account.balance || 0) : 0;
   const liveUnclaimed = live ? unclaimed : 0;
   const levelBalance = walletBalance + engineBalance;
   const progress = useMemo(() => getLevelProgress(levelBalance), [levelBalance]);
-
-  useEffect(() => {
-    const next = progress.currentLevel;
-    if (lastLevel.current === null) {
-      lastLevel.current = next;
-      return;
-    }
-    if (next > lastLevel.current) {
-      setLevelUp({ to: next, title: getLevelTitle(next) });
-      window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success');
-    }
-    lastLevel.current = next;
-  }, [progress.currentLevel]);
+  const { popup, closePopup, armAfterClaim } = useLevelUpPopup(
+    progress.currentLevel,
+    Boolean(walletAddress && !checkingPass),
+    walletAddress,
+  );
 
   const mintOnchain = async () => {
     if (!walletAddress || checkingPass || busy) return;
@@ -172,6 +161,7 @@ export default function DrillEngineDashboard() {
         setStatusMessage(data.error || 'ACTION FAILED');
         return;
       }
+      if (path.includes('/claim')) armAfterClaim();
       await loadState();
       if (path.includes('/start')) setStatusMessage('MINING STARTED');
       if (path.includes('/claim')) setStatusMessage(`CLAIMED +${Number(data.reward || 0).toFixed(4)} $DRILL`);
@@ -195,10 +185,10 @@ export default function DrillEngineDashboard() {
   return (
     <main className="min-h-screen max-w-md mx-auto bg-black text-white px-4 py-5 flex flex-col justify-between font-sans pb-8">
       <LevelUpModal
-        open={Boolean(levelUp)}
-        level={levelUp?.to || progress.currentLevel}
-        title={levelUp?.title || getLevelTitle(progress.currentLevel)}
-        onClose={() => setLevelUp(null)}
+        open={Boolean(popup)}
+        level={popup?.to || 0}
+        title={popup?.title || ''}
+        onClose={closePopup}
       />
       <header className="flex justify-between items-center w-full pb-3 border-b border-zinc-900">
         <div className="flex flex-col">

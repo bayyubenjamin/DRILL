@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ShieldCheck, Trophy, Wallet } from 'lucide-react';
 import { useTonAddress } from '@tonconnect/ui-react';
 import { calculateLevel, getLevelProgress, MAX_LEVEL } from '@/lib/level/calculator';
 import { getLevelTitle, getVisibleLevelCards } from '@/lib/level/ranks';
 import DrillPassCard from '@/components/UI/DrillPassCard';
-import LevelUpModal from '@/components/UI/LevelUpModal';
 
 export default function DrillPage() {
   const walletAddress = useTonAddress();
@@ -17,8 +16,6 @@ export default function DrillPage() {
   const [miningActive, setMiningActive] = useState(false);
   const [miningSpeed, setMiningSpeed] = useState(0);
   const [lastClaimAt, setLastClaimAt] = useState<string | null>(null);
-  const [levelUp, setLevelUp] = useState<{ to: number; title: string } | null>(null);
-  const lastLevel = useRef<number | null>(null);
 
   const load = async () => {
     const initData = window.Telegram?.WebApp?.initData || '';
@@ -77,25 +74,8 @@ export default function DrillPage() {
   const progress = getLevelProgress(claimedTotal);
   const cards = getVisibleLevelCards(claimedTotal);
 
-  useEffect(() => {
-    if (lastLevel.current === null) {
-      lastLevel.current = level;
-      return;
-    }
-    if (level > lastLevel.current) {
-      setLevelUp({ to: level, title: getLevelTitle(level) });
-    }
-    lastLevel.current = level;
-  }, [level]);
-
   return (
     <main className="min-h-screen max-w-md mx-auto bg-black text-white px-4 py-5 font-mono pb-24">
-      <LevelUpModal
-        open={Boolean(levelUp)}
-        level={levelUp?.to || level}
-        title={levelUp?.title || getLevelTitle(level)}
-        onClose={() => setLevelUp(null)}
-      />
       <header className="flex items-center justify-between pb-4 border-b border-zinc-900">
         <h1 className="text-sm tracking-widest text-emerald-400">DRILL PROTOCOL</h1>
         <span className="text-[10px] text-zinc-500">
