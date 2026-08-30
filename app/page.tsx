@@ -222,23 +222,19 @@ export default function DrillEngineDashboard() {
         </div>
       </EmbossCard>
       <MiningDrill active={live} />
-      <section className="flex flex-col items-center w-full gap-2 mt-auto">
-        {statusMessage && <div className="emboss emboss-accent text-[10px] font-mono text-emerald-400 px-3 py-1">{statusMessage}</div>}
-        <EmbossCard className="w-full px-3 py-2" inset>
-          <div className="flex justify-between w-full text-xs font-mono">
-            <span className="text-zinc-500">UNCLAIMED</span>
-            <span className="text-emerald-400 font-semibold">+{liveUnclaimed.toFixed(4)} $DRILL</span>
-          </div>
+      <section className="flex flex-col w-full gap-2 mt-auto">
+        {statusMessage && <div className="emboss emboss-accent text-[10px] font-mono text-emerald-400 px-3 py-1 text-center">{statusMessage}</div>}
+        <EmbossCard className="px-3 py-2.5 flex items-center justify-between gap-3" inset>
+          <span className="text-xs font-mono text-zinc-500 shrink-0">UNCLAIMED</span>
+          <span className="text-xs font-mono text-emerald-400 font-semibold text-right">+{liveUnclaimed.toFixed(4)} $DRILL</span>
         </EmbossCard>
         <button onClick={action.onClick} disabled={action.disabled} className={`emboss-btn relative w-full py-3.5 font-mono text-xs font-bold flex items-center justify-center gap-2 ${action.disabled ? 'bg-zinc-900 text-zinc-600 border border-zinc-800' : 'bg-emerald-500 text-black'}`}>
           {busy || checkingPass ? <RefreshCw className="w-4 h-4 animate-spin" /> : live ? <Battery className="w-4 h-4" /> : <Pickaxe className="w-4 h-4" />}
           <span>{busy ? 'PROCESSING...' : action.label}</span>
         </button>
-        <EmbossCard className="w-full p-3 mt-3">
-          <div className="flex justify-between items-center text-[10px] tracking-widest text-zinc-400 font-mono">
-            <span className="flex items-center gap-1 text-amber-400/90 font-semibold"><Lock className="w-3 h-3" /> LEVEL = WALLET + CLAIMED</span>
-            <span>UNCLAIMED EXCLUDED</span>
-          </div>
+        <EmbossCard className="p-3 mt-2 flex items-center justify-between gap-3">
+          <span className="flex items-center gap-1 text-[10px] tracking-widest text-amber-400/90 font-semibold font-mono"><Lock className="w-3 h-3" /> LEVEL = WALLET + CLAIMED</span>
+          <span className="text-[10px] tracking-widest text-zinc-500 font-mono shrink-0">UNCLAIMED EXCLUDED</span>
         </EmbossCard>
       </section>
     </main>
