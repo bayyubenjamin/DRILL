@@ -1,32 +1,32 @@
 'use client';
 
-const BLOCKS = [
-  { x: 8, y: 10, s: 18, d: '0s' },
-  { x: 22, y: 7, s: 14, d: '0.4s' },
-  { x: 36, y: 12, s: 20, d: '0.8s' },
-  { x: 52, y: 6, s: 16, d: '1.1s' },
-  { x: 68, y: 11, s: 22, d: '0.2s' },
-  { x: 82, y: 8, s: 15, d: '1.6s' },
-  { x: 12, y: 28, s: 16, d: '0.6s' },
-  { x: 28, y: 32, s: 24, d: '1.3s' },
-  { x: 48, y: 26, s: 18, d: '0.3s' },
-  { x: 64, y: 30, s: 14, d: '1.8s' },
-  { x: 80, y: 27, s: 20, d: '0.9s' },
-  { x: 6, y: 48, s: 15, d: '1.4s' },
-  { x: 20, y: 52, s: 19, d: '0.1s' },
-  { x: 38, y: 46, s: 13, d: '2s' },
-  { x: 56, y: 50, s: 21, d: '0.7s' },
-  { x: 74, y: 47, s: 17, d: '1.5s' },
-  { x: 88, y: 54, s: 14, d: '0.5s' },
-  { x: 10, y: 70, s: 20, d: '1.2s' },
-  { x: 26, y: 74, s: 15, d: '1.9s' },
-  { x: 44, y: 68, s: 23, d: '0.35s' },
-  { x: 62, y: 72, s: 16, d: '1.05s' },
-  { x: 78, y: 69, s: 19, d: '1.7s' },
-  { x: 16, y: 88, s: 14, d: '0.25s' },
-  { x: 34, y: 86, s: 18, d: '1.45s' },
-  { x: 58, y: 90, s: 15, d: '0.85s' },
-  { x: 76, y: 87, s: 21, d: '2.1s' },
+const CUBES = [
+  { x: 6, y: 8, s: 1, d: '0s' },
+  { x: 22, y: 5, s: 0.8, d: '0.4s' },
+  { x: 38, y: 11, s: 1.15, d: '0.8s' },
+  { x: 56, y: 4, s: 0.9, d: '1.1s' },
+  { x: 72, y: 9, s: 1.2, d: '0.2s' },
+  { x: 86, y: 6, s: 0.75, d: '1.6s' },
+  { x: 10, y: 24, s: 0.95, d: '0.6s' },
+  { x: 28, y: 28, s: 1.25, d: '1.3s' },
+  { x: 48, y: 22, s: 1, d: '0.3s' },
+  { x: 66, y: 26, s: 0.85, d: '1.8s' },
+  { x: 82, y: 23, s: 1.1, d: '0.9s' },
+  { x: 4, y: 44, s: 0.9, d: '1.4s' },
+  { x: 18, y: 48, s: 1.15, d: '0.1s' },
+  { x: 36, y: 42, s: 0.8, d: '2s' },
+  { x: 54, y: 46, s: 1.2, d: '0.7s' },
+  { x: 72, y: 43, s: 1, d: '1.5s' },
+  { x: 88, y: 50, s: 0.85, d: '0.5s' },
+  { x: 8, y: 64, s: 1.1, d: '1.2s' },
+  { x: 24, y: 68, s: 0.9, d: '1.9s' },
+  { x: 42, y: 62, s: 1.3, d: '0.35s' },
+  { x: 60, y: 66, s: 0.95, d: '1.05s' },
+  { x: 78, y: 63, s: 1.15, d: '1.7s' },
+  { x: 14, y: 82, s: 0.85, d: '0.25s' },
+  { x: 32, y: 80, s: 1.05, d: '1.45s' },
+  { x: 58, y: 84, s: 0.9, d: '0.85s' },
+  { x: 76, y: 81, s: 1.2, d: '2.1s' },
 ];
 
 const NODES = [
@@ -35,24 +35,24 @@ const NODES = [
   { x: 24, y: 64 }, { x: 60, y: 62 }, { x: 80, y: 78 },
 ];
 
+function Cube({ x, y, s, d }: { x: number; y: number; s: number; d: string }) {
+  return (
+    <span className="iso-cube" style={{ left: `${x}%`, top: `${y}%`, ['--s' as string]: String(s), animationDelay: d }}>
+      <i className="iso-top" />
+      <i className="iso-left" />
+      <i className="iso-right" />
+    </span>
+  );
+}
+
 export default function AppBackground() {
   return (
     <div className="drill-bg" aria-hidden>
       <div className="chain-aurora" />
       <div className="chain-grid" />
       <div className="chain-field">
-        {BLOCKS.map((b, i) => (
-          <span
-            key={i}
-            className="chain-block"
-            style={{
-              left: `${b.x}%`,
-              top: `${b.y}%`,
-              width: b.s,
-              height: b.s,
-              animationDelay: b.d,
-            }}
-          />
+        {CUBES.map((c, i) => (
+          <Cube key={i} {...c} />
         ))}
         {NODES.map((n, i) => (
           <span key={`n${i}`} className="chain-node" style={{ left: `${n.x}%`, top: `${n.y}%`, animationDelay: `${i * 0.35}s` }} />
@@ -62,7 +62,7 @@ export default function AppBackground() {
       <div className="drill-bg-fog" />
       <div className="drill-bg-scan" />
       <div className="drill-bg-particles">
-        {Array.from({ length: 14 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <span
             key={i}
             style={{
