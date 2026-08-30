@@ -1,11 +1,14 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Battery, Zap, Trophy, RefreshCw, Lock, ShieldCheck, Pickaxe } from 'lucide-react';
 import { useTonAddress, useTonConnectUI } from '@tonconnect/ui-react';
 import WalletConnect from '@/components/Wallet/WalletConnect';
+import MiningDrill from '@/components/UI/MiningDrill';
+import LevelUpModal from '@/components/UI/LevelUpModal';
 import { getLevelProgress } from '@/lib/level/calculator';
+import { getLevelTitle } from '@/lib/level/ranks';
 import { DRILL_PASS_COLLECTION } from '@/lib/ton/network';
 import { buyPassPayloadBase64, MINT_SEND_NANOTON } from '@/lib/ton/pass';
 
@@ -26,6 +29,8 @@ export default function DrillEngineDashboard() {
   const [unclaimed, setUnclaimed] = useState(0);
   const [busy, setBusy] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [levelUp, setLevelUp] = useState<{ to: number; title: string } | null>(null);
+  const lastLevel = useRef<number | null>(null);
 
   const initData = () => window.Telegram?.WebApp?.initData || '';
 
@@ -35,6 +40,7 @@ export default function DrillEngineDashboard() {
     setUnclaimed(0);
     setWalletBalance(0);
     setAccount({ balance: 0, miningSpeed: 0, level: 1, lastClaimAt: null, miningActive: false, progressPercent: 0 });
+    lastLevel.current = null;
   };
 
   const loadState = async () => {
@@ -98,6 +104,19 @@ export default function DrillEngineDashboard() {
   const liveUnclaimed = live ? unclaimed : 0;
   const levelBalance = walletBalance + engineBalance;
   const progress = useMemo(() => getLevelProgress(levelBalance), [levelBalance]);
+
+  useEffect(() => {
+    const next = progress.currentLevel;
+    if (lastLevel.current === null) {
+      lastLevel.current = next;
+      return;
+    }
+    if (next > lastLevel.current) {
+      setLevelUp({ to: next, title: getLevelTitle(next) });
+      window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success');
+    }
+    lastLevel.current = next;
+  }, [progress.currentLevel]);
 
   const mintOnchain = async () => {
     if (!walletAddress || checkingPass || busy) return;
@@ -175,6 +194,12 @@ export default function DrillEngineDashboard() {
 
   return (
     <main className="min-h-screen max-w-md mx-auto bg-black text-white px-4 py-5 flex flex-col justify-between font-sans pb-8">
+      <LevelUpModal
+        open={Boolean(levelUp)}
+        level={levelUp?.to || progress.currentLevel}
+        title={levelUp?.title || getLevelTitle(progress.currentLevel)}
+        onClose={() => setLevelUp(null)}
+      />
       <header className="flex justify-between items-center w-full pb-3 border-b border-zinc-900">
         <div className="flex flex-col">
           <h1 className="text-sm font-bold tracking-widest text-zinc-100 font-mono">DRILL ENGINE</h1>
@@ -210,12 +235,7 @@ export default function DrillEngineDashboard() {
           <motion.div className="h-full bg-gradient-to-r from-emerald-600 via-emerald-400 to-emerald-300" animate={{ width: `${progress.progressPercent}%` }} />
         </div>
       </section>
-      <div className="relative flex items-center justify-center my-8 h-64 w-full">
-        <div className="w-28 h-36 bg-zinc-950 border border-zinc-800 rounded-xl flex flex-col items-center justify-center">
-          <Zap className={`w-9 h-9 ${live ? 'text-emerald-400' : 'text-zinc-600'}`} />
-          <span className="text-[9px] font-mono mt-2 text-zinc-500">{live ? 'MINING' : 'LOCKED'}</span>
-        </div>
-      </div>
+      <MiningDrill active={live} />
       <section className="flex flex-col items-center w-full gap-2 mt-auto">
         {statusMessage && <div className="text-[10px] font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-800/60 px-3 py-1 rounded-md">{statusMessage}</div>}
         <div className="flex justify-between w-full text-xs font-mono px-1">

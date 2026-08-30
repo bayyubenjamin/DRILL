@@ -10,14 +10,17 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   min-height: 100%;
-  overflow-x: hidden;
+overflow-x: hidden;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
-/* Do not force position:relative on the TonConnect host.
-   That clips/hides the official modal inside Telegram's WebView. */
 #tc-widget-root,
 tc-root {
   z-index: 2147483646 !important;
   pointer-events: auto !important;
+}
+
+@keyframes drill-spark {
+  0% { transform: translateY(0); opacity: 0.8; }
+  100% { transform: translateY(16px); opacity: 0; }
 }
