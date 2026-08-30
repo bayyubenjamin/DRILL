@@ -115,22 +115,27 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
           </span>
         </div>
       ) : (
-        <div className="emboss emboss-accent w-full p-3 font-mono text-xs">
+        <div className="emboss emboss-accent w-full px-3 py-2.5 font-mono">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className={`w-2 h-2 rounded-full shrink-0 ${testnet ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`} />
-              <span className="text-zinc-200 truncate">{address.slice(0, 6)}...{address.slice(-4)}</span>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-9 h-9 rounded-lg border border-emerald-500/35 flex items-center justify-center bg-black/40">
+                <ShieldCheck className={`w-4 h-4 ${nftActive ? 'text-emerald-400' : 'text-zinc-500'}`} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[8px] tracking-[0.28em] text-zinc-500">JARINGAN</p>
+                <p className="text-[11px] tracking-widest text-white truncate">TON TESTNET</p>
+                <div className="mt-0.5 text-[10px] tracking-widest">{passLine}</div>
+              </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <span className={`text-[9px] tracking-widest px-2 py-0.5 rounded border ${testnet ? 'text-emerald-400 border-emerald-500/40' : 'text-amber-400 border-amber-500/40'}`}>
+            <div className="flex flex-col items-end gap-1.5 shrink-0">
+              <span className={`text-[8px] tracking-widest px-2 py-1 rounded-full border ${testnet ? 'text-emerald-400 border-emerald-500/40 bg-emerald-500/5' : 'text-amber-400 border-amber-500/40'}`}>
                 {testnet ? 'LIVE TESTNET' : 'WRONG NETWORK'}
               </span>
               <button type="button" onClick={() => tonConnectUI.disconnect()} className="text-zinc-500 p-1">
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
-          {testnet && <div className="mt-2 flex items-center gap-1.5 text-[10px] tracking-widest">{passLine}</div>}
         </div>
       )}
       {error && <p className="text-[10px] font-mono text-red-400 text-center">{error}</p>}
