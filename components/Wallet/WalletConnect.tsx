@@ -12,7 +12,7 @@ const WALLETS = [
   { appName: 'mytonwallet', label: 'MyTonWallet', hint: 'App / Web' },
 ] as const;
 
-export default function WalletConnect() {
+export default function WalletConnect({ compact = false }: { compact?: boolean }) {
   const address = useTonAddress();
   const wallet = useTonWallet();
   const [tonConnectUI] = useTonConnectUI();
@@ -31,6 +31,8 @@ export default function WalletConnect() {
       setNftActive(false);
       return;
     }
+    const cached = sessionStorage.getItem(`drill:pass:${address}`);
+    if (cached === '1') setNftActive(true);
     setOpen(false);
     void persistWallet(address);
   }, [address]);
@@ -55,7 +57,8 @@ export default function WalletConnect() {
   };
 
   const verifyNFT = async (walletAddress: string) => {
-    setIsVerifying(true);
+    const cached = sessionStorage.getItem(`drill:pass:${walletAddress}`);
+    if (cached !== '1') setIsVerifying(true);
     try {
       const initData = window.Telegram?.WebApp?.initData || '';
       const res = await fetch('/api/nft/verify', {
@@ -67,9 +70,12 @@ export default function WalletConnect() {
       if (!res.ok) {
         setError(data.error || 'Wallet rejected');
         setNftActive(false);
+        sessionStorage.removeItem(`drill:pass:${walletAddress}`);
         return;
       }
-      setNftActive(Boolean(data.hasNft));
+      const ready = Boolean(data.hasNft);
+      setNftActive(ready);
+      sessionStorage.setItem(`drill:pass:${walletAddress}`, ready ? '1' : '0');
     } catch (err) {
       console.error(err);
       setNftActive(false);
@@ -80,13 +86,34 @@ export default function WalletConnect() {
 
   if (!isClient) return <div className="h-12 w-full emboss animate-pulse" />;
 
+  const passLine = testnet && (
+    isVerifying ? (
+      <span className="text-amber-400">CHECKING PASS</span>
+    ) : nftActive ? (
+      <span className="text-emerald-400 flex items-center gap-1"><ShieldCheck size={12} /> PASS</span>
+    ) : (
+      <span className="text-amber-400 flex items-center gap-1"><ShieldAlert size={12} /> NO PASS</span>
+    )
+  );
+
   return (
-    <div className="flex flex-col items-center w-full gap-2">
+    <div className="flex flex-col w-full gap-2">
       {!address ? (
         <button type="button" onClick={() => { setError(null); window.Telegram?.WebApp?.expand?.(); setOpen(true); }} className="emboss emboss-accent emboss-btn w-full py-3 px-4 font-mono text-xs font-bold tracking-widest text-emerald-400 flex items-center justify-center gap-2">
           <Wallet className="w-4 h-4" />
           CONNECT TON TESTNET
         </button>
+      ) : compact ? (
+        <div className="flex items-center justify-between gap-2 text-[10px] font-mono text-zinc-400">
+          <span className="flex items-center gap-2 text-zinc-200">
+            <span className={`w-1.5 h-1.5 rounded-full ${testnet ? 'bg-emerald-500' : 'bg-amber-400'}`} />
+            {address.slice(0, 6)}...{address.slice(-4)}
+          </span>
+          <span className="flex items-center gap-2">
+            {passLine}
+            <button type="button" onClick={() => tonConnectUI.disconnect()} className="text-zinc-500"><LogOut className="w-3.5 h-3.5" /></button>
+          </span>
+        </div>
       ) : (
         <div className="emboss emboss-accent w-full p-3 font-mono text-xs">
           <div className="flex items-center justify-between gap-2">
@@ -103,17 +130,7 @@ export default function WalletConnect() {
               </button>
             </div>
           </div>
-          {testnet && (
-            <div className="mt-2 flex items-center gap-1.5 text-[10px]">
-              {isVerifying ? (
-                <span className="text-amber-400 animate-pulse">CHECKING PASS...</span>
-              ) : nftActive ? (
-                <><ShieldCheck size={13} className="text-emerald-400" /><span className="text-emerald-400 tracking-widest">PASS READY</span></>
-              ) : (
-                <><ShieldAlert size={13} className="text-amber-400" /><span className="text-amber-400 tracking-widest">PASS NOT MINTED</span></>
-              )}
-            </div>
-          )}
+          {testnet && <div className="mt-2 flex items-center gap-1.5 text-[10px] tracking-widest">{passLine}</div>}
         </div>
       )}
       {error && <p className="text-[10px] font-mono text-red-400 text-center">{error}</p>}
