@@ -175,12 +175,12 @@ tc-root {
 }
 .drill-hero-glow {
   position: absolute;
-  left: 42%;
-  bottom: 10px;
-  width: 28%;
-  height: 22%;
+  left: 45.6%;
+  bottom: 8px;
+  width: 22%;
+  height: 18%;
   transform: translateX(-50%);
-  background: radial-gradient(circle, rgba(200, 255, 58, 0.5), transparent 70%);
+  background: radial-gradient(circle, rgba(200, 255, 58, 0.55), transparent 70%);
   filter: blur(12px);
   animation: drill-core-pulse 1.4s ease-in-out infinite;
   pointer-events: none;
@@ -189,10 +189,10 @@ tc-root {
 .drill-hero.is-idle .drill-hero-glow { opacity: 0.28; animation-duration: 3.2s; }
 .drill-impact {
   position: absolute;
-  left: 42%;
-  bottom: 18px;
-  width: 16px;
-  height: 16px;
+  left: 45.6%;
+  bottom: 14px;
+  width: 14px;
+  height: 14px;
   transform: translateX(-50%);
   border-radius: 999px;
   background: #c8ff3a;
