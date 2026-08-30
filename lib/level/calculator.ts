@@ -1,8 +1,8 @@
 export const MAX_LEVEL = 500;
 const MAX_BALANCE = 80_000;
 const POWER = 2.2;
-const BASE_MINING_SPEED = 0.05;
-const MAX_MINING_SPEED = 0.60;
+const BASE_MINING_SPEED = 0.01;
+const MAX_MINING_SPEED = 0.12;
 
 export function getRequiredBalanceForLevel(level: number): number {
   if (level <= 1) return 0;
