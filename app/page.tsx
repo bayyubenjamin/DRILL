@@ -184,57 +184,69 @@ export default function DrillEngineDashboard() {
           : { label: 'CLAIM TO ENGINE', disabled: busy || liveUnclaimed <= 0, onClick: () => runAction('/api/mining/claim') };
 
   return (
-    <main className="min-h-screen max-w-md mx-auto text-white px-4 py-5 flex flex-col justify-between font-sans pb-8">
+    <main className="min-h-screen max-w-md mx-auto text-white px-4 pt-3 pb-6 flex flex-col gap-2.5 font-sans">
       <LevelUpModal open={Boolean(popup)} level={popup?.to || 0} title={popup?.title || ''} onClose={closePopup} />
-      <header className="flex justify-between items-center w-full pb-3 border-b border-white/10">
-        <div className="flex flex-col">
-          <h1 className="text-sm font-bold tracking-widest text-zinc-100 font-mono">DRILL ENGINE</h1>
-          <span className="text-[10px] text-zinc-500 font-mono tracking-widest mt-0.5">TON TESTNET</span>
+      <header className="flex justify-between items-center w-full">
+        <div>
+          <h1 className="text-[11px] font-bold tracking-[0.22em] text-zinc-200 font-mono">DRILL ENGINE</h1>
+          <span className="text-[9px] text-zinc-500 font-mono tracking-[0.18em]">TON TESTNET</span>
         </div>
-        <div className="emboss emboss-accent px-2.5 py-1 rounded-md flex items-center gap-1.5">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          <span className="text-[10px] font-mono tracking-wider text-emerald-400 font-semibold">TESTNET</span>
+        <div className="emboss emboss-accent px-2 py-1 rounded-md flex items-center gap-1.5">
+          <ShieldCheck className="w-3 h-3 text-emerald-400" />
+          <span className="text-[9px] font-mono tracking-wider text-emerald-400 font-semibold">TESTNET</span>
         </div>
       </header>
-      <div className="mt-4 mb-2"><WalletConnect /></div>
-      <EmbossCard className="my-5 px-4 py-5 text-center" accent>
-        <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase mb-1 block">ENGINE BALANCE</span>
-        <div className="flex items-baseline justify-center gap-2">
-          <span className="text-4xl font-mono font-light tracking-tight text-white">
+
+      <WalletConnect />
+
+      <EmbossCard className="px-4 py-3 text-center" accent>
+        <span className="text-[9px] font-mono tracking-[0.28em] text-zinc-500 uppercase block">ENGINE BALANCE</span>
+        <div className="mt-1 flex items-baseline justify-center gap-1.5">
+          <motion.span
+            key={engineBalance.toFixed(2)}
+            initial={{ opacity: 0.4, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-[28px] leading-none font-mono font-light tracking-tight text-white"
+          >
             {engineBalance.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
-          </span>
-          <span className="text-lg font-bold text-emerald-400">$DRILL</span>
+          </motion.span>
+          <span className="text-sm font-bold text-emerald-400">$DRILL</span>
         </div>
       </EmbossCard>
-      <EmbossCard className="p-3.5 flex flex-col gap-2.5" accent={live}>
-        <div className="flex justify-between items-center text-xs font-mono">
+
+      <EmbossCard className="px-3.5 py-2.5 flex flex-col gap-2" accent={live}>
+        <div className="flex justify-between items-center text-[11px] font-mono">
           <div className="flex items-center gap-1.5 text-amber-400 font-medium">
-            <Trophy className="w-4 h-4" />
+            <Trophy className="w-3.5 h-3.5" />
             <span>LEVEL {progress.currentLevel}</span>
           </div>
           <div className="flex items-center gap-1 text-emerald-400 font-medium">
-            <Zap className="w-4 h-4" />
-            <span>+{(live ? account.miningSpeed : 0).toFixed(2)} $DRILL / MIN</span>
+            <Zap className="w-3.5 h-3.5" />
+            <span>+{(live ? account.miningSpeed : 0).toFixed(2)} / MIN</span>
           </div>
         </div>
-        <div className="w-full h-2 rounded-full overflow-hidden emboss-inset">
+        <div className="w-full h-1.5 rounded-full overflow-hidden emboss-inset">
           <motion.div className="h-full bg-gradient-to-r from-emerald-600 via-emerald-400 to-emerald-300" animate={{ width: `${progress.progressPercent}%` }} />
         </div>
       </EmbossCard>
+
       <MiningDrill active={live} />
+
       <section className="flex flex-col w-full gap-2 mt-auto">
         {statusMessage && <div className="emboss emboss-accent text-[10px] font-mono text-emerald-400 px-3 py-1 text-center">{statusMessage}</div>}
-        <EmbossCard className="px-3 py-2.5 flex items-center justify-between gap-3" inset>
-          <span className="text-xs font-mono text-zinc-500 shrink-0">UNCLAIMED</span>
-          <span className="text-xs font-mono text-emerald-400 font-semibold text-right">+{liveUnclaimed.toFixed(4)} $DRILL</span>
+        <EmbossCard className="px-3 py-2 flex items-center justify-between gap-3" inset>
+          <span className="text-[11px] font-mono text-zinc-500">UNCLAIMED</span>
+          <motion.span key={liveUnclaimed.toFixed(4)} initial={{ opacity: 0.5 }} animate={{ opacity: 1 }} className="text-[11px] font-mono text-emerald-400 font-semibold">
+            +{liveUnclaimed.toFixed(4)} $DRILL
+          </motion.span>
         </EmbossCard>
-        <button onClick={action.onClick} disabled={action.disabled} className={`emboss-btn relative w-full py-3.5 font-mono text-xs font-bold flex items-center justify-center gap-2 ${action.disabled ? 'bg-zinc-900 text-zinc-600 border border-zinc-800' : 'bg-emerald-500 text-black'}`}>
+        <button onClick={action.onClick} disabled={action.disabled} className={`emboss-btn relative w-full py-3 font-mono text-xs font-bold flex items-center justify-center gap-2 ${action.disabled ? 'bg-zinc-900 text-zinc-600 border border-zinc-800' : 'bg-emerald-500 text-black'}`}>
           {busy || checkingPass ? <RefreshCw className="w-4 h-4 animate-spin" /> : live ? <Battery className="w-4 h-4" /> : <Pickaxe className="w-4 h-4" />}
           <span>{busy ? 'PROCESSING...' : action.label}</span>
         </button>
-        <EmbossCard className="p-3 mt-2 flex items-center justify-between gap-3">
-          <span className="flex items-center gap-1 text-[10px] tracking-widest text-amber-400/90 font-semibold font-mono"><Lock className="w-3 h-3" /> LEVEL = WALLET + CLAIMED</span>
-          <span className="text-[10px] tracking-widest text-zinc-500 font-mono shrink-0">UNCLAIMED EXCLUDED</span>
+        <EmbossCard className="px-3 py-2 flex items-center justify-between gap-2">
+          <span className="flex items-center gap-1 text-[9px] tracking-widest text-amber-400/90 font-semibold font-mono"><Lock className="w-3 h-3" /> LEVEL = WALLET + CLAIMED</span>
+          <span className="text-[9px] tracking-widest text-zinc-500 font-mono shrink-0">UNCLAIMED EXCLUDED</span>
         </EmbossCard>
       </section>
     </main>
