@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { ShieldCheck, Trophy, Wallet } from 'lucide-react';
-import { useTonAddress } from '@tonconnect/ui-react';
+import { useTonAddress, useTonConnectUI } from '@tonconnect/ui-react';
 import { calculateLevel, getLevelProgress, MAX_LEVEL } from '@/lib/level/calculator';
 import { getLevelTitle, getVisibleLevelCards } from '@/lib/level/ranks';
 import DrillPassCard from '@/components/UI/DrillPassCard';
 import EmbossCard from '@/components/UI/EmbossCard';
+import { DRILL_PASS_COLLECTION } from '@/lib/ton/network';
+import { buyPassPayloadBase64, MINT_SEND_NANOTON } from '@/lib/ton/pass';
+import { impact, notify } from '@/lib/telegram/haptic';
 
 function StatRow({ label, value, tone = 'white' }: { label: string; value: string; tone?: 'white' | 'lime' | 'amber' }) {
   const color = tone === 'lime' ? 'text-emerald-400' : tone === 'amber' ? 'text-amber-400' : 'text-white';
@@ -20,7 +23,11 @@ function StatRow({ label, value, tone = 'white' }: { label: string; value: strin
 
 export default function DrillPage() {
   const walletAddress = useTonAddress();
+  const [tonConnectUI] = useTonConnectUI();
   const [hasNft, setHasNft] = useState(false);
+  const [checkingPass, setCheckingPass] = useState(false);
+  const [minting, setMinting] = useState(false);
+  const [mintNote, setMintNote] = useState('');
   const [walletBalance, setWalletBalance] = useState(0);
   const [engineBalance, setEngineBalance] = useState(0);
   const [unclaimed, setUnclaimed] = useState(0);
@@ -28,37 +35,46 @@ export default function DrillPage() {
   const [miningSpeed, setMiningSpeed] = useState(0);
   const [lastClaimAt, setLastClaimAt] = useState<string | null>(null);
 
+  const initData = () => window.Telegram?.WebApp?.initData || '';
+
   const load = async () => {
-    const initData = window.Telegram?.WebApp?.initData || '';
-    if (!initData || !walletAddress) {
+    if (!walletAddress) {
       setHasNft(false);
+      setCheckingPass(false);
       setEngineBalance(0);
       setUnclaimed(0);
       setMiningActive(false);
       return;
     }
-    const [assetsRes, stateRes] = await Promise.all([
-      fetch('/api/user/assets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData, walletAddress }),
-      }),
-      fetch('/api/mining/state', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData, walletAddress }),
-      }),
-    ]);
-    const assets = await assetsRes.json();
-    const state = await stateRes.json();
-    if (assets.success) {
-      setWalletBalance(Number(assets.walletBalance || 0));
-      setEngineBalance(Number(assets.engineBalance || 0));
-      setMiningActive(Boolean(assets.miningActive));
-      setMiningSpeed(Number(assets.miningSpeed || 0));
-      setLastClaimAt(assets.lastClaimAt || null);
+    const payload = initData();
+    if (!payload) return;
+    setCheckingPass(true);
+    try {
+      const [assetsRes, stateRes] = await Promise.all([
+        fetch('/api/user/assets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ initData: payload, walletAddress }),
+        }),
+        fetch('/api/mining/state', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ initData: payload, walletAddress }),
+        }),
+      ]);
+      const assets = await assetsRes.json();
+      const state = await stateRes.json();
+      if (assets.success) {
+        setWalletBalance(Number(assets.walletBalance || 0));
+        setEngineBalance(Number(assets.engineBalance || 0));
+        setMiningActive(Boolean(assets.miningActive));
+        setMiningSpeed(Number(assets.miningSpeed || 0));
+        setLastClaimAt(assets.lastClaimAt || null);
+      }
+      if (state.success) setHasNft(Boolean(state.hasNft));
+    } finally {
+      setCheckingPass(false);
     }
-    if (state.success) setHasNft(Boolean(state.hasNft));
   };
 
   useEffect(() => {
@@ -79,11 +95,59 @@ export default function DrillPage() {
     return () => clearInterval(id);
   }, [walletAddress, hasNft, miningActive, lastClaimAt, miningSpeed]);
 
+  const mintOnchain = async () => {
+    if (!walletAddress || checkingPass || minting || hasNft) return;
+    impact('medium');
+    setMinting(true);
+    setMintNote('CONFIRM IN WALLET');
+    try {
+      await tonConnectUI.sendTransaction({
+        validUntil: Math.floor(Date.now() / 1000) + 300,
+        messages: [{
+          address: DRILL_PASS_COLLECTION,
+          amount: MINT_SEND_NANOTON.toString(),
+          payload: buyPassPayloadBase64(),
+        }],
+      });
+      notify('success');
+      setMintNote('TX SENT · CONFIRMING');
+      const payload = initData();
+      for (let i = 0; i < 8; i += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        const confirm = await fetch('/api/nft/mint', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ initData: payload, walletAddress }),
+        });
+        const confirmed = await confirm.json();
+        if (confirm.ok && confirmed.hasNft) {
+          setHasNft(true);
+          setMintNote('');
+          notify('success');
+          sessionStorage.setItem(`drill:pass:${walletAddress}`, '1');
+          await load();
+          return;
+        }
+        impact('light');
+        setMintNote(`WAITING CHAIN · ${i + 1}/8`);
+      }
+      notify('warning');
+      setMintNote('TX SENT · PASS NOT INDEXED YET');
+      await load();
+    } catch (err) {
+      notify('error');
+      setMintNote(err instanceof Error ? err.message : 'MINT REJECTED');
+    } finally {
+      setMinting(false);
+    }
+  };
+
   const liveUnclaimed = walletAddress && hasNft && miningActive ? unclaimed : 0;
   const claimedTotal = walletBalance + engineBalance;
   const level = calculateLevel(claimedTotal);
   const progress = getLevelProgress(claimedTotal);
   const cards = getVisibleLevelCards(claimedTotal);
+  const showMint = Boolean(walletAddress) && !checkingPass && !hasNft;
 
   return (
     <main className="min-h-screen max-w-md mx-auto text-white px-4 pt-4 pb-24 font-mono flex flex-col gap-3">
@@ -107,6 +171,23 @@ export default function DrillPage() {
             </p>
           </div>
         </div>
+
+        {showMint && (
+          <button
+            type="button"
+            disabled={minting}
+            onPointerDown={() => { if (!minting) impact('medium'); }}
+            onClick={mintOnchain}
+            className={`emboss-btn mt-4 w-full py-3 text-[11px] font-bold tracking-[0.22em] ${
+              minting ? 'bg-zinc-900 text-zinc-500 border border-zinc-800' : 'claim-cta'
+            }`}
+          >
+            {minting ? 'MINTING...' : 'MINT PASS'}
+          </button>
+        )}
+        {showMint && mintNote && (
+          <p className="mt-2 text-center text-[9px] tracking-widest text-emerald-400">{mintNote}</p>
+        )}
       </EmbossCard>
 
       <div className="flex justify-center py-1">
