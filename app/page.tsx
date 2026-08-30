@@ -13,6 +13,7 @@ export default function DrillEngineDashboard() {
   const walletAddress = useTonAddress();
   const [tonConnectUI] = useTonConnectUI();
   const [hasNft, setHasNft] = useState(false);
+  const [checkingPass, setCheckingPass] = useState(false);
   const [walletBalance, setWalletBalance] = useState(0);
   const [account, setAccount] = useState({
     balance: 0,
@@ -30,6 +31,7 @@ export default function DrillEngineDashboard() {
 
   const resetIdle = () => {
     setHasNft(false);
+    setCheckingPass(false);
     setUnclaimed(0);
     setWalletBalance(0);
     setAccount({ balance: 0, miningSpeed: 0, level: 1, lastClaimAt: null, miningActive: false, progressPercent: 0 });
@@ -41,29 +43,38 @@ export default function DrillEngineDashboard() {
       return;
     }
     const payload = initData();
-    if (!payload) return;
-    const [stateRes, assetsRes] = await Promise.all([
-      fetch('/api/mining/state', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: payload, walletAddress }),
-      }),
-      fetch('/api/user/assets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: payload, walletAddress }),
-      }),
-    ]);
-    const data = await stateRes.json();
-    const assets = await assetsRes.json();
-    if (data.success) {
-      setHasNft(Boolean(data.hasNft));
-      setAccount(data.account);
+    if (!payload) {
+      setCheckingPass(false);
+      return;
     }
-    if (assets.success) setWalletBalance(Number(assets.walletBalance || 0));
+    setCheckingPass(true);
+    try {
+      const [stateRes, assetsRes] = await Promise.all([
+        fetch('/api/mining/state', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ initData: payload, walletAddress }),
+        }),
+        fetch('/api/user/assets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ initData: payload, walletAddress }),
+        }),
+      ]);
+      const data = await stateRes.json();
+      const assets = await assetsRes.json();
+      if (data.success) {
+        setHasNft(Boolean(data.hasNft));
+        setAccount(data.account);
+      }
+      if (assets.success) setWalletBalance(Number(assets.walletBalance || 0));
+    } finally {
+      setCheckingPass(false);
+    }
   };
 
   useEffect(() => {
+    if (walletAddress) setCheckingPass(true);
     void loadState();
   }, [walletAddress]);
 
@@ -81,7 +92,7 @@ export default function DrillEngineDashboard() {
     return () => clearInterval(id);
   }, [walletAddress, hasNft, account.miningActive, account.lastClaimAt, account.miningSpeed]);
 
-  const canMine = Boolean(walletAddress && hasNft);
+  const canMine = Boolean(walletAddress && hasNft && !checkingPass);
   const live = Boolean(canMine && account.miningActive);
   const engineBalance = canMine ? account.balance : 0;
   const liveUnclaimed = live ? unclaimed : 0;
@@ -89,7 +100,7 @@ export default function DrillEngineDashboard() {
   const progress = useMemo(() => getLevelProgress(levelBalance), [levelBalance]);
 
   const mintOnchain = async () => {
-    if (!walletAddress) return;
+    if (!walletAddress || checkingPass || busy) return;
     setBusy(true);
     setStatusMessage('CONFIRM IN TONKEEPER');
     try {
@@ -104,7 +115,7 @@ export default function DrillEngineDashboard() {
       setStatusMessage('TX SENT · CONFIRMING PASS');
       const payload = initData();
       for (let i = 0; i < 8; i += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 1500));
         const confirm = await fetch('/api/nft/mint', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -129,7 +140,7 @@ export default function DrillEngineDashboard() {
   };
 
   const runAction = async (path: string) => {
-    if (!canMine) return;
+    if (!canMine || busy) return;
     setBusy(true);
     try {
       const res = await fetch(path, {
@@ -154,11 +165,13 @@ export default function DrillEngineDashboard() {
 
   const action = !walletAddress
     ? { label: 'CONNECT TESTNET WALLET FIRST', disabled: true, onClick: () => undefined }
-    : !hasNft
-      ? { label: 'MINT PASS ON-CHAIN · 1 TON', disabled: busy, onClick: mintOnchain }
-      : !account.miningActive
-        ? { label: 'START MINING', disabled: busy, onClick: () => runAction('/api/mining/start') }
-        : { label: 'CLAIM TO ENGINE', disabled: busy || liveUnclaimed <= 0, onClick: () => runAction('/api/mining/claim') };
+    : checkingPass
+      ? { label: 'CHECKING PASS...', disabled: true, onClick: () => undefined }
+      : !hasNft
+        ? { label: 'MINT PASS ON-CHAIN · 1 TON', disabled: busy, onClick: mintOnchain }
+        : !account.miningActive
+          ? { label: 'START MINING', disabled: busy, onClick: () => runAction('/api/mining/start') }
+          : { label: 'CLAIM TO ENGINE', disabled: busy || liveUnclaimed <= 0, onClick: () => runAction('/api/mining/claim') };
 
   return (
     <main className="min-h-screen max-w-md mx-auto bg-black text-white px-4 py-5 flex flex-col justify-between font-sans pb-8">
@@ -210,7 +223,7 @@ export default function DrillEngineDashboard() {
           <span className="text-emerald-400 font-semibold">+{liveUnclaimed.toFixed(4)} $DRILL</span>
         </div>
         <button onClick={action.onClick} disabled={action.disabled} className={`relative w-full py-3.5 rounded-xl font-mono text-xs font-bold tracking-widest uppercase flex items-center justify-center gap-2 ${action.disabled ? 'bg-zinc-900 text-zinc-600 border border-zinc-800' : 'bg-emerald-500 text-black'}`}>
-          {busy ? <RefreshCw className="w-4 h-4 animate-spin" /> : live ? <Battery className="w-4 h-4" /> : <Pickaxe className="w-4 h-4" />}
+          {busy || checkingPass ? <RefreshCw className="w-4 h-4 animate-spin" /> : live ? <Battery className="w-4 h-4" /> : <Pickaxe className="w-4 h-4" />}
           <span>{busy ? 'PROCESSING...' : action.label}</span>
         </button>
         <div className="w-full bg-zinc-950/80 border border-zinc-800/80 rounded-xl p-3 mt-4">
