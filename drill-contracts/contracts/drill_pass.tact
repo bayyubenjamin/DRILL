@@ -1,3 +1,17 @@
+struct CollectionData {
+    nextItemIndex: Int;
+    collectionContent: Cell;
+    ownerAddress: Address;
+}
+
+struct NftData {
+    init: Bool;
+    index: Int;
+    collectionAddress: Address;
+    ownerAddress: Address;
+    individualContent: Cell;
+}
+
 message(0x3a9dfd19) SetPrice {
     queryId: Int as uint64;
     newPrice: Int as coins;
@@ -28,6 +42,13 @@ message RevokePass {
     itemIndex: Int as uint64;
 }
 
+message InitPass {
+    queryId: Int as uint64;
+    owner: Address;
+    authority: Address;
+    content: Cell;
+}
+
 message Revoke {
     queryId: Int as uint64;
 }
@@ -36,14 +57,26 @@ message TransferSbt {
     queryId: Int as uint64;
 }
 
+/// Soulbound item. Address depends only on collection + index so wallets can index it.
 contract DrillPassItem(
     collection: Address,
     index: Int as uint64,
-    owner: Address,
-    authority: Address,
-    revokedAt: Int as uint64,
-    initialized: Bool,
 ) {
+    owner: Address = collection;
+    authority: Address = collection;
+    content: Cell = emptyCell();
+    revokedAt: Int as uint64 = 0;
+    initialized: Bool = false;
+
+    receive(msg: InitPass) {
+        require(sender() == self.collection, "Only collection");
+        require(!self.initialized, "Already inited");
+        self.owner = msg.owner;
+        self.authority = msg.authority;
+        self.content = msg.content;
+        self.initialized = true;
+    }
+
     receive(msg: TransferSbt) {
         require(false, "Soulbound: transfer disabled");
     }
@@ -65,8 +98,19 @@ contract DrillPassItem(
     get fun revokedAt(): Int {
         return self.revokedAt;
     }
+
+    get fun get_nft_data(): NftData {
+        return NftData{
+            init: self.initialized,
+            index: self.index,
+            collectionAddress: self.collection,
+            ownerAddress: self.owner,
+            individualContent: self.content,
+        };
+    }
 }
 
+/// SBT collection. 1 pass per wallet. Indexer-friendly TEP-62 getters.
 contract DrillPassCollection(
     admin: Address,
     nextItemIndex: Int as uint64,
@@ -84,12 +128,12 @@ contract DrillPassCollection(
 
     receive(msg: AdminMint) {
         require(sender() == self.admin, "Only admin can admin-mint");
-        self.mintPass(msg.to);
+        self.mintPass(msg.to, msg.queryId);
     }
 
     receive(msg: BuyPass) {
         require(context().value >= self.mintPrice, "Insufficient TON");
-        self.mintPass(sender());
+        self.mintPass(sender(), msg.queryId);
     }
 
     receive(msg: ChangeCollectionAdmin) {
@@ -112,11 +156,11 @@ contract DrillPassCollection(
             value: 0,
             mode: SendRemainingValue,
             body: Revoke{ queryId: msg.queryId }.toCell(),
-            init: initOf DrillPassItem(myAddress(), msg.itemIndex, self.admin, self.admin, 0, true),
+            init: initOf DrillPassItem(myAddress(), msg.itemIndex),
         });
     }
 
-    fun mintPass(to: Address) {
+    fun mintPass(to: Address, queryId: Int) {
         require(self.minted.get(to) == null, "Wallet already has a pass");
         let index: Int = self.nextItemIndex;
         self.minted.set(to, index);
@@ -124,7 +168,13 @@ contract DrillPassCollection(
         deploy(DeployParameters{
             value: ton("0.05"),
             bounce: false,
-            init: initOf DrillPassItem(myAddress(), index, to, self.admin, 0, true),
+            body: InitPass{
+                queryId: queryId,
+                owner: to,
+                authority: self.admin,
+                content: self.content,
+            }.toCell(),
+            init: initOf DrillPassItem(myAddress(), index),
         });
     }
 
@@ -144,7 +194,19 @@ contract DrillPassCollection(
         return self.minted.get(owner);
     }
 
+    get fun get_collection_data(): CollectionData {
+        return CollectionData{
+            nextItemIndex: self.nextItemIndex,
+            collectionContent: self.content,
+            ownerAddress: self.admin,
+        };
+    }
+
     get fun get_nft_address_by_index(index: Int): Address {
-        return contractAddress(initOf DrillPassItem(myAddress(), index, self.admin, self.admin, 0, true));
+        return contractAddress(initOf DrillPassItem(myAddress(), index));
+    }
+
+    get fun get_nft_content(index: Int, individualContent: Cell): Cell {
+        return individualContent;
     }
 }

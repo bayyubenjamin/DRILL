@@ -1,12 +1,10 @@
 import { Address, beginCell, toNano } from '@ton/core';
-import { DRILL_PASS_COLLECTION } from '@/lib/ton/network';
+import { DRILL_PASS_COLLECTION, TONAPI_BASE, TONCENTER_RUNGET } from '@/lib/ton/network';
 
 export const BUY_PASS_OPCODE = 0x42555950;
-export const MINT_PRICE_NANOTON = toNano('1');
-export const MINT_SEND_NANOTON = toNano('1.15');
+export const MINT_PRICE_NANOTON = toNano(process.env.NEXT_PUBLIC_MINT_PRICE_TON || '1');
+export const MINT_SEND_NANOTON = toNano(process.env.NEXT_PUBLIC_MINT_SEND_TON || '1.15');
 
-const TONAPI = 'https://testnet.tonapi.io/v2';
-const TONCENTER = 'https://testnet.toncenter.com/api/v2/runGetMethod';
 const FETCH_MS = 3500;
 
 function walletForms(walletAddress: string) {
@@ -51,7 +49,7 @@ async function hasPassViaNftIndex(walletAddress: string) {
   const collections = collectionForms();
   const checks = owners.flatMap((owner) =>
     collections.map(async (collection) => {
-      const url = `${TONAPI}/accounts/${encodeURIComponent(owner)}/nfts?collection=${encodeURIComponent(collection)}&limit=4`;
+      const url = `${TONAPI_BASE}/accounts/${encodeURIComponent(owner)}/nfts?collection=${encodeURIComponent(collection)}&limit=4`;
       const data = await fetchJson(url);
       const items = data?.nft_items || data?.nfts || [];
       return Array.isArray(items) && items.length > 0;
@@ -69,12 +67,12 @@ async function hasPassViaGetMethod(walletAddress: string) {
   const attempts: Array<() => Promise<boolean>> = [
     async () => {
       const data = await fetchJson(
-        `${TONAPI}/blockchain/accounts/${encodeURIComponent(collection)}/methods/passIndexOf?args=${encodeURIComponent(friendly)}`,
+        `${TONAPI_BASE}/blockchain/accounts/${encodeURIComponent(collection)}/methods/passIndexOf?args=${encodeURIComponent(friendly)}`,
       );
       return Boolean(data?.success) && data?.exit_code === 0 && stackHasIndex(data?.stack);
     },
     async () => {
-      const data = await fetchJson(`${TONAPI}/blockchain/accounts/${encodeURIComponent(collection)}/methods/passIndexOf`, {
+      const data = await fetchJson(`${TONAPI_BASE}/blockchain/accounts/${encodeURIComponent(collection)}/methods/passIndexOf`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ args: [friendly] }),
@@ -83,7 +81,7 @@ async function hasPassViaGetMethod(walletAddress: string) {
     },
     async () => {
       const sliceBoc = beginCell().storeAddress(parsed).endCell().toBoc().toString('base64');
-      const data = await fetchJson(TONCENTER, {
+      const data = await fetchJson(TONCENTER_RUNGET, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
