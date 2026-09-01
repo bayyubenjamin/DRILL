@@ -4,7 +4,13 @@
   "decimals": "9",
   "description": "DRILL ENGINE utility token. Immutable hard cap 10,000,000,000.",
   "image": "https://drill-chi-flax.vercel.app/icon.png",
+<<<<<<< HEAD
   "website": "https://YOUR_WEBSITE",
   "twitter": "https://x.com/YOUR_HANDLE",
   "telegram": "https://t.me/YOUR_CHANNEL"
+=======
+  "website": "https://drill-chi-flax.vercel.app",
+  "twitter": "https://x.com/drillnetwork",
+  "telegram": "https://t.me/drillnetwork"
+>>>>>>> ae33ee1 (Update mining speed curve)
 }
