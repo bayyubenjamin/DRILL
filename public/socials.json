@@ -1,11 +1,5 @@
 {
-<<<<<<< HEAD
-  "website": "https://YOUR_WEBSITE",
-  "x": "https://x.com/YOUR_HANDLE",
-  "telegram": "https://t.me/YOUR_CHANNEL"
-=======
   "website": "https://drill-chi-flax.vercel.app",
   "x": "https://x.com/drillnetwork",
   "telegram": "https://t.me/drillnetwork"
->>>>>>> ae33ee1 (Update mining speed curve)
 }

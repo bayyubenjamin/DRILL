@@ -1,9 +1,5 @@
 {
-<<<<<<< HEAD
-  "url": "https://YOUR_WEBSITE",
-=======
   "url": "https://drill-chi-flax.vercel.app",
->>>>>>> ae33ee1 (Update mining speed curve)
   "name": "DRILL ENGINE",
-  "iconUrl": "https://drill-chi-flax.vercel.app/icon.png"
+  "iconUrl": "https://drill-chi-flax.vercel.app/logo.png"
 }
