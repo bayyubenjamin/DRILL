@@ -1,4 +1,4 @@
-# DRILL NETWORK — DRILL ENGINE
+# DRILL PROTOCOL — DRILL ENGINE
 
 > Industrial + Futuristic + Dark + Minimal Web3 Telegram Mini App built on TON Testnet and Supabase.
 
