@@ -5,8 +5,8 @@
   "cover_image": "https://drill-chi-flax.vercel.app/drill-pass.png",
   "external_url": "https://drill-chi-flax.vercel.app",
   "website": "https://drill-chi-flax.vercel.app",
-  "twitter": "https://x.com/drillnetwork",
-  "telegram": "https://t.me/drillnetwork",
+  "twitter": "https://x.com/drillprotocol",
+  "telegram": "https://t.me/drillprotocol",
   "attributes": [
     { "trait_type": "Type", "value": "SBT" },
     { "trait_type": "Transferable", "value": "No" }

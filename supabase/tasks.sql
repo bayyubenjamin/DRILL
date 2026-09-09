@@ -41,8 +41,8 @@ update public.tasks set is_active = true where is_active is null;
 insert into public.tasks (slug, title, description, reward, type, link, is_active)
 values
   ('daily-login', 'Daily Drill Login', 'Open the engine every day to keep your generator online.', 5, 'daily', null, true),
-  ('tg-channel', 'Join Drill Telegram Official', 'Join the official Telegram channel for updates.', 5, 'social', 'https://t.me/drillnetwork', true),
-  ('twitter-follow', 'Follow DRILL on X', 'Follow the official X account.', 5, 'social', 'https://x.com', true),
+  ('tg-channel', 'Join Drill Telegram Official', 'Join the official Telegram channel for updates.', 5, 'social', 'https://t.me/drillprotocol', true),
+  ('twitter-follow', 'Follow DRILL on X', 'Follow the official X account.', 5, 'social', 'https://x.com/drillprotocol', true),
   ('wallet-connect', 'Connect TON Testnet Wallet', 'Connect a TON Testnet wallet to bind your account.', 5, 'onchain', null, true),
   ('mint-pass', 'Mint Mining NFT Pass', 'Mint the Drill Pass SBT to unlock mining.', 5, 'onchain', null, true)
 on conflict (slug) do update
