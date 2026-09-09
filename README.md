@@ -38,7 +38,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token
 
 NEXT_PUBLIC_TON_NETWORK=testnet
-NEXT_PUBLIC_TON_CONNECT_MANIFEST_URL=https://your-domain.vercel.app/tonconnect-manifest.json
+NEXT_PUBLIC_TON_CONNECT_MANIFEST_URL=https://drillprotocol.xyz/tonconnect-manifest.json
 TON_RPC_URL=https://testnet.toncenter.com/api/v2/jsonRPC
 TON_TESTNET_MNEMONIC="word1 word2 ... word24"
 

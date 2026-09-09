@@ -8,7 +8,7 @@ export async function run(provider: NetworkProvider) {
 
   const content = beginCell()
     .storeUint(1, 8)
-    .storeStringTail('https://drill-chi-flax.vercel.app/drill.json')
+    .storeStringTail('https://drillprotocol.xyz/drill.json')
     .endCell();
 
   const minter = provider.open(await DrillJettonMinter.fromInit(admin, content));

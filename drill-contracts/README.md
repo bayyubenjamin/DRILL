@@ -38,6 +38,6 @@ NEXT_PUBLIC_NFT_COLLECTION_ADDRESS=EQ...
 Edit metadata URLs in `.env` before deploy:
 
 ```
-METADATA_URL=https://YOUR_DOMAIN/drill.json
-PASS_METADATA_URL=https://YOUR_DOMAIN/drill-pass.json
+METADATA_URL=https://drillprotocol.xyz/drill.json
+PASS_METADATA_URL=https://drillprotocol.xyz/drill-pass.json
 ```

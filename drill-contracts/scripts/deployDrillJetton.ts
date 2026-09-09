@@ -11,7 +11,7 @@ export async function run(provider: NetworkProvider) {
   if (!admin) throw new Error('Connect wallet first');
 
   const metadataUrl =
-    process.env.METADATA_URL || 'https://drill-chi-flax.vercel.app/drill.json';
+    process.env.METADATA_URL || 'https://drillprotocol.xyz/drill.json';
 
   const minter = provider.open(
     await DrillJettonMinter.fromInit(0n, admin, true, offchainContent(metadataUrl)),

@@ -11,7 +11,7 @@ export async function run(provider: NetworkProvider) {
   if (!admin) throw new Error('Connect wallet first');
 
   const metadataUrl =
-    process.env.PASS_METADATA_URL || 'https://drill-chi-flax.vercel.app/drill-pass.json';
+    process.env.PASS_METADATA_URL || 'https://drillprotocol.xyz/drill-pass.json';
   const price = toNano(process.env.MINT_PRICE_TON || '1');
   const minted = Dictionary.empty<Address, bigint>(
     Dictionary.Keys.Address(),
