@@ -10,30 +10,39 @@ export default function TelegramGate({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     let cancelled = false;
+
     const check = () => {
-      if (cancelled) return;
+      if (cancelled) return false;
       if (isOpenedInsideTelegram()) {
         setInsideTelegram(true);
         setReady(true);
-        window.Telegram?.WebApp?.ready?.();
-        window.Telegram?.WebApp?.expand?.();
+        try {
+          window.Telegram?.WebApp?.ready?.();
+          window.Telegram?.WebApp?.expand?.();
+        } catch {
+          // ignore
+        }
         return true;
       }
       return false;
     };
 
-    if (check()) return () => {
-      cancelled = true;
-    };
+    // Immediate check
+    if (check()) {
+      return () => {
+        cancelled = true;
+      };
+    }
 
+    // Retry because telegram-web-app.js + initData can arrive slightly later
     let tries = 0;
     const timer = setInterval(() => {
       tries += 1;
-      if (check() || tries >= 20) {
+      if (check() || tries >= 40) {
         clearInterval(timer);
         if (!cancelled) setReady(true);
       }
-    }, 150);
+    }, 100);
 
     return () => {
       cancelled = true;

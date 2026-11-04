@@ -5,7 +5,7 @@ import { THEME, TonConnectUIProvider } from '@tonconnect/ui-react';
 
 const MANIFEST_URL =
   process.env.NEXT_PUBLIC_TON_CONNECT_MANIFEST_URL ??
-  'https://drillprotocol.xyz/tonconnect-manifest.json';
+  'https://drill-chi-flax.vercel.app/tonconnect-manifest.json';
 
 const TWA_RETURN_URL = process.env.NEXT_PUBLIC_TWA_RETURN_URL;
 
