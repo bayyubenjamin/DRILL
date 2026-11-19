@@ -8,6 +8,9 @@
  * TELEGRAM_WEBHOOK_SECRET (Vercel env) and rejects everything else.
  * Fail closed: no secret configured = no update is processed.
  *
+ * Deploy note: TELEGRAM_WEBHOOK_SECRET lives in Vercel Production env
+ * (added 20 Nov 2026). A fresh deployment is required after adding it.
+ *
  * Always answers 200 after processing (even when a single handler
  * fails) so Telegram does not retry a poisoned update. 401 only for
  * a missing/wrong secret header.
