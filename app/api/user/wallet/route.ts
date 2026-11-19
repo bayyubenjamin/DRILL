@@ -3,6 +3,46 @@ import { validateTelegramWebAppData } from '@/utils/telegram';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { bindWalletToUser } from '@/lib/user/wallet-bind';
 
+export async function GET(request: Request) {
+  try {
+    const initData = new URL(request.url).searchParams.get('initData') || '';
+    if (!initData) {
+      return NextResponse.json({ error: 'Missing initData' }, { status: 400 });
+    }
+
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    if (!botToken) {
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
+    if (!validateTelegramWebAppData(initData, botToken)) {
+      return NextResponse.json({ error: 'Invalid Telegram data signature' }, { status: 401 });
+    }
+
+    const userString = new URLSearchParams(initData).get('user');
+    if (!userString) {
+      return NextResponse.json({ error: 'No user data found in initData' }, { status: 400 });
+    }
+
+    const tgUser = JSON.parse(userString);
+    const { data: user, error } = await supabaseAdmin
+      .from('users')
+      .select('id, wallet_address')
+      .eq('telegram_user_id', tgUser.id)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, walletAddress: user.wallet_address ?? null });
+  } catch (error) {
+    console.error('Wallet lookup error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const { initData, walletAddress } = await request.json();

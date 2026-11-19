@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useTonAddress, useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
-import { LogOut, ShieldAlert, ShieldCheck, User, Wallet, X } from 'lucide-react';
+import { Check, Copy, LogOut, ShieldAlert, ShieldCheck, User, Wallet, X } from 'lucide-react';
 import { IS_MAINNET, isTonMainnet, isTonTestnet, networkLabel } from '@/lib/ton/network';
 import { describeWalletFailure, shortAddress } from '@/lib/ton/wallet-errors';
 import { showToast } from '@/components/UI/Toast';
@@ -24,6 +24,12 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [tgName, setTgName] = useState('OPERATOR');
+  // Wallet yang terikat ke akun Telegram ini menurut database — sumber
+  // kebenaran saat sesi TonConnect di perangkat ini sudah hilang.
+  const [boundWallet, setBoundWallet] = useState<string | null>(null);
+  const [boundLoaded, setBoundLoaded] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const boundFetchedRef = useRef(false);
   const chainOk = IS_MAINNET ? isTonMainnet(wallet?.account?.chain) : isTonTestnet(wallet?.account?.chain);
   // true saat putusnya disengaja (tombol disconnect / aturan ikat) — jangan
   // tampilkan toast "terputus" untuk yang ini.
@@ -37,6 +43,29 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
     if (!user) return;
     const full = [user.first_name, user.last_name].filter(Boolean).join(' ');
     setTgName(full || (user.username ? `@${user.username}` : 'OPERATOR'));
+  }, []);
+
+  // Ambil wallet yang sudah terikat ke akun Telegram ini dari database —
+  // supaya pengguna langsung tahu wallet mana yang terhubung, walau sesi
+  // TonConnect di perangkat ini sudah hilang. Tanpa initData (di luar
+  // Telegram) lewati saja, tampilannya tetap seperti semula.
+  useEffect(() => {
+    if (boundFetchedRef.current) return;
+    boundFetchedRef.current = true;
+    const initData = window.Telegram?.WebApp?.initData || '';
+    if (!initData) {
+      setBoundLoaded(true);
+      return;
+    }
+    void fetch(`/api/user/wallet?initData=${encodeURIComponent(initData)}`)
+      .then((res) => res.json().catch(() => ({})))
+      .then((data) => {
+        if (typeof data.walletAddress === 'string' && data.walletAddress) {
+          setBoundWallet(data.walletAddress);
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => setBoundLoaded(true));
   }, []);
 
   // Beri tahu pengguna bila wallet terputus sendiri dari luar (misal diputus
@@ -122,6 +151,7 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
       return;
     }
     void verifyNFT(walletAddress);
+    setBoundWallet(data.walletAddress ?? walletAddress);
     showToast({
       kind: 'success',
       title: 'Wallet terhubung',
@@ -182,10 +212,36 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
   return (
     <div className="flex flex-col w-full gap-2">
       {!address ? (
-        <button type="button" onClick={() => { window.Telegram?.WebApp?.expand?.(); setOpen(true); }} className="emboss emboss-accent emboss-btn w-full py-3 px-4 font-mono text-xs font-bold tracking-widest text-emerald-400 flex items-center justify-center gap-2">
-          <Wallet className="w-4 h-4" />
-          CONNECT TON {networkLabel()}
-        </button>
+        !boundLoaded ? (
+          <div className="h-12 w-full emboss animate-pulse" />
+        ) : boundWallet ? (
+          <div className="emboss emboss-accent w-full px-3 py-2.5 font-mono">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-9 h-9 rounded-lg border border-emerald-500/35 flex items-center justify-center bg-black/40">
+                  <Wallet className="w-4 h-4 text-emerald-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[8px] tracking-[0.28em] text-emerald-400">WALLET TERIKAT · {networkLabel()}</p>
+                  <p className="text-[11px] tracking-widest text-white truncate">{shortAddress(boundWallet)}</p>
+                  <p className="mt-0.5 text-[9px] tracking-wider text-zinc-500">Akun ini sebelumnya terhubung ke wallet ini</p>
+                </div>
+              </div>
+              <button type="button" aria-label="Salin alamat wallet terikat" onClick={async () => { try { await navigator.clipboard.writeText(boundWallet); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* abaikan */ } }} className="text-zinc-400 p-1 shrink-0">
+                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+              </button>
+            </div>
+            <button type="button" onClick={() => { window.Telegram?.WebApp?.expand?.(); setOpen(true); }} className="emboss emboss-btn w-full mt-2.5 py-2.5 px-4 font-mono text-[11px] font-bold tracking-widest text-emerald-400 flex items-center justify-center gap-2">
+              <Wallet className="w-4 h-4" />
+              HUBUNGKAN LAGI
+            </button>
+          </div>
+        ) : (
+          <button type="button" onClick={() => { window.Telegram?.WebApp?.expand?.(); setOpen(true); }} className="emboss emboss-accent emboss-btn w-full py-3 px-4 font-mono text-xs font-bold tracking-widest text-emerald-400 flex items-center justify-center gap-2">
+            <Wallet className="w-4 h-4" />
+            CONNECT TON {networkLabel()}
+          </button>
+        )
       ) : compact ? (
         <div className="flex items-center justify-between gap-2 text-[10px] font-mono text-zinc-400">
           <span className="flex items-center gap-2 text-zinc-200">
@@ -224,6 +280,11 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
           <h2 className="font-mono text-xs tracking-widest text-emerald-400">TON {networkLabel()}</h2>
           <button type="button" aria-label="Close wallet picker" onClick={() => setOpen(false)}><X className="w-4 h-4 text-zinc-500" /></button>
         </div>
+        {boundWallet && !address && (
+          <p className="mb-3 rounded-lg border border-emerald-500/25 bg-emerald-500/5 px-3 py-2 font-mono text-[10px] leading-relaxed tracking-wider text-zinc-300">
+            Akun ini terikat ke wallet <span className="text-emerald-400">{shortAddress(boundWallet)}</span> — pilih wallet yang sama supaya tidak ditolak.
+          </p>
+        )}
         {WALLETS.map((item) => (
           <button key={item.appName} type="button" disabled={Boolean(busy)} onClick={async () => {
             setBusy(item.appName);
