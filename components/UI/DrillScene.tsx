@@ -87,11 +87,14 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
     container.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    // Camera frames the rig's visual centre (mast at x=0, body at x=1.18)
-    // — not the mast alone — so the model sits dead-centre on a phone.
+    // Precision centring: the camera aims at the TURNTABLE AXIS
+    // (scene x = -0.6, where the mast stands and the ground disc is
+    // centred) — not at the mast+body midpoint. The body orbits the axis,
+    // so the axis is the only point that stays centred while the scene
+    // turns; aiming anywhere else makes the whole diorama sit off-centre.
     const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
-    camera.position.set(1.0, 2.4, 8.6);
-    camera.lookAt(0.6, 1.4, 0);
+    camera.position.set(-0.2, 2.5, 8.6);
+    camera.lookAt(-0.6, 1.5, 0);
 
     const disposables: Array<{ dispose: () => void }> = [];
     const track = <T extends { dispose: () => void }>(item: T): T => {

@@ -310,15 +310,12 @@ export default function DrillEngineDashboard() {
         <span className="text-sm font-bold text-emerald-400 tracking-widest">$DRILL</span>
       </div>
 
-      <div className="drill-stage relative min-h-[248px] flex items-end justify-center">
-        <span className="drill-stage-glow" aria-hidden />
-        <span className="drill-stage-ring" aria-hidden />
-        <div className="drill-stage-float relative w-full">
+      <div className="drill-stage relative h-[240px] flex items-end justify-center">
+        <div className="drill-stage-float relative w-full h-full">
+          <span className="drill-stage-glow" aria-hidden />
+          <span className="drill-stage-ring" aria-hidden />
           <MiningDrill active={live} />
         </div>
-        <p className="absolute bottom-0 left-1/2 -translate-x-1/2 text-[8px] font-mono tracking-[0.3em] text-zinc-600 whitespace-nowrap">
-          3D · DRAG TO ROTATE · TAP FOR SPARKS
-        </p>
       </div>
 
       <EmbossCard className="px-3.5 py-2.5 flex flex-col gap-2" accent={live}>
