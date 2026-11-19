@@ -15,6 +15,17 @@ const WALLETS = [
   { appName: 'mytonwallet', label: 'MyTonWallet', hint: 'App / Web' },
 ] as const;
 
+/** Show a toast at most once per browser session for the given key. */
+function showToastOnce(key: string, toast: Parameters<typeof showToast>[0]): void {
+  try {
+    if (sessionStorage.getItem(key) === '1') return;
+    sessionStorage.setItem(key, '1');
+  } catch {
+    // ignore — storage unavailable, show it
+  }
+  showToast(toast);
+}
+
 export default function WalletConnect({ compact = false }: { compact?: boolean }) {
   const address = useTonAddress();
   const wallet = useTonWallet();
@@ -185,10 +196,15 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
     } catch {
       // ignore
     }
-    showToast({
+    // The bind call runs again on every remount / navigation, so the
+    // "connected" notice must not repeat each time. Once per wallet per
+    // session, as a small pill that is gone in 2.5s.
+    showToastOnce(`drill:connect-toast:${walletAddress}`, {
       kind: 'success',
-      title: 'Wallet connected',
-      message: `${shortAddress(walletAddress)} is now bound to your Telegram account. One account, one wallet.`,
+      compact: true,
+      title: `Wallet connected · ${shortAddress(walletAddress)}`,
+      message: '',
+      durationMs: 2500,
     });
   };
 
@@ -206,7 +222,7 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
       if (!res.ok) {
         setNftActive(false);
         sessionStorage.removeItem(`drill:pass:${walletAddress}`);
-        showToast({
+        showToastOnce(`drill:pass-toast:${walletAddress}`, {
           kind: 'error',
           title: 'Could not check Drill Pass',
           message:
@@ -220,7 +236,7 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
     } catch (err) {
       console.error(err);
       setNftActive(false);
-      showToast({
+      showToastOnce(`drill:pass-toast:${walletAddress}`, {
         kind: 'error',
         title: 'Could not check Drill Pass',
         message: 'Could not reach the server to check the pass. Your wallet stays connected.',

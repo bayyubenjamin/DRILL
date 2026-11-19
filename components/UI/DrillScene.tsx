@@ -81,9 +81,17 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
     container.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
-    camera.position.set(0.4, 2.35, 7.8);
-    camera.lookAt(0.1, 1.35, 0);
+    // Camera frames the rig's visual centre (mast at x=0, body at x=1.18)
+    // — not the mast alone — so the model sits dead-centre on a phone.
+    const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
+    camera.position.set(1.0, 2.4, 8.6);
+    camera.lookAt(0.6, 1.4, 0);
+
+    // Everything visible lives in one group shifted left so the mast+body
+    // composition is centred on x=0 (the camera's lookAt point).
+    const world = new THREE.Group();
+    world.position.x = -0.6;
+    scene.add(world);
 
     const disposables: Array<{ dispose: () => void }> = [];
     const track = <T extends { dispose: () => void }>(item: T): T => {
@@ -101,7 +109,7 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
     scene.add(rim);
     const glowLight = new THREE.PointLight(LIME, 9, 9, 1.6);
     glowLight.position.set(0, 0.6, 1.6);
-    scene.add(glowLight);
+    world.add(glowLight);
 
     // ---- ground -----------------------------------------------------------
     const groundMat = track(
@@ -110,7 +118,7 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
     const ground = new THREE.Mesh(track(new THREE.CircleGeometry(2.7, 48)), groundMat);
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = -0.02;
-    scene.add(ground);
+    world.add(ground);
 
     const glowMat = track(
       new THREE.MeshBasicMaterial({
@@ -124,7 +132,7 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
     const groundGlow = new THREE.Mesh(track(new THREE.CircleGeometry(1.5, 48)), glowMat);
     groundGlow.rotation.x = -Math.PI / 2;
     groundGlow.position.y = 0.0;
-    scene.add(groundGlow);
+    world.add(groundGlow);
 
     // ---- rocks + ore crystals ---------------------------------------------
     const rockMat = track(
@@ -136,7 +144,7 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
       rock.position.set(r.x, 0.06 * r.s + 0.02, r.z);
       rock.scale.setScalar(r.s);
       rock.rotation.set(0.4, r.ry, 0.2);
-      scene.add(rock);
+      world.add(rock);
     }
 
     const crystalMat = track(
@@ -154,13 +162,13 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
       crystal.position.set(c.x, 0.12 * c.s + 0.03, c.z);
       crystal.scale.set(c.s, c.s * 1.6, c.s);
       crystal.rotation.set(0.2, c.ry, 0.15);
-      scene.add(crystal);
+      world.add(crystal);
     }
 
     // ---- rig (everything that rotates / bobs) ------------------------------
     const rig = new THREE.Group();
     rig.position.y = 0;
-    scene.add(rig);
+    world.add(rig);
 
     const railMat = track(
       new THREE.MeshStandardMaterial({ color: METAL_DARK, metalness: 0.85, roughness: 0.35 }),
@@ -333,13 +341,16 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
       }),
     );
     const particles = new THREE.Points(particleGeo, particleMat);
-    scene.add(particles);
+    world.add(particles);
 
     // ---- sizing ---------------------------------------------------------------
     const resize = () => {
       const w = container.clientWidth || 1;
       const h = container.clientHeight || 1;
-      renderer.setSize(w, h, false);
+      // updateStyle=true: the canvas must fill its container exactly.
+      // Without it the canvas falls back to its 300x150 default size and
+      // the scene renders squeezed / off-centre on phones.
+      renderer.setSize(w, h, true);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
     };
@@ -351,9 +362,11 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
     let dragging = false;
     let lastX = 0;
     let lastY = 0;
-    let targetRotY = 0;
+    // Start at a 3/4 angle so the first paint already reads as 3D
+    // (body angled, depth visible) instead of a flat side-on view.
+    let targetRotY = -0.55;
     let targetTilt = 0;
-    let currentRotY = 0;
+    let currentRotY = -0.55;
     let currentTilt = 0;
 
     const onPointerDown = (e: PointerEvent) => {

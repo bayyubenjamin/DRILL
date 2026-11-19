@@ -18,6 +18,8 @@ export interface ToastItem {
   onAction?: () => void;
   /** Milidetik sebelum hilang sendiri; 0 = tidak hilang sendiri. */
   durationMs: number;
+  /** Small single-line pill (icon + title only) for low-priority notices. */
+  compact?: boolean;
 }
 
 interface ToastState {
@@ -62,6 +64,24 @@ function ToastCard({ toast }: { toast: ToastItem }) {
     const t = window.setTimeout(() => dismiss(toast.id), toast.durationMs);
     return () => window.clearTimeout(t);
   }, [toast.durationMs, toast.id, dismiss]);
+  if (toast.compact) {
+    return (
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: -8, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -6, scale: 0.96 }}
+        transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+        role="status"
+        className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-zinc-950/90 px-2.5 py-1.5 shadow-lg shadow-black/50 backdrop-blur"
+      >
+        <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
+        <p className="font-mono text-[10px] font-bold tracking-wider text-zinc-200 whitespace-nowrap">
+          {toast.title}
+        </p>
+      </motion.div>
+    );
+  }
   return (
     <motion.div
       layout
