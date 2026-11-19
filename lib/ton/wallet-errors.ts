@@ -1,16 +1,16 @@
-// Alasan wallet terputus / gagal terikat, dalam Bahasa Indonesia yang
-// dimengerti pengguna. Satu akun Telegram = satu wallet, dan satu wallet =
-// satu akun Telegram; aturan itu ditegakkan server di /api/user/wallet.
+// Why a wallet disconnected or failed to bind, in plain English for the
+// user. One Telegram account = one wallet, and one wallet = one Telegram
+// account; that rule is enforced server-side in /api/user/wallet.
 
 export type WalletFailureKind = 'taken' | 'locked' | 'invalid' | 'session' | 'not-found' | 'server' | 'network';
 
 export interface WalletFailure {
   kind: WalletFailureKind;
-  /** Judul singkat untuk toast. */
+  /** Short title for the toast. */
   title: string;
-  /** Penjelasan + apa yang harus dilakukan pengguna. */
+  /** Explanation + what the user should do. */
   message: string;
-  /** true = pelanggaran aturan ikat yang sudah pasti; wallet harus diputus. */
+  /** true = a binding rule was definitely broken; the wallet must disconnect. */
   mustDisconnect: boolean;
 }
 
@@ -20,10 +20,10 @@ export function shortAddress(address: string): string {
 }
 
 /**
- * Terjemahkan respons gagal dari /api/user/wallet menjadi alasan yang jelas.
- * `code` adalah `code` dari server (WALLET_TAKEN / WALLET_LOCKED /
- * INVALID_WALLET) atau status HTTP-nya; `boundWallet` adalah alamat wallet
- * yang sudah terikat (bila server mengembalikannya).
+ * Translate a failed /api/user/wallet response into a clear reason.
+ * `code` is the server code (WALLET_TAKEN / WALLET_LOCKED /
+ * INVALID_WALLET) or the HTTP status; `boundWallet` is the wallet address
+ * already bound (when the server returns one).
  */
 export function describeWalletFailure(
   opts: { code?: string | null; status?: number | null; boundWallet?: string | null },
@@ -33,25 +33,25 @@ export function describeWalletFailure(
     case 'WALLET_TAKEN':
       return {
         kind: 'taken',
-        title: 'Wallet sudah dipakai akun lain',
+        title: 'Wallet already used by another account',
         message:
-          'Wallet ini sudah terikat ke akun Telegram lain. Satu wallet hanya untuk satu akun — hubungkan wallet lain.',
+          'This wallet is already bound to another Telegram account. One wallet is for one account only — connect a different wallet.',
         mustDisconnect: true,
       };
     case 'WALLET_LOCKED':
       return {
         kind: 'locked',
-        title: 'Akun ini sudah terikat wallet lain',
+        title: 'This account is already bound to another wallet',
         message: bound
-          ? `Akun Telegram kamu sudah terikat ke wallet ${bound}. Satu akun hanya satu wallet — hubungkan wallet ${bound} itu.`
-          : 'Akun Telegram kamu sudah terikat ke wallet lain. Satu akun hanya satu wallet — hubungkan wallet yang sudah terikat itu.',
+          ? `Your Telegram account is already bound to wallet ${bound}. One account, one wallet — connect that wallet ${bound}.`
+          : 'Your Telegram account is already bound to another wallet. One account, one wallet — connect the wallet that is already bound.',
         mustDisconnect: true,
       };
     case 'INVALID_WALLET':
       return {
         kind: 'invalid',
-        title: 'Alamat wallet tidak valid',
-        message: 'Alamat wallet yang dikirim tidak dikenali. Coba hubungkan lagi dari aplikasi wallet kamu.',
+        title: 'Invalid wallet address',
+        message: 'The wallet address sent was not recognized. Try connecting again from your wallet app.',
         mustDisconnect: true,
       };
     default:
@@ -60,34 +60,34 @@ export function describeWalletFailure(
   if (opts.status === 401) {
     return {
       kind: 'session',
-      title: 'Sesi Telegram kedaluwarsa',
+      title: 'Telegram session expired',
       message:
-        'Tutup Mini App lalu buka lagi dari bot @drillengine_bot, kemudian hubungkan wallet. Wallet kamu tetap terhubung untuk saat ini.',
+        'Close the Mini App and reopen it from the @drillengine_bot bot, then connect your wallet. Your wallet stays connected for now.',
       mustDisconnect: false,
     };
   }
   if (opts.status === 404) {
     return {
       kind: 'not-found',
-      title: 'Akun belum terdaftar',
+      title: 'Account not registered yet',
       message:
-        'Akun Telegram kamu belum terdaftar di Drill. Tutup lalu buka lagi Mini App dari bot, kemudian hubungkan wallet.',
+        'Your Telegram account is not registered in Drill yet. Close and reopen the Mini App from the bot, then connect your wallet.',
       mustDisconnect: false,
     };
   }
   if (opts.status === 500 || opts.status === 502 || opts.status === 503) {
     return {
       kind: 'server',
-      title: 'Server sedang bermasalah',
+      title: 'Server is having issues',
       message:
-        'Wallet kamu tetap terhubung — yang gagal hanya pencatatan ke server. Coba lagi sebentar lagi.',
+        'Your wallet stays connected — only the server record failed. Try again in a moment.',
       mustDisconnect: false,
     };
   }
   return {
     kind: 'network',
-    title: 'Tidak bisa menghubungi server',
-    message: 'Periksa koneksi internet kamu lalu coba lagi. Wallet kamu tetap terhubung untuk saat ini.',
+    title: 'Cannot reach the server',
+    message: 'Check your internet connection and try again. Your wallet stays connected for now.',
     mustDisconnect: false,
   };
 }

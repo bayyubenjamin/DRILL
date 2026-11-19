@@ -20,8 +20,8 @@ export async function POST(request: Request) {
     }
 
     const tgUser = JSON.parse(new URLSearchParams(initData).get('user')!);
-    // Cek pass on-chain (RPC TON) dan lookup user tidak saling bergantung —
-    // jalankan paralel, bukan berurutan.
+    // The on-chain pass check (TON RPC) and the user lookup do not depend
+    // on each other — run them in parallel, not one after another.
     const [hasNft, userRes] = await Promise.all([
       hasOnchainPass(walletAddress),
       supabaseAdmin.from('users').select('id').eq('telegram_user_id', tgUser.id).maybeSingle(),

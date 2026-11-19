@@ -13,7 +13,7 @@ export interface ToastItem {
   kind: ToastKind;
   title: string;
   message: string;
-  /** Label tombol aksi opsional (misal "Coba lagi"). */
+  /** Optional action button label (e.g. "Try again"). */
   actionLabel?: string;
   onAction?: () => void;
   /** Milidetik sebelum hilang sendiri; 0 = tidak hilang sendiri. */
@@ -44,7 +44,7 @@ export const useToastStore = create<ToastState>((set) => ({
   dismiss: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
 }));
 
-/** Tampilkan toast. Dipakai dari mana saja, misal saat wallet gagal terikat. */
+/** Show a toast. Used from anywhere, e.g. when a wallet fails to bind. */
 export function showToast(toast: Omit<ToastItem, 'id' | 'durationMs'> & { durationMs?: number }): number {
   return useToastStore.getState().push(toast);
 }
@@ -92,7 +92,7 @@ function ToastCard({ toast }: { toast: ToastItem }) {
         </div>
         <button
           type="button"
-          aria-label="Tutup pemberitahuan"
+          aria-label="Dismiss notification"
           onClick={() => dismiss(toast.id)}
           className="shrink-0 p-0.5 text-zinc-500"
         >

@@ -19,9 +19,9 @@ export async function POST(request: Request) {
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
     const owner = walletAddress || user.wallet_address;
-    // Tiga hal ini tidak saling bergantung — jalankan paralel, bukan
-    // berurutan. Sebelumnya cek pass on-chain (RPC TON, paling lambat)
-    // memblokir dua query database di belakangnya.
+    // These three do not depend on each other — run them in parallel, not
+    // one after another. Before this, the on-chain pass check (TON RPC,
+    // the slowest one) blocked the two database queries behind it.
     const [hasNft, accountRes, withdrawalsRes] = await Promise.all([
       owner ? hasOnchainPass(owner) : Promise.resolve(false),
       supabaseAdmin

@@ -16,6 +16,37 @@ import { impact } from '@/lib/telegram/haptic';
 const MIN_WITHDRAW = 500;
 const WITHDRAW_FEE = 70;
 
+// Last-known profile assets, so the rows show instantly on reopen while
+// fresh data loads (stale-while-revalidate). Always overwritten by the
+// server response; never trusted for longer than 7 days.
+const PROFILE_CACHE_PREFIX = 'drill:profile-assets:';
+
+function profileCacheKey() {
+  const id = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+  return `${PROFILE_CACHE_PREFIX}${id || 'guest'}`;
+}
+
+function readProfileCache() {
+  try {
+    const raw = localStorage.getItem(profileCacheKey());
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    if (Date.now() - Number(parsed.cachedAt || 0) > 7 * 24 * 60 * 60 * 1000) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeProfileCache(data: Record<string, unknown>) {
+  try {
+    localStorage.setItem(profileCacheKey(), JSON.stringify({ ...data, cachedAt: Date.now() }));
+  } catch {
+    // ignore — cache is only a speedup
+  }
+}
+
 type Withdrawal = {
   id: string;
   amount: number;
@@ -100,6 +131,15 @@ export default function ProfilePage() {
       setMiningSpeed(Number(data.miningSpeed || 0));
       setLastClaimAt(data.lastClaimAt || null);
       setWithdrawals(data.withdrawals || []);
+      writeProfileCache({
+        hasNft: Boolean(data.hasNft),
+        engineBalance: Number(data.engineBalance || 0),
+        walletBalance: Number(data.walletBalance || 0),
+        miningActive: Boolean(data.miningActive),
+        miningSpeed: Number(data.miningSpeed || 0),
+        lastClaimAt: data.lastClaimAt || null,
+        withdrawals: data.withdrawals || [],
+      });
     } finally {
       setLoading(false);
     }
@@ -111,6 +151,18 @@ export default function ProfilePage() {
   }, []);
 
   useEffect(() => {
+    // Show the last known assets instantly while fresh data loads.
+    const cached = readProfileCache();
+    if (cached) {
+      setHasNft(Boolean(cached.hasNft));
+      setEngineBalance(Number(cached.engineBalance || 0));
+      setWalletBalance(Number(cached.walletBalance || 0));
+      setMiningActive(Boolean(cached.miningActive));
+      setMiningSpeed(Number(cached.miningSpeed || 0));
+      setLastClaimAt(cached.lastClaimAt || null);
+      setWithdrawals(Array.isArray(cached.withdrawals) ? cached.withdrawals : []);
+      setLoading(false);
+    }
     void loadAssets();
   }, [address]);
 

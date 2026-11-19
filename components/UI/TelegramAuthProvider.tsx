@@ -2,24 +2,16 @@
 
 import { ReactNode } from 'react';
 import { useTelegramAuth } from '@/hooks/useTelegramAuth';
-import { useUserStore } from '@/store/useUserStore';
 import TelegramGate from '@/components/UI/TelegramGate';
 
 function AuthenticatedShell({ children }: { children: ReactNode }) {
   useTelegramAuth();
-  const { isLoading } = useUserStore();
 
-  if (isLoading) {
-    return (
-      <div className="flex h-screen w-full flex-col items-center justify-center gap-3 bg-black text-white">
-        <span className="spinner" aria-hidden />
-        <div className="text-sm font-mono tracking-widest text-emerald-500">
-          INITIALIZING DRILL CORE...
-        </div>
-      </div>
-    );
-  }
-
+  // Render the shell immediately — do NOT block the whole app behind the
+  // auth round trip. Pages already show their own skeletons while their
+  // data loads, so the user sees the interface at once and the numbers
+  // fill in as they arrive. Auth still runs in the background and the
+  // user store updates when it finishes.
   return <>{children}</>;
 }
 

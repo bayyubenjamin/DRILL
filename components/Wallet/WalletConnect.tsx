@@ -25,15 +25,15 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [tgName, setTgName] = useState('OPERATOR');
-  // Wallet yang terikat ke akun Telegram ini menurut database — sumber
-  // kebenaran saat sesi TonConnect di perangkat ini sudah hilang.
+  // The wallet bound to this Telegram account according to the database —
+  // the source of truth when the TonConnect session on this device is gone.
   const storeWallet = useUserStore((s) => s.user?.wallet_address ?? null);
   const [boundWallet, setBoundWallet] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const boundFetchedRef = useRef(false);
   const chainOk = IS_MAINNET ? isTonMainnet(wallet?.account?.chain) : isTonTestnet(wallet?.account?.chain);
-  // true saat putusnya disengaja (tombol disconnect / aturan ikat) — jangan
-  // tampilkan toast "terputus" untuk yang ini.
+  // true when the disconnect is intentional (disconnect button / binding
+  // rule) — don't show the "disconnected" toast for those.
   const disconnectExpectedRef = useRef(false);
   const wasConnectedRef = useRef(false);
 
@@ -46,19 +46,19 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
     setTgName(full || (user.username ? `@${user.username}` : 'OPERATOR'));
   }, []);
 
-  // Wallet terikat sudah dibawa pulang oleh /api/user/auth saat aplikasi
-  // dibuka (tersimpan di useUserStore) — jadi kartu bisa tampil langsung
-  // tanpa menunggu satu request tambahan. Cache sessionStorage dipakai
-  // supaya kartu langsung muncul walau auth belum selesai; GET ke
-  // /api/user/wallet hanya jalan di latar belakang bila keduanya kosong,
-  // dan TIDAK PERNAH memblokir tombol CONNECT (fail-open, timeout 4 dtk).
+  // The bound wallet already comes home with /api/user/auth when the app
+  // opens (stored in useUserStore) — so the card can show right away
+  // without waiting for one extra request. The sessionStorage cache is
+  // used so the card shows instantly even before auth finishes; the GET to
+  // /api/user/wallet only runs in the background when both are empty,
+  // and NEVER blocks the CONNECT button (fail-open, 4s timeout).
   useEffect(() => {
     if (storeWallet) {
       setBoundWallet(storeWallet);
       try {
         sessionStorage.setItem('drill:bound-wallet', storeWallet);
       } catch {
-        // abaikan — cache hanya percepatan, bukan kebutuhan
+        // ignore — the cache is only a speedup, not a requirement
       }
       return;
     }
@@ -66,7 +66,7 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
       const cached = sessionStorage.getItem('drill:bound-wallet');
       if (cached) setBoundWallet(cached);
     } catch {
-      // abaikan
+      // ignore
     }
   }, [storeWallet]);
 
@@ -87,7 +87,7 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
           try {
             sessionStorage.setItem('drill:bound-wallet', data.walletAddress);
           } catch {
-            // abaikan
+            // ignore
           }
         }
       })
@@ -95,18 +95,18 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
       .finally(() => clearTimeout(timer));
   }, [boundWallet]);
 
-  // Beri tahu pengguna bila wallet terputus sendiri dari luar (misal diputus
-  // dari aplikasi wallet, atau sesi TonConnect berakhir) — sebelumnya kejadian
-  // ini diam-diam tanpa pemberitahuan apa pun.
+  // Tell the user when the wallet disconnects on its own from outside
+  // (e.g. disconnected from the wallet app, or the TonConnect session
+  // ended) — this used to happen silently with no notice at all.
   useEffect(() => {
     const unsubscribe = tonConnectUI.onStatusChange((next) => {
       const connected = Boolean(next);
       if (wasConnectedRef.current && !connected && !disconnectExpectedRef.current) {
         showToast({
           kind: 'info',
-          title: 'Wallet terputus',
+          title: 'Wallet disconnected',
           message:
-            'Koneksi ke wallet terputus dari luar — misalnya diputus dari aplikasi wallet atau sesinya berakhir. Hubungkan lagi bila perlu.',
+            'The wallet connection was closed from outside — for example disconnected from the wallet app or the session ended. Connect again if needed.',
         });
       }
       if (connected) disconnectExpectedRef.current = false;
@@ -142,14 +142,14 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
         body: JSON.stringify({ initData, walletAddress }),
       });
     } catch {
-      // Jaringan gagal: bukan salah wallet-nya — jangan diputus, beri tahu
-      // alasannya dan tawarkan coba lagi.
+      // Network failed: not the wallet's fault — don't disconnect, explain
+      // why and offer to try again.
       const failure = describeWalletFailure({});
       showToast({
         kind: 'error',
         title: failure.title,
         message: failure.message,
-        actionLabel: 'COBA LAGI',
+        actionLabel: 'TRY AGAIN',
         onAction: () => void persistWallet(walletAddress),
       });
       return;
@@ -167,13 +167,14 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
         message: failure.message,
         ...(failure.mustDisconnect
           ? {}
-          : { actionLabel: 'COBA LAGI', onAction: () => void persistWallet(walletAddress) }),
+          : { actionLabel: 'TRY AGAIN', onAction: () => void persistWallet(walletAddress) }),
       });
       setNftActive(false);
-      // Hanya putus bila aturannya yang dilanggar (wallet sudah terikat ke
-      // akun lain / akun sudah terikat wallet lain / alamat tidak valid).
-      // Gangguan server, sesi kedaluwarsa, atau jaringan: wallet tetap
-      // terhubung supaya pengguna bisa coba lagi tanpa konek ulang.
+      // Only disconnect when a rule is broken (wallet already bound to
+      // another account / account already bound to another wallet / invalid
+      // address). Server trouble, an expired session, or network issues:
+      // the wallet stays connected so the user can retry without
+      // reconnecting.
       if (failure.mustDisconnect) await disconnectSilently();
       return;
     }
@@ -182,12 +183,12 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
     try {
       sessionStorage.setItem('drill:bound-wallet', data.walletAddress ?? walletAddress);
     } catch {
-      // abaikan
+      // ignore
     }
     showToast({
       kind: 'success',
-      title: 'Wallet terhubung',
-      message: `${shortAddress(walletAddress)} berhasil terikat ke akun Telegram kamu. Satu akun, satu wallet.`,
+      title: 'Wallet connected',
+      message: `${shortAddress(walletAddress)} is now bound to your Telegram account. One account, one wallet.`,
     });
   };
 
@@ -207,9 +208,9 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
         sessionStorage.removeItem(`drill:pass:${walletAddress}`);
         showToast({
           kind: 'error',
-          title: 'Gagal memeriksa Drill Pass',
+          title: 'Could not check Drill Pass',
           message:
-            'Status pass tidak bisa dicek sekarang, tapi wallet kamu tetap terhubung. Tutup lalu buka lagi Mini App bila perlu.',
+            'The pass status cannot be checked right now, but your wallet stays connected. Close and reopen the Mini App if needed.',
         });
         return;
       }
@@ -221,8 +222,8 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
       setNftActive(false);
       showToast({
         kind: 'error',
-        title: 'Gagal memeriksa Drill Pass',
-        message: 'Tidak bisa menghubungi server untuk memeriksa pass. Wallet kamu tetap terhubung.',
+        title: 'Could not check Drill Pass',
+        message: 'Could not reach the server to check the pass. Your wallet stays connected.',
       });
     } finally {
       setIsVerifying(false);
@@ -252,18 +253,18 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
                   <Wallet className="w-4 h-4 text-emerald-400" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[8px] tracking-[0.28em] text-emerald-400">WALLET TERIKAT · {networkLabel()}</p>
+                  <p className="text-[8px] tracking-[0.28em] text-emerald-400">BOUND WALLET · {networkLabel()}</p>
                   <p className="text-[11px] tracking-widest text-white truncate">{shortAddress(boundWallet)}</p>
-                  <p className="mt-0.5 text-[9px] tracking-wider text-zinc-500">Akun ini sebelumnya terhubung ke wallet ini</p>
+                  <p className="mt-0.5 text-[9px] tracking-wider text-zinc-500">This account was previously connected to this wallet</p>
                 </div>
               </div>
-              <button type="button" aria-label="Salin alamat wallet terikat" onClick={async () => { try { await navigator.clipboard.writeText(boundWallet); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* abaikan */ } }} className="text-zinc-400 p-1 shrink-0">
+              <button type="button" aria-label="Copy bound wallet address" onClick={async () => { try { await navigator.clipboard.writeText(boundWallet); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* ignore */ } }} className="text-zinc-400 p-1 shrink-0">
                 {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
               </button>
             </div>
             <button type="button" onClick={() => { window.Telegram?.WebApp?.expand?.(); setOpen(true); }} className="emboss emboss-btn w-full mt-2.5 py-2.5 px-4 font-mono text-[11px] font-bold tracking-widest text-emerald-400 flex items-center justify-center gap-2">
               <Wallet className="w-4 h-4" />
-              HUBUNGKAN LAGI
+              CONNECT AGAIN
             </button>
           </div>
         ) : (
@@ -312,7 +313,7 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
         </div>
         {boundWallet && !address && (
           <p className="mb-3 rounded-lg border border-emerald-500/25 bg-emerald-500/5 px-3 py-2 font-mono text-[10px] leading-relaxed tracking-wider text-zinc-300">
-            Akun ini terikat ke wallet <span className="text-emerald-400">{shortAddress(boundWallet)}</span> — pilih wallet yang sama supaya tidak ditolak.
+            This account is bound to wallet <span className="text-emerald-400">{shortAddress(boundWallet)}</span> — pick the same wallet so it is not rejected.
           </p>
         )}
         {WALLETS.map((item) => (
@@ -321,8 +322,8 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
             try { await tonConnectUI.openSingleWalletModal(item.appName); } catch (err) {
               showToast({
                 kind: 'error',
-                title: 'Gagal membuka wallet',
-                message: err instanceof Error ? err.message : 'Coba lagi sebentar lagi.',
+                title: 'Could not open wallet',
+                message: err instanceof Error ? err.message : 'Try again in a moment.',
               });
             } finally { setBusy(null); }
           }} className="emboss w-full mb-2 flex items-center justify-between px-3 py-3 active:scale-[0.98] transition-transform">

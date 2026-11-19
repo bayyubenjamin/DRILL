@@ -27,6 +27,48 @@ function formatHms(ms: number) {
   return `${h}:${m}:${s}`;
 }
 
+// Last-known home state, so the numbers show instantly on reopen while
+// fresh data loads (stale-while-revalidate). Always overwritten by the
+// server response; never trusted for longer than 7 days.
+const HOME_CACHE_PREFIX = 'drill:home-state:';
+
+type HomeAccount = {
+  balance: number;
+  miningSpeed: number;
+  level: number;
+  lastClaimAt: string | null;
+  miningActive: boolean;
+  progressPercent: number;
+};
+
+function readHomeCache(walletAddress: string) {
+  try {
+    const raw = localStorage.getItem(`${HOME_CACHE_PREFIX}${walletAddress}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    if (Date.now() - Number(parsed.cachedAt || 0) > 7 * 24 * 60 * 60 * 1000) return null;
+    if (!parsed.account || typeof parsed.account.balance !== 'number') return null;
+    return parsed as { account: HomeAccount; walletBalance: number; hasNft: boolean };
+  } catch {
+    return null;
+  }
+}
+
+function writeHomeCache(
+  walletAddress: string,
+  data: { account: HomeAccount; walletBalance: number; hasNft: boolean },
+) {
+  try {
+    localStorage.setItem(
+      `${HOME_CACHE_PREFIX}${walletAddress}`,
+      JSON.stringify({ ...data, cachedAt: Date.now() }),
+    );
+  } catch {
+    // ignore — cache is only a speedup
+  }
+}
+
 export default function DrillEngineDashboard() {
   const walletAddress = useTonAddress();
   const [tonConnectUI] = useTonConnectUI();
@@ -59,7 +101,7 @@ export default function DrillEngineDashboard() {
     setAccount({ balance: 0, miningSpeed: 0, level: 1, lastClaimAt: null, miningActive: false, progressPercent: 0 });
   };
 
-  const loadState = async () => {
+  const loadState = async (opts?: { silent?: boolean }) => {
     if (!walletAddress) {
       resetIdle();
       return;
@@ -69,7 +111,7 @@ export default function DrillEngineDashboard() {
       setCheckingPass(false);
       return;
     }
-    setCheckingPass(true);
+    if (!opts?.silent) setCheckingPass(true);
     try {
       const [stateRes, assetsRes] = await Promise.all([
         fetch('/api/mining/state', {
@@ -90,13 +132,34 @@ export default function DrillEngineDashboard() {
         setAccount(data.account);
       }
       if (assets.success) setWalletBalance(Number(assets.walletBalance || 0));
+      if (data.success && assets.success) {
+        writeHomeCache(walletAddress, {
+          account: data.account,
+          walletBalance: Number(assets.walletBalance || 0),
+          hasNft: Boolean(data.hasNft),
+        });
+      }
     } finally {
       setCheckingPass(false);
     }
   };
 
   useEffect(() => {
-    if (walletAddress) setCheckingPass(true);
+    if (!walletAddress) {
+      resetIdle();
+      return;
+    }
+    // Show the last known numbers instantly while fresh data loads.
+    const cached = readHomeCache(walletAddress);
+    if (cached) {
+      setAccount(cached.account);
+      setWalletBalance(cached.walletBalance);
+      setHasNft(cached.hasNft);
+      setCheckingPass(false);
+      void loadState({ silent: true });
+      return;
+    }
+    setCheckingPass(true);
     void loadState();
   }, [walletAddress]);
 
