@@ -3,7 +3,9 @@ const INITIAL_QUARTER_EMISSION = 100_000_000; // 100 Juta $DRILL
 
 /**
  * Menghitung batas emisi global saat ini berdasarkan halving formula.
- * Parameter GENESIS_TIMESTAMP harus sama persis dengan yang ada di DrillCore.tact
+ * Genesis = tanggal deploy Jetton mainnet (00:00 UTC), BUKAN 1 Sep 2024.
+ * Lihat Spesifikasi Ekonomi DRILL Frozen v1.0 §1-§3 (genesis + kuota kuartal).
+ * Nilai genesis dibaca dari config saat deploy, bukan hardcode di sini.
  */
 export function calculateGlobalQuarterlyEmission(genesisTimestampSec: number): number {
     const nowSec = Math.floor(Date.now() / 1000);
