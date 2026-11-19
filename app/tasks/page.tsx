@@ -52,14 +52,19 @@ export default function TasksPage() {
 
   const initData = () => window.Telegram?.WebApp?.initData || '';
 
-  const loadTasks = async () => {
+  // `silent` = background sync only: refreshes data without touching
+  // isLoading, so the task list never flashes back to skeletons.
+  // Used after start/claim; the first load still shows skeletons.
+  const loadTasks = async (silent = false) => {
     const payload = initData();
     if (!payload) {
-      setIsLoading(false);
-      setError('Open inside Telegram');
+      if (!silent) {
+        setIsLoading(false);
+        setError('Open inside Telegram');
+      }
       return;
     }
-    setIsLoading(true);
+    if (!silent) setIsLoading(true);
     try {
       const res = await fetch('/api/tasks', {
         method: 'POST',
@@ -68,16 +73,16 @@ export default function TasksPage() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        setError(data.error || 'Failed to load tasks');
+        if (!silent) setError(data.error || 'Failed to load tasks');
         return;
       }
       setTasks(data.tasks || []);
       setUserBalance(Number(data.balance || 0));
-      setError('');
+      if (!silent) setError('');
     } catch {
-      setError('Network error');
+      if (!silent) setError('Network error');
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
@@ -112,7 +117,20 @@ export default function TasksPage() {
         setError(data.error || 'Failed to start task');
         return;
       }
-      await loadTasks();
+      // Update just this card in place, then confirm with the server in
+      // the background — no full list reload, no skeleton flash.
+      if (data.completed) {
+        setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, is_completed: true } : t)));
+      } else {
+        setTasks((prev) =>
+          prev.map((t) =>
+            t.id === task.id
+              ? { ...t, started: true, started_at: data.startedAt || new Date().toISOString(), can_claim: false }
+              : t,
+          ),
+        );
+      }
+      void loadTasks(true);
     } catch {
       notify('error');
       setError('Network error');
@@ -136,14 +154,18 @@ export default function TasksPage() {
       if (!res.ok || !data.success) {
         notify('error');
         setError(data.error || 'Claim failed');
-        await loadTasks();
+        void loadTasks(true);
         return;
       }
       notify('success');
-      setUserBalance(Number(data.new_balance || userBalance + 5));
+      // Optimistic in-place update: the card flips to DONE and the balance
+      // rises immediately. The server is re-checked silently in the
+      // background — the list never reloads or flashes to skeletons.
+      setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, is_completed: true, can_claim: false } : t)));
+      setUserBalance(Number(data.new_balance ?? userBalance + 5));
       setRewardToast({ amount: Number(data.reward || 5), title: task.title });
-      await loadTasks();
       setTimeout(() => setRewardToast(null), 3200);
+      void loadTasks(true);
     } catch {
       notify('error');
       setError('Network error');
