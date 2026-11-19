@@ -61,8 +61,9 @@ export default function TelegramGate({ children }: { children: React.ReactNode }
 
   if (!ready) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-black text-emerald-500 font-mono text-xs tracking-widest">
-        INITIALIZING...
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-3 bg-black font-mono text-xs tracking-widest text-emerald-500">
+        <span className="spinner" aria-hidden />
+        <span>INITIALIZING...</span>
       </div>
     );
   }

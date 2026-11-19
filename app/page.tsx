@@ -1,18 +1,23 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { Zap, Trophy, RefreshCw } from 'lucide-react';
 import { useTonAddress, useTonConnectUI } from '@tonconnect/ui-react';
 import WalletConnect from '@/components/Wallet/WalletConnect';
 import MiningDrill from '@/components/UI/MiningDrill';
-import LevelUpModal from '@/components/UI/LevelUpModal';
+import AnimatedNumber from '@/components/UI/AnimatedNumber';
+import Skeleton from '@/components/UI/Skeleton';
 import EmbossCard from '@/components/UI/EmbossCard';
 import { getLevelProgress } from '@/lib/level/calculator';
 import { DRILL_PASS_COLLECTION } from '@/lib/ton/network';
 import { buyPassPayloadBase64, MINT_SEND_NANOTON } from '@/lib/ton/pass';
 import { useLevelUpPopup } from '@/hooks/useLevelUpPopup';
 import { impact, notify, startClaimPulse } from '@/lib/telegram/haptic';
+
+// Level-up popup is not needed at first paint — load it on demand.
+const LevelUpModal = dynamic(() => import('@/components/UI/LevelUpModal'), { ssr: false });
 
 function formatHms(ms: number) {
   const total = Math.max(0, Math.floor(ms / 1000));
@@ -213,11 +218,11 @@ export default function DrillEngineDashboard() {
   const action = !walletAddress
     ? { label: 'Claim $Drill', disabled: true, onClick: () => undefined }
     : checkingPass
-      ? { label: 'Claim $Drill', disabled: true, onClick: () => undefined }
+      ? { label: 'Checking Pass...', disabled: true, onClick: () => undefined }
       : !hasNft
-        ? { label: 'Claim $Drill', disabled: busy, onClick: mintOnchain }
+        ? { label: 'Mint Pass', disabled: busy, onClick: mintOnchain }
         : !account.miningActive
-          ? { label: 'Claim $Drill', disabled: busy, onClick: () => runAction('/api/mining/start') }
+          ? { label: 'Start Engine', disabled: busy, onClick: () => runAction('/api/mining/start') }
           : { label: 'Claim $Drill', disabled: busy || liveUnclaimed <= 0, onClick: () => runAction('/api/mining/claim') };
 
   return (
@@ -229,14 +234,15 @@ export default function DrillEngineDashboard() {
       <div className="text-center pt-1">
         <span className="text-[9px] font-mono tracking-[0.32em] text-zinc-500 uppercase block">ENGINE BALANCE</span>
         <div className="mt-1 flex items-baseline justify-center gap-1.5">
-          <motion.span
-            key={engineBalance.toFixed(2)}
-            initial={{ opacity: 0.4, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-[34px] leading-none font-mono font-light tracking-tight text-white"
-          >
-            {engineBalance.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
-          </motion.span>
+          {walletAddress && checkingPass ? (
+            <Skeleton className="h-9 w-48" label="Loading engine balance" />
+          ) : (
+            <AnimatedNumber
+              value={engineBalance}
+              digits={4}
+              className="text-[34px] leading-none font-mono font-light tracking-tight text-white tabular-nums"
+            />
+          )}
         </div>
         <span className="text-sm font-bold text-emerald-400 tracking-widest">$DRILL</span>
       </div>
@@ -287,14 +293,12 @@ export default function DrillEngineDashboard() {
         <EmbossCard className="px-3 py-3 flex flex-col items-center text-center min-h-[188px]" accent={liveUnclaimed > 0}>
           <p className="text-[9px] tracking-[0.22em] text-zinc-500">REWARD</p>
           <p className="mt-1 text-[11px] tracking-widest font-bold text-zinc-300">UNCLAIMED</p>
-          <motion.p
-            key={liveUnclaimed.toFixed(4)}
-            initial={{ opacity: 0.5, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mt-2 text-[20px] font-mono font-light text-emerald-400 leading-none"
-          >
-            +{liveUnclaimed.toFixed(4)}
-          </motion.p>
+          <AnimatedNumber
+            value={liveUnclaimed}
+            digits={4}
+            prefix="+"
+            className="mt-2 text-[20px] font-mono font-light text-emerald-400 leading-none tabular-nums"
+          />
           <p className="text-[10px] text-emerald-400/80 tracking-widest mt-0.5">$DRILL</p>
           <div className="ore-art mt-1">
             <img src="/drill-ore.svg" alt="" />
@@ -308,7 +312,7 @@ export default function DrillEngineDashboard() {
               !action.disabled ? 'claim-cta' : 'bg-zinc-900 text-zinc-600 border border-zinc-800'
             }`}
           >
-            {busy ? 'PROCESSING...' : 'Claim $Drill'}
+            {busy ? 'PROCESSING...' : action.label}
           </button>
         </EmbossCard>
       </section>
@@ -318,9 +322,9 @@ export default function DrillEngineDashboard() {
           <p className="text-[8px] tracking-[0.28em] text-zinc-500">PROCESS LOG</p>
           {busy || checkingPass ? <RefreshCw className="w-3 h-3 animate-spin text-emerald-400" /> : <span className="status-dot" />}
         </div>
-        <div className="flex flex-col gap-0.5 min-h-[52px]">
+        <div className="flex flex-col gap-0.5 min-h-[52px]" aria-live="polite">
           {processLog.map((line, i) => (
-            <p key={`${line}-${i}`} className={`text-[10px] tracking-wide ${i === 0 ? 'text-emerald-400' : 'text-zinc-500'}`}>
+            <p key={`${line}-${i}`} className={`text-[10px] tracking-wide ${i === 0 ? 'text-emerald-400 log-line-new' : 'text-zinc-500'}`}>
               {i === 0 ? '› ' : '  '}{line}
             </p>
           ))}

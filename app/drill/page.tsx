@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { ShieldCheck, Trophy, Wallet } from 'lucide-react';
 import { useTonAddress, useTonConnectUI } from '@tonconnect/ui-react';
 import { calculateLevel, getLevelProgress, MAX_LEVEL } from '@/lib/level/calculator';
@@ -9,6 +10,7 @@ import DrillPassCard from '@/components/UI/DrillPassCard';
 import EmbossCard from '@/components/UI/EmbossCard';
 import { DRILL_PASS_COLLECTION } from '@/lib/ton/network';
 import { buyPassPayloadBase64, MINT_SEND_NANOTON } from '@/lib/ton/pass';
+import { formatDrill } from '@/lib/format';
 import { impact, notify } from '@/lib/telegram/haptic';
 
 function StatRow({ label, value, tone = 'white' }: { label: string; value: string; tone?: 'white' | 'lime' | 'amber' }) {
@@ -166,8 +168,8 @@ export default function DrillPage() {
             <p className="text-[8px] tracking-[0.28em] text-zinc-500">MINING NFT</p>
             <p className="text-[13px] tracking-widest text-white mt-1">{hasNft ? 'DRILL PASS ACTIVE' : 'NOT MINTED'}</p>
             <p className="text-[9px] text-zinc-500 mt-1 tracking-wide">Soulbound SBT · Testnet</p>
-            <p className={`mt-2 text-[9px] tracking-widest ${hasNft ? 'text-emerald-400' : 'text-amber-400'}`}>
-              {hasNft ? 'ACCESS GRANTED' : 'MINT REQUIRED'}
+            <p className={`mt-2 text-[9px] tracking-widest ${hasNft ? 'text-emerald-400' : checkingPass ? 'text-zinc-400' : 'text-amber-400'}`}>
+              {checkingPass ? 'CHECKING PASS…' : hasNft ? 'ACCESS GRANTED' : 'MINT REQUIRED'}
             </p>
           </div>
         </div>
@@ -185,8 +187,8 @@ export default function DrillPage() {
             {minting ? 'MINTING...' : 'MINT PASS'}
           </button>
         )}
-        {showMint && mintNote && (
-          <p className="mt-2 text-center text-[9px] tracking-widest text-emerald-400">{mintNote}</p>
+        {showMint && (
+          <p className="mt-2 min-h-[12px] text-center text-[9px] tracking-widest text-emerald-400">{mintNote}</p>
         )}
       </EmbossCard>
 
@@ -210,29 +212,32 @@ export default function DrillPage() {
           <div className="lime-bar" style={{ width: `${progress.progressPercent}%` }} />
         </div>
         <p className="text-[9px] text-zinc-500 mt-2 tracking-wide">
-          Next LV {progress.nextLevel} · {progress.nextLevelMinBalance.toFixed(2)} $DRILL
+          Next LV {progress.nextLevel} · {formatDrill(progress.nextLevelMinBalance, 2)} $DRILL
         </p>
 
         <div className="mt-3 pt-1">
-          <StatRow label="WALLET" value={walletBalance.toFixed(4)} />
-          <StatRow label="ENGINE" value={engineBalance.toFixed(4)} tone="lime" />
-          <StatRow label="UNCLAIMED" value={`+${liveUnclaimed.toFixed(4)}`} tone="amber" />
+          <StatRow label="WALLET" value={formatDrill(walletBalance)} />
+          <StatRow label="ENGINE" value={formatDrill(engineBalance)} tone="lime" />
+          <StatRow label="UNCLAIMED" value={`+${formatDrill(liveUnclaimed)}`} tone="amber" />
         </div>
 
         <div className="mt-3 flex items-center justify-between">
           <span className="text-[8px] tracking-[0.2em] text-zinc-500 flex items-center gap-1">
             <Wallet className="w-3 h-3" /> LEVEL TOTAL
           </span>
-          <span className="text-[12px] tabular-nums text-white">{claimedTotal.toFixed(4)} $DRILL</span>
+          <span className="text-[12px] tabular-nums text-white">{formatDrill(claimedTotal)} $DRILL</span>
         </div>
       </EmbossCard>
 
       <section>
         <p className="text-[8px] tracking-[0.28em] text-zinc-500 mb-2">LEVEL CARDS</p>
         <div className="flex flex-col gap-1.5">
-          {cards.map((card) => (
-            <div
+          {cards.map((card, i) => (
+            <motion.div
               key={card.level}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, delay: i * 0.05, ease: 'easeOut' }}
               className={`emboss px-3 py-2.5 ${card.current ? 'emboss-accent' : ''} ${card.unlocked ? '' : 'opacity-45'}`}
             >
               <div className="flex items-center justify-between gap-2">
@@ -248,7 +253,7 @@ export default function DrillPage() {
                   <span className="text-[9px] text-zinc-500 tabular-nums shrink-0">{card.required.toFixed(1)}</span>
                 )}
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>

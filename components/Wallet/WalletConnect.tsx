@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useEffect, useRef, useState } from 'react';
 import { useTonAddress, useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import { LogOut, ShieldAlert, ShieldCheck, User, Wallet, X } from 'lucide-react';
 import { IS_MAINNET, isTonMainnet, isTonTestnet, networkLabel } from '@/lib/ton/network';
+import { describeWalletFailure, shortAddress } from '@/lib/ton/wallet-errors';
+import { showToast } from '@/components/UI/Toast';
+import SheetModal from '@/components/UI/SheetModal';
 
 const WALLETS = [
   { appName: 'telegram-wallet', label: 'Wallet', hint: 'Telegram' },
@@ -21,9 +23,12 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
   const [nftActive, setNftActive] = useState(false);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [tgName, setTgName] = useState('OPERATOR');
   const chainOk = IS_MAINNET ? isTonMainnet(wallet?.account?.chain) : isTonTestnet(wallet?.account?.chain);
+  // true saat putusnya disengaja (tombol disconnect / aturan ikat) — jangan
+  // tampilkan toast "terputus" untuk yang ini.
+  const disconnectExpectedRef = useRef(false);
+  const wasConnectedRef = useRef(false);
 
   useEffect(() => setIsClient(true), []);
 
@@ -33,6 +38,26 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
     const full = [user.first_name, user.last_name].filter(Boolean).join(' ');
     setTgName(full || (user.username ? `@${user.username}` : 'OPERATOR'));
   }, []);
+
+  // Beri tahu pengguna bila wallet terputus sendiri dari luar (misal diputus
+  // dari aplikasi wallet, atau sesi TonConnect berakhir) — sebelumnya kejadian
+  // ini diam-diam tanpa pemberitahuan apa pun.
+  useEffect(() => {
+    const unsubscribe = tonConnectUI.onStatusChange((next) => {
+      const connected = Boolean(next);
+      if (wasConnectedRef.current && !connected && !disconnectExpectedRef.current) {
+        showToast({
+          kind: 'info',
+          title: 'Wallet terputus',
+          message:
+            'Koneksi ke wallet terputus dari luar — misalnya diputus dari aplikasi wallet atau sesinya berakhir. Hubungkan lagi bila perlu.',
+        });
+      }
+      if (connected) disconnectExpectedRef.current = false;
+      wasConnectedRef.current = connected;
+    });
+    return () => unsubscribe();
+  }, [tonConnectUI]);
 
   useEffect(() => {
     if (!address) {
@@ -45,23 +70,63 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
     void persistWallet(address);
   }, [address]);
 
+  const disconnectSilently = async () => {
+    disconnectExpectedRef.current = true;
+    await tonConnectUI.disconnect();
+  };
+
   const persistWallet = async (walletAddress: string) => {
     const initData = window.Telegram?.WebApp?.initData || '';
     if (!initData) return;
-    const res = await fetch('/api/user/wallet', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ initData, walletAddress }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || data.success === false) {
-      setError(data.error || 'Wallet already bound to another account');
-      setNftActive(false);
-      await tonConnectUI.disconnect();
+    let res: Response;
+    try {
+      res = await fetch('/api/user/wallet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData, walletAddress }),
+      });
+    } catch {
+      // Jaringan gagal: bukan salah wallet-nya — jangan diputus, beri tahu
+      // alasannya dan tawarkan coba lagi.
+      const failure = describeWalletFailure({});
+      showToast({
+        kind: 'error',
+        title: failure.title,
+        message: failure.message,
+        actionLabel: 'COBA LAGI',
+        onAction: () => void persistWallet(walletAddress),
+      });
       return;
     }
-    setError(null);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.success === false) {
+      const failure = describeWalletFailure({
+        code: data.code ?? null,
+        status: res.status,
+        boundWallet: data.boundWallet ?? null,
+      });
+      showToast({
+        kind: 'error',
+        title: failure.title,
+        message: failure.message,
+        ...(failure.mustDisconnect
+          ? {}
+          : { actionLabel: 'COBA LAGI', onAction: () => void persistWallet(walletAddress) }),
+      });
+      setNftActive(false);
+      // Hanya putus bila aturannya yang dilanggar (wallet sudah terikat ke
+      // akun lain / akun sudah terikat wallet lain / alamat tidak valid).
+      // Gangguan server, sesi kedaluwarsa, atau jaringan: wallet tetap
+      // terhubung supaya pengguna bisa coba lagi tanpa konek ulang.
+      if (failure.mustDisconnect) await disconnectSilently();
+      return;
+    }
     void verifyNFT(walletAddress);
+    showToast({
+      kind: 'success',
+      title: 'Wallet terhubung',
+      message: `${shortAddress(walletAddress)} berhasil terikat ke akun Telegram kamu. Satu akun, satu wallet.`,
+    });
   };
 
   const verifyNFT = async (walletAddress: string) => {
@@ -76,9 +141,14 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || 'Wallet rejected');
         setNftActive(false);
         sessionStorage.removeItem(`drill:pass:${walletAddress}`);
+        showToast({
+          kind: 'error',
+          title: 'Gagal memeriksa Drill Pass',
+          message:
+            'Status pass tidak bisa dicek sekarang, tapi wallet kamu tetap terhubung. Tutup lalu buka lagi Mini App bila perlu.',
+        });
         return;
       }
       const ready = Boolean(data.hasNft);
@@ -87,6 +157,11 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
     } catch (err) {
       console.error(err);
       setNftActive(false);
+      showToast({
+        kind: 'error',
+        title: 'Gagal memeriksa Drill Pass',
+        message: 'Tidak bisa menghubungi server untuk memeriksa pass. Wallet kamu tetap terhubung.',
+      });
     } finally {
       setIsVerifying(false);
     }
@@ -102,12 +177,12 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
     <span className="text-amber-400 flex items-center gap-1"><ShieldAlert size={12} /> NO PASS</span>
   );
 
-  const shortWallet = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'NO WALLET';
+  const shortWallet = address ? shortAddress(address) : 'NO WALLET';
 
   return (
     <div className="flex flex-col w-full gap-2">
       {!address ? (
-        <button type="button" onClick={() => { setError(null); window.Telegram?.WebApp?.expand?.(); setOpen(true); }} className="emboss emboss-accent emboss-btn w-full py-3 px-4 font-mono text-xs font-bold tracking-widest text-emerald-400 flex items-center justify-center gap-2">
+        <button type="button" onClick={() => { window.Telegram?.WebApp?.expand?.(); setOpen(true); }} className="emboss emboss-accent emboss-btn w-full py-3 px-4 font-mono text-xs font-bold tracking-widest text-emerald-400 flex items-center justify-center gap-2">
           <Wallet className="w-4 h-4" />
           CONNECT TON {networkLabel()}
         </button>
@@ -119,7 +194,7 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
           </span>
           <span className="flex items-center gap-2">
             {passLine}
-            <button type="button" onClick={() => tonConnectUI.disconnect()} className="text-zinc-500"><LogOut className="w-3.5 h-3.5" /></button>
+            <button type="button" aria-label="Disconnect wallet" onClick={() => void disconnectSilently()} className="text-zinc-500"><LogOut className="w-3.5 h-3.5" /></button>
           </span>
         </div>
       ) : (
@@ -137,34 +212,34 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
             </div>
             <div className="flex flex-col items-end gap-1.5 shrink-0">
               <div className="text-[10px] tracking-widest">{passLine}</div>
-              <button type="button" onClick={() => tonConnectUI.disconnect()} className="text-zinc-500 p-1">
+              <button type="button" aria-label="Disconnect wallet" onClick={() => void disconnectSilently()} className="text-zinc-500 p-1">
                 <LogOut className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
         </div>
       )}
-      {error && <p className="text-[10px] font-mono text-red-400 text-center">{error}</p>}
-      {open && createPortal(
-        <div className="fixed inset-0 flex items-end sm:items-center justify-center p-4" style={{ zIndex: 2147483647, background: 'rgba(0,0,0,0.78)' }} onClick={() => setOpen(false)}>
-          <div className="emboss w-full max-w-sm p-4" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-mono text-xs tracking-widest text-emerald-400">TON {networkLabel()}</h2>
-              <button type="button" onClick={() => setOpen(false)}><X className="w-4 h-4 text-zinc-500" /></button>
-            </div>
-            {WALLETS.map((item) => (
-              <button key={item.appName} type="button" disabled={Boolean(busy)} onClick={async () => {
-                setBusy(item.appName);
-                try { await tonConnectUI.openSingleWalletModal(item.appName); } catch (err) { setError(err instanceof Error ? err.message : 'Failed'); } finally { setBusy(null); }
-              }} className="emboss w-full mb-2 flex items-center justify-between px-3 py-3">
-                <span className="font-mono text-xs text-white">{item.label}</span>
-                <span className="font-mono text-[10px] text-zinc-500">{busy === item.appName ? 'OPENING...' : item.hint}</span>
-              </button>
-            ))}
-          </div>
-        </div>,
-        document.body,
-      )}
+      <SheetModal open={open} onClose={() => setOpen(false)} zIndex={2147483647} label="Connect TON wallet">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-mono text-xs tracking-widest text-emerald-400">TON {networkLabel()}</h2>
+          <button type="button" aria-label="Close wallet picker" onClick={() => setOpen(false)}><X className="w-4 h-4 text-zinc-500" /></button>
+        </div>
+        {WALLETS.map((item) => (
+          <button key={item.appName} type="button" disabled={Boolean(busy)} onClick={async () => {
+            setBusy(item.appName);
+            try { await tonConnectUI.openSingleWalletModal(item.appName); } catch (err) {
+              showToast({
+                kind: 'error',
+                title: 'Gagal membuka wallet',
+                message: err instanceof Error ? err.message : 'Coba lagi sebentar lagi.',
+              });
+            } finally { setBusy(null); }
+          }} className="emboss w-full mb-2 flex items-center justify-between px-3 py-3 active:scale-[0.98] transition-transform">
+            <span className="font-mono text-xs text-white">{item.label}</span>
+            <span className="font-mono text-[10px] text-zinc-500">{busy === item.appName ? 'OPENING...' : item.hint}</span>
+          </button>
+        ))}
+      </SheetModal>
     </div>
   );
 }

@@ -13,10 +13,10 @@ import {
   Share2,
   Wallet,
   Cpu,
-  RefreshCw,
 } from 'lucide-react';
 import Link from 'next/link';
 import EmbossCard from '@/components/UI/EmbossCard';
+import Skeleton from '@/components/UI/Skeleton';
 import { impact, notify } from '@/lib/telegram/haptic';
 
 interface Task {
@@ -179,7 +179,7 @@ export default function TasksPage() {
 
       <AnimatePresence>
         {rewardToast && (
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-emerald-500 text-black px-4 py-2.5 rounded-xl flex items-center gap-2 font-mono text-xs font-bold">
+          <motion.div role="status" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-emerald-500 text-black px-4 py-2.5 rounded-xl flex items-center gap-2 font-mono text-xs font-bold">
             <Sparkles className="w-4 h-4 fill-black" />
             <span>TASK COMPLETED! +{rewardToast.amount} $DRILL</span>
           </motion.div>
@@ -192,30 +192,47 @@ export default function TasksPage() {
           <span className="text-2xl font-bold tracking-tight text-white">{userBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
           <span className="text-xs font-bold text-emerald-400">$DRILL</span>
         </div>
-        <p className="text-[10px] text-zinc-400 mt-1 leading-relaxed">Open the task link first. Claim appears after 1 minute. Each task pays 5 $DRILL.</p>
+        <p className="text-[10px] text-zinc-400 mt-1 leading-relaxed">Open the task link first. Claim appears after 1 minute.</p>
       </EmbossCard>
 
       <EmbossCard className="mb-4 p-1 grid grid-cols-4 gap-1">
         {(['all', 'daily', 'social', 'onchain'] as const).map((tab) => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`py-2 rounded-lg text-[9px] font-bold tracking-wider uppercase ${
-              activeTab === tab ? 'bg-emerald-500 text-black' : 'text-zinc-400'
+            type="button"
+            aria-pressed={activeTab === tab}
+            onClick={() => { impact('light'); setActiveTab(tab); }}
+            className={`relative py-2 rounded-lg text-[9px] font-bold tracking-wider uppercase transition-colors ${
+              activeTab === tab ? 'text-black' : 'text-zinc-400'
             }`}
           >
-            {tab}
+            {activeTab === tab && (
+              <motion.span layoutId="tasks-tab-pill" className="absolute inset-0 rounded-lg bg-emerald-500" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />
+            )}
+            <span className="relative z-[1]">{tab}</span>
           </button>
         ))}
       </EmbossCard>
 
-      {error && <p className="text-[10px] text-red-400 mb-2 tracking-wide">{error}</p>}
+      {error && (
+        <div role="alert" className="emboss mb-2.5 px-3.5 py-3 flex items-center justify-between gap-3 border-red-500/30">
+          <p className="text-[10px] text-red-400 tracking-wide">{error}</p>
+          <button
+            type="button"
+            onClick={() => { impact('light'); setError(''); void loadTasks(); }}
+            className="emboss-btn shrink-0 px-3 py-1.5 text-[10px] font-bold bg-red-500/15 text-red-300 border border-red-500/30"
+          >
+            RETRY
+          </button>
+        </div>
+      )}
 
       <section className="flex flex-col gap-2.5">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-2 text-zinc-500 text-xs">
-            <RefreshCw className="w-5 h-5 animate-spin text-emerald-500" />
-            <span>LOADING TASKS...</span>
+          <div className="flex flex-col gap-2.5" aria-label="Loading tasks">
+            <Skeleton className="h-[86px] w-full" />
+            <Skeleton className="h-[86px] w-full" />
+            <Skeleton className="h-[86px] w-full" />
           </div>
         ) : filteredTasks.length === 0 ? (
           <EmbossCard className="text-center py-10 text-xs text-zinc-500">NO TASKS IN THIS CATEGORY</EmbossCard>
@@ -233,7 +250,7 @@ export default function TasksPage() {
                       <p className="text-[10px] text-zinc-400 mt-0.5 leading-normal">{task.description}</p>
                       <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 mt-1.5">
                         <Zap className="w-3 h-3" />
-                        <span>+5 $DRILL</span>
+                        <span>+{task.reward} $DRILL</span>
                       </div>
                     </div>
                   </div>

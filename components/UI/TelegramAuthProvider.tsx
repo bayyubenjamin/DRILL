@@ -11,8 +11,9 @@ function AuthenticatedShell({ children }: { children: ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen w-full flex-col items-center justify-center bg-black text-white">
-        <div className="animate-pulse text-sm font-mono tracking-widest text-emerald-500">
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-3 bg-black text-white">
+        <span className="spinner" aria-hidden />
+        <div className="text-sm font-mono tracking-widest text-emerald-500">
           INITIALIZING DRILL CORE...
         </div>
       </div>

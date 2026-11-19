@@ -5,6 +5,8 @@ import { Users, Copy, CheckCircle2, ArrowLeft, Zap, Clock3 } from 'lucide-react'
 import Link from 'next/link';
 import { BOT_USERNAME, FRIEND_SHARE, REFERRAL_REWARD } from '@/lib/referral/constants';
 import EmbossCard from '@/components/UI/EmbossCard';
+import Skeleton from '@/components/UI/Skeleton';
+import { formatDrill, formatInt } from '@/lib/format';
 import { impact, notify } from '@/lib/telegram/haptic';
 
 export default function ReferralPage() {
@@ -88,13 +90,17 @@ export default function ReferralPage() {
 
       <EmbossCard className="p-4 mb-4">
         <span className="text-[9px] tracking-widest text-emerald-400 font-bold uppercase">ENGINE BALANCE</span>
-        <p className="text-2xl font-bold mt-1">{stats.engineBalance.toLocaleString('en-US', { maximumFractionDigits: 4 })} <span className="text-xs text-emerald-400">$DRILL</span></p>
+        {loading ? (
+          <Skeleton className="h-8 w-40 mt-1" label="Loading engine balance" />
+        ) : (
+          <p className="text-2xl font-bold mt-1 tabular-nums">{formatDrill(stats.engineBalance)} <span className="text-xs text-emerald-400">$DRILL</span></p>
+        )}
       </EmbossCard>
 
       <div className="grid grid-cols-2 gap-3 mb-4">
         <EmbossCard className="p-4" accent>
           <span className="text-[9px] tracking-widest text-emerald-400 font-bold uppercase">VALID REF POOL</span>
-          <p className="text-xl font-bold text-emerald-400 mt-1">+{stats.validPool.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
+          <p className="text-xl font-bold text-emerald-400 mt-1 tabular-nums">+{formatDrill(stats.validPool, 2)}</p>
           <p className="text-[10px] text-zinc-500 mt-1">+{REFERRAL_REWARD} each time a friend mints</p>
           <button
             type="button"
@@ -107,7 +113,7 @@ export default function ReferralPage() {
         </EmbossCard>
         <EmbossCard className="p-4" accent>
           <span className="text-[9px] tracking-widest text-emerald-400 font-bold uppercase">FRIENDS POOL</span>
-          <p className="text-xl font-bold text-emerald-400 mt-1">+{stats.friendPool.toLocaleString('en-US', { maximumFractionDigits: 4 })}</p>
+          <p className="text-xl font-bold text-emerald-400 mt-1 tabular-nums">+{formatDrill(stats.friendPool)}</p>
           <p className="text-[10px] text-zinc-500 mt-1">{FRIEND_SHARE * 100}% of friend $DRILL claims</p>
           <button
             type="button"
@@ -120,15 +126,30 @@ export default function ReferralPage() {
         </EmbossCard>
       </div>
 
-      {error && <p className="text-[10px] text-red-400 mb-3">{error}</p>}
+      {error && (
+        <div role="alert" className="emboss mb-3 px-3.5 py-3 flex items-center justify-between gap-3 border-red-500/30">
+          <p className="text-[10px] text-red-400">{error}</p>
+          <button
+            type="button"
+            onClick={() => { impact('light'); setError(''); setLoading(true); void load(); }}
+            className="emboss-btn shrink-0 px-3 py-1.5 text-[10px] font-bold bg-red-500/15 text-red-300 border border-red-500/30"
+          >
+            RETRY
+          </button>
+        </div>
+      )}
 
       {loading ? (
-        <div className="text-center text-zinc-500 text-sm">LOADING STATS...</div>
+        <div className="grid grid-cols-3 gap-3 mb-6" aria-label="Loading referral stats">
+          <Skeleton className="h-[68px] w-full" />
+          <Skeleton className="h-[68px] w-full" />
+          <Skeleton className="h-[68px] w-full" />
+        </div>
       ) : (
         <div className="grid grid-cols-3 gap-3 mb-6">
-          <EmbossCard className="p-3 text-center"><span className="text-zinc-500 text-[9px]">INVITES</span><p className="text-xl font-bold">{stats.totalInvites}</p></EmbossCard>
-          <EmbossCard className="p-3 text-center"><span className="text-zinc-500 text-[9px] flex items-center justify-center gap-1"><Clock3 size={11} /> PENDING</span><p className="text-xl font-bold text-amber-400">{stats.pendingCount}</p></EmbossCard>
-          <EmbossCard className="p-3 text-center" accent><span className="text-zinc-500 text-[9px] flex items-center justify-center gap-1"><CheckCircle2 size={11} /> VALID</span><p className="text-xl font-bold text-emerald-400">{stats.validCount}</p></EmbossCard>
+          <EmbossCard className="p-3 text-center"><span className="text-zinc-500 text-[9px]">INVITES</span><p className="text-xl font-bold tabular-nums">{formatInt(stats.totalInvites)}</p></EmbossCard>
+          <EmbossCard className="p-3 text-center"><span className="text-zinc-500 text-[9px] flex items-center justify-center gap-1"><Clock3 size={11} /> PENDING</span><p className="text-xl font-bold text-amber-400 tabular-nums">{formatInt(stats.pendingCount)}</p></EmbossCard>
+          <EmbossCard className="p-3 text-center" accent><span className="text-zinc-500 text-[9px] flex items-center justify-center gap-1"><CheckCircle2 size={11} /> VALID</span><p className="text-xl font-bold text-emerald-400 tabular-nums">{formatInt(stats.validCount)}</p></EmbossCard>
         </div>
       )}
 
@@ -140,12 +161,14 @@ export default function ReferralPage() {
         <p className="text-xs text-zinc-400 mb-3 text-center uppercase tracking-wider">Your invite link</p>
         <div className="emboss emboss-inset flex items-center space-x-2 rounded p-2 mb-4">
           <div className="flex-1 truncate text-xs text-zinc-300">{referralLink}</div>
-          <button onClick={() => { navigator.clipboard.writeText(referralLink); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="p-2 rounded text-emerald-500">
+          <button type="button" aria-label={copied ? 'Link copied' : 'Copy invite link'} onClick={() => { impact('light'); navigator.clipboard.writeText(referralLink); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="p-2 rounded text-emerald-500">
             {copied ? <CheckCircle2 size={16} /> : <Copy size={16} />}
           </button>
         </div>
         <button
+          type="button"
           onClick={() => {
+            impact('medium');
             const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent('Join DRILL ENGINE and mine $DRILL with me.')}`;
             window.Telegram?.WebApp?.openTelegramLink?.(shareUrl);
           }}

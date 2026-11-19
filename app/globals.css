@@ -232,13 +232,18 @@ tc-root {
   transform: translateY(1px) scale(0.985);
   box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.3), 0 3px 10px rgba(200, 255, 58, 0.16);
 }
-.emboss-btn:disabled { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), inset 0 -1px 0 rgba(0, 0, 0, 0.4); }
+.emboss-btn:disabled {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
 
 .lime-bar {
   height: 100%;
   border-radius: 999px;
   background: linear-gradient(90deg, #6aa000, #c8ff3a 55%, #f2ff9a);
   box-shadow: 0 0 12px rgba(200, 255, 58, 0.55);
+  transition: width 0.5s ease;
 }
 
 .drill-hero {
@@ -429,4 +434,103 @@ tc-root {
   background: #c8ff3a;
   box-shadow: 0 0 8px #c8ff3a;
   animation: drill-core-pulse 1.2s ease-in-out infinite;
+}
+
+/* ---- Premium polish: focus, selection, scrollbars, motion safety ---- */
+
+/* Visible keyboard focus on every interactive element. */
+:focus-visible {
+  outline: 2px solid #c8ff3a;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Lime text selection to match the brand. */
+::selection {
+  background: rgba(200, 255, 58, 0.85);
+  color: #081000;
+}
+
+/* Fast, ghost-free taps inside the Telegram WebView. */
+button,
+a,
+input {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  touch-action: manipulation;
+}
+
+/* Slim dark scrollbars for modal / history lists. */
+html {
+  scrollbar-color: rgba(200, 255, 58, 0.35) transparent;
+}
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(200, 255, 58, 0.28);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Safe-area inset for devices with a home indicator. */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Shimmer placeholder used by <Skeleton /> while sections load. */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.6rem;
+  background: rgba(255, 255, 255, 0.06);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.09) 50%, transparent 80%);
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes skeleton-shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+/* Small loading ring for full-screen gates. */
+.spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 2px solid rgba(200, 255, 58, 0.25);
+  border-top-color: #c8ff3a;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Log lines slide in instead of popping. */
+@keyframes log-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.log-line-new {
+  animation: log-in 0.25s ease;
+}
+
+/* Respect users who ask for less motion: freeze every CSS animation. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -1,14 +1,17 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useTonAddress, useTonWallet } from '@tonconnect/ui-react';
 import { Copy, CheckCircle2, History, User, X } from 'lucide-react';
 import WalletConnect from '@/components/Wallet/WalletConnect';
 import EmbossCard from '@/components/UI/EmbossCard';
+import SheetModal from '@/components/UI/SheetModal';
+import Skeleton from '@/components/UI/Skeleton';
 import SocialLinks from '@/components/UI/SocialLinks';
 import { calculateLevel, getLevelProgress } from '@/lib/level/calculator';
+import { formatDrill } from '@/lib/format';
+import { impact } from '@/lib/telegram/haptic';
 
 const MIN_WITHDRAW = 500;
 const WITHDRAW_FEE = 70;
@@ -71,27 +74,35 @@ export default function ProfilePage() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [wdAmount, setWdAmount] = useState('');
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
 
   const initData = () => window.Telegram?.WebApp?.initData || '';
 
   const loadAssets = async () => {
     const payload = initData();
-    if (!payload) return;
-    const res = await fetch('/api/user/assets', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ initData: payload, walletAddress: address }),
-    });
-    const data = await res.json();
-    if (!data.success) return;
-    setHasNft(Boolean(data.hasNft));
-    setEngineBalance(Number(data.engineBalance || 0));
-    setWalletBalance(Number(data.walletBalance || 0));
-    setMiningActive(Boolean(data.miningActive));
-    setMiningSpeed(Number(data.miningSpeed || 0));
-    setLastClaimAt(data.lastClaimAt || null);
-    setWithdrawals(data.withdrawals || []);
+    if (!payload) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const res = await fetch('/api/user/assets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: payload, walletAddress: address }),
+      });
+      const data = await res.json();
+      if (!data.success) return;
+      setHasNft(Boolean(data.hasNft));
+      setEngineBalance(Number(data.engineBalance || 0));
+      setWalletBalance(Number(data.walletBalance || 0));
+      setMiningActive(Boolean(data.miningActive));
+      setMiningSpeed(Number(data.miningSpeed || 0));
+      setLastClaimAt(data.lastClaimAt || null);
+      setWithdrawals(data.withdrawals || []);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -128,12 +139,23 @@ export default function ProfilePage() {
 
   const handleCopy = async () => {
     if (!address) return;
+    impact('light');
     await navigator.clipboard.writeText(address);
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   };
 
+  const wdError = (() => {
+    if (!wdAmount) return '';
+    const amount = Number(wdAmount);
+    if (!Number.isFinite(amount) || amount <= 0) return 'Enter a valid amount';
+    if (amount < MIN_WITHDRAW) return `Minimum withdraw is ${MIN_WITHDRAW} $DRILL`;
+    if (amount > engineBalance) return 'Amount is more than your engine balance';
+    return '';
+  })();
+
   const submitWithdraw = async () => {
+    if (wdError || !wdAmount) return;
     const amount = Number(wdAmount);
     setBusy(true);
     setMessage(null);
@@ -189,16 +211,26 @@ export default function ProfilePage() {
           <p className="text-[9px] tracking-[0.28em] text-zinc-500">ASSETS</p>
           <p className="text-[9px] tracking-[0.2em] text-emerald-400">LV {level.toLocaleString()}</p>
         </div>
-        <Row label="WALLET" value={walletBalance.toFixed(4)} />
-        <Row label="ENGINE" value={engineBalance.toFixed(4)} tone="emerald" />
-        <Row label="UNCLAIMED" value={`+${liveUnclaimed.toFixed(4)}`} tone="amber" />
+        {loading ? (
+          <div className="flex flex-col gap-2 py-1" aria-label="Loading assets">
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-9 w-full" />
+          </div>
+        ) : (
+          <>
+            <Row label="WALLET" value={formatDrill(walletBalance)} />
+            <Row label="ENGINE" value={formatDrill(engineBalance)} tone="emerald" />
+            <Row label="UNCLAIMED" value={`+${formatDrill(liveUnclaimed)}`} tone="amber" />
+          </>
+        )}
         <div className="mt-2 pt-3 border-t border-white/10">
           <div className="flex items-end justify-between gap-3">
             <p className="text-[9px] tracking-[0.18em] text-zinc-500 leading-4">LEVEL BASE<br />WALLET + CLAIMED</p>
-            <p className="text-[18px] leading-none text-white tabular-nums">{claimedTotal.toFixed(4)}</p>
+            <p className="text-[18px] leading-none text-white tabular-nums">{formatDrill(claimedTotal)}</p>
           </div>
           <div className="w-full h-1.5 rounded-full mt-2.5 overflow-hidden emboss-inset">
-            <div className="h-full bg-emerald-400" style={{ width: `${progress.progressPercent}%` }} />
+            <div className="h-full bg-emerald-400 transition-[width] duration-500 ease-out" style={{ width: `${progress.progressPercent}%` }} />
           </div>
         </div>
       </EmbossCard>
@@ -241,45 +273,42 @@ export default function ProfilePage() {
 
       <SocialLinks />
 
-      {wdOpen && createPortal(
-        <div className="fixed inset-0 z-[9999] bg-black/80 flex items-end sm:items-center justify-center p-4" onClick={() => setWdOpen(false)}>
-          <div className="emboss w-full max-w-sm p-4" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-3"><h2 className="text-xs tracking-widest text-emerald-400">WITHDRAW ENGINE</h2><button type="button" onClick={() => setWdOpen(false)}><X className="w-4 h-4 text-zinc-500" /></button></div>
-            <p className="text-[10px] text-zinc-500 mb-2">Engine claimed: {engineBalance.toFixed(4)} $DRILL</p>
-            <input value={wdAmount} onChange={(e) => setWdAmount(e.target.value)} inputMode="decimal" placeholder="Amount" className="emboss emboss-inset w-full rounded-xl px-3 py-3 text-sm text-white mb-3 bg-transparent" />
-            <p className="text-[10px] text-zinc-500 mb-3">Fee {WITHDRAW_FEE}. Receive {Math.max(0, Number(wdAmount || 0) - WITHDRAW_FEE).toFixed(2)} $DRILL</p>
-            {message && <p className="text-[10px] text-amber-400 mb-3">{message}</p>}
-            <button type="button" disabled={busy || !address || !hasNft} onClick={submitWithdraw} className="emboss-btn w-full py-3 bg-emerald-500 text-black text-xs font-bold disabled:opacity-50">{busy ? 'QUEUEING...' : 'CONFIRM WITHDRAW'}</button>
-          </div>
-        </div>, document.body)}
+      <SheetModal open={wdOpen} onClose={() => setWdOpen(false)} label="Withdraw engine balance">
+        <div className="flex justify-between items-center mb-3"><h2 className="text-xs tracking-widest text-emerald-400">WITHDRAW ENGINE</h2><button type="button" aria-label="Close withdraw" onClick={() => setWdOpen(false)}><X className="w-4 h-4 text-zinc-500" /></button></div>
+        <p className="text-[10px] text-zinc-500 mb-2">Engine claimed: {formatDrill(engineBalance)} $DRILL</p>
+        <input value={wdAmount} onChange={(e) => setWdAmount(e.target.value)} inputMode="decimal" placeholder="Amount" aria-label="Withdraw amount" className="emboss emboss-inset w-full rounded-xl px-3 py-3 text-sm text-white mb-3 bg-transparent" />
+        <p className="text-[10px] text-zinc-500 mb-3">Fee {WITHDRAW_FEE}. Receive {formatDrill(Math.max(0, Number(wdAmount || 0) - WITHDRAW_FEE), 2)} $DRILL</p>
+        {wdError && <p role="alert" className="text-[10px] text-red-400 mb-3">{wdError}</p>}
+        {message && <p role="status" className="text-[10px] text-amber-400 mb-3">{message}</p>}
+        <button type="button" disabled={busy || !address || !hasNft || !wdAmount || Boolean(wdError)} onClick={submitWithdraw} className="emboss-btn w-full py-3 bg-emerald-500 text-black text-xs font-bold disabled:opacity-50">{busy ? 'QUEUEING...' : 'CONFIRM WITHDRAW'}</button>
+      </SheetModal>
 
-      {historyOpen && createPortal(
-        <div className="fixed inset-0 z-[9999] bg-black/80 flex items-end sm:items-center justify-center p-4" onClick={() => setHistoryOpen(false)}>
-          <div className="emboss w-full max-w-sm p-4 max-h-[74vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-3">
-              <h2 className="text-xs tracking-widest text-emerald-400">WD HISTORY</h2>
-              <button type="button" onClick={() => setHistoryOpen(false)}><X className="w-4 h-4 text-zinc-500" /></button>
-            </div>
-            {withdrawals.length === 0 ? (
-              <p className="text-[10px] text-zinc-500">No withdrawals yet.</p>
-            ) : withdrawals.map((item) => {
-              const st = statusLabel(item.status);
-              const hash = item.tx_hash || (item as { txhash?: string }).txhash || '';
-              return (
-                <div key={item.id} className="border-b border-white/5 py-3 last:border-0">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-white">{Number(item.amount).toFixed(2)} $DRILL</span>
-                    <span className={`${st.tone} tracking-widest text-[10px] font-bold`}>{st.text}</span>
-                  </div>
-                  <p className="text-[10px] text-zinc-500 mt-1">Receive {Number(item.receive_amount).toFixed(2)} · Fee {Number(item.fee).toFixed(0)}</p>
-                  <p className="text-[10px] text-zinc-500 mt-1">{formatTime(item.created_at)}</p>
-                  {item.wallet_address && <p className="text-[10px] text-zinc-600 mt-1 break-all">{item.wallet_address}</p>}
-                  <p className="text-[10px] text-zinc-400 mt-1 break-all">TX {hash || '-'}</p>
-                </div>
-              );
-            })}
+      <SheetModal open={historyOpen} onClose={() => setHistoryOpen(false)} label="Withdrawal history">
+        <div className="max-h-[74vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-xs tracking-widest text-emerald-400">WD HISTORY</h2>
+            <button type="button" aria-label="Close history" onClick={() => setHistoryOpen(false)}><X className="w-4 h-4 text-zinc-500" /></button>
           </div>
-        </div>, document.body)}
+          {withdrawals.length === 0 ? (
+            <p className="text-[10px] text-zinc-500">No withdrawals yet.</p>
+          ) : withdrawals.map((item) => {
+            const st = statusLabel(item.status);
+            const hash = item.tx_hash || (item as { txhash?: string }).txhash || '';
+            return (
+              <div key={item.id} className="border-b border-white/5 py-3 last:border-0">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-white">{formatDrill(Number(item.amount), 2)} $DRILL</span>
+                  <span className={`${st.tone} tracking-widest text-[10px] font-bold`}>{st.text}</span>
+                </div>
+                <p className="text-[10px] text-zinc-500 mt-1">Receive {formatDrill(Number(item.receive_amount), 2)} · Fee {Number(item.fee).toFixed(0)}</p>
+                <p className="text-[10px] text-zinc-500 mt-1">{formatTime(item.created_at)}</p>
+                {item.wallet_address && <p className="text-[10px] text-zinc-600 mt-1 break-all">{item.wallet_address}</p>}
+                <p className="text-[10px] text-zinc-400 mt-1 break-all">TX {hash || '-'}</p>
+              </div>
+            );
+          })}
+        </div>
+      </SheetModal>
     </main>
   );
 }
