@@ -1,5 +1,14 @@
 'use client';
 
+import dynamic from 'next/dynamic';
+import { useState } from 'react';
+
+// The 3D drill is heavy — load it on demand so it never blocks first paint.
+const DrillScene = dynamic(() => import('@/components/UI/DrillScene'), {
+  ssr: false,
+  loading: () => <div className="h-[240px] w-full emboss animate-pulse" />,
+});
+
 const SPARKS = [
   { x: 44.8, y: 84.5, dx: -28, dy: -36, d: '0s', t: '0.62s' },
   { x: 45.6, y: 85.2, dx: -6, dy: -48, d: '0.08s', t: '0.55s' },
@@ -13,7 +22,8 @@ const SPARKS = [
   { x: 46.6, y: 84.8, dx: 18, dy: -40, d: '0.4s', t: '0.64s' },
 ];
 
-export default function MiningDrill({ active }: { active: boolean }) {
+/** The previous 2D artwork — kept as the fallback when WebGL is unavailable. */
+function DrillArtwork2D({ active }: { active: boolean }) {
   return (
     <div className={`drill-hero ${active ? 'is-live' : 'is-idle'}`} aria-hidden>
       <span className="drill-hero-glow" />
@@ -83,4 +93,10 @@ export default function MiningDrill({ active }: { active: boolean }) {
       </div>
     </div>
   );
+}
+
+export default function MiningDrill({ active }: { active: boolean }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <DrillArtwork2D active={active} />;
+  return <DrillScene active={active} onError={() => setFailed(true)} />;
 }
