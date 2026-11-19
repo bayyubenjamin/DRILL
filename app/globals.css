@@ -548,7 +548,8 @@ html {
   inset: -1px;
   border-radius: inherit;
   border-top: 1px solid rgba(200, 255, 58, 0.75);
-  animation: ring-spin-slow 9s linear infinite;
+  /* One sweep per turntable revolution (~28s) so the ring turns with the scene. */
+  animation: ring-spin-slow 28s linear infinite;
 }
 @keyframes ring-spin-slow {
   to { transform: rotate(360deg); }

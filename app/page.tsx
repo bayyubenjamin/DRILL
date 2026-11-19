@@ -317,7 +317,7 @@ export default function DrillEngineDashboard() {
           <MiningDrill active={live} />
         </div>
         <p className="absolute bottom-0 left-1/2 -translate-x-1/2 text-[8px] font-mono tracking-[0.3em] text-zinc-600 whitespace-nowrap">
-          3D · DRAG TO ROTATE
+          3D · DRAG TO ROTATE · TAP FOR SPARKS
         </p>
       </div>
 
