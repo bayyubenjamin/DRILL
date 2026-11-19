@@ -34,11 +34,13 @@ export default function TelegramGate({ children }: { children: React.ReactNode }
       };
     }
 
-    // Retry because telegram-web-app.js + initData can arrive slightly later
+    // Retry because telegram-web-app.js + initData can arrive later,
+    // especially on slow mobile connections. 10s instead of 4s: locking
+    // a real Telegram user out on a slow load was worse than waiting.
     let tries = 0;
     const timer = setInterval(() => {
       tries += 1;
-      if (check() || tries >= 40) {
+      if (check() || tries >= 100) {
         clearInterval(timer);
         if (!cancelled) setReady(true);
       }

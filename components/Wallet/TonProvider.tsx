@@ -2,10 +2,11 @@
 
 import { useEffect } from 'react';
 import { THEME, TonConnectUIProvider } from '@tonconnect/ui-react';
+import { resolveTonConnectManifestUrl } from '@/lib/site';
 
-const MANIFEST_URL =
-  process.env.NEXT_PUBLIC_TON_CONNECT_MANIFEST_URL ??
-  'https://drill-chi-flax.vercel.app/tonconnect-manifest.json';
+// Resolved via lib/site so a stale Vercel env var still pointing at the
+// old drill-chi-flax.vercel.app fallback is rewritten to drillprotocol.xyz.
+const MANIFEST_URL = resolveTonConnectManifestUrl();
 
 const TWA_RETURN_URL = process.env.NEXT_PUBLIC_TWA_RETURN_URL;
 

@@ -6,6 +6,15 @@ export const TELEGRAM_MINIAPP_DEEP_LINK = `tg://resolve?domain=${BOT_USERNAME}&a
 export function isOpenedInsideTelegram() {
   if (typeof window === 'undefined') return false;
 
+  // Telegram appends these query params when it opens a Mini App, even
+  // before telegram-web-app.js has finished injecting window.Telegram.
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tgWebAppData') || params.get('tgWebAppStartParam')) return true;
+  } catch {
+    // ignore — fall through to the WebApp checks below
+  }
+
   const webApp = window.Telegram?.WebApp;
   if (!webApp) return false;
 
@@ -21,5 +30,8 @@ export function isOpenedInsideTelegram() {
   const version = (webApp as { version?: string }).version;
   if (version && version.length > 0) return true;
 
-  return false;
+  // The WebApp object itself only exists inside Telegram (or a page that
+  // deliberately mocks it). After the script has loaded, treat its bare
+  // presence as a weak signal rather than locking a real Telegram user out.
+  return true;
 }
