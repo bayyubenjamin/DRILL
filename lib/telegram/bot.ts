@@ -38,6 +38,8 @@ export interface TelegramMessage {
   chat: { id: number; type?: string };
   from?: TelegramUser;
   text?: string;
+  caption?: string;
+  photo?: { file_id: string }[];
   entities?: { type: string; offset: number; length: number }[];
 }
 
@@ -295,30 +297,37 @@ async function handleCallback(query: TelegramCallbackQuery): Promise<void> {
   // Always acknowledge first so the loading spinner clears.
   await callTelegram('answerCallbackQuery', { callback_query_id: query.id });
 
+  // A photo message (the /start card) has a caption, not text — it must
+  // be edited with editMessageCaption, or Telegram answers
+  // "there is no text in the message to edit" and the button looks dead.
+  const isPhoto = Boolean(query.message?.photo?.length);
+  const editMethod = isPhoto ? 'editMessageCaption' : 'editMessageText';
+  const textKey = isPhoto ? 'caption' : 'text';
+
   if (query.data === 'help') {
-    await callTelegram('editMessageText', {
+    await callTelegram(editMethod, {
       chat_id: chatId,
       message_id: messageId,
-      text: HELP_TEXT,
+      [textKey]: HELP_TEXT,
       parse_mode: 'HTML',
       disable_web_page_preview: true,
       reply_markup: helpKeyboard(),
     });
   } else if (query.data === 'start') {
-    await callTelegram('editMessageText', {
+    await callTelegram(editMethod, {
       chat_id: chatId,
       message_id: messageId,
-      text: startCaption(query.from.first_name || ''),
+      [textKey]: startCaption(query.from.first_name || ''),
       parse_mode: 'HTML',
       disable_web_page_preview: true,
       reply_markup: mainKeyboard(),
     });
   } else if (query.data === 'balance') {
     const text = await balanceText(query.from.id);
-    await callTelegram('editMessageText', {
+    await callTelegram(editMethod, {
       chat_id: chatId,
       message_id: messageId,
-      text,
+      [textKey]: text,
       parse_mode: 'HTML',
       disable_web_page_preview: true,
       reply_markup: mainKeyboard(),
