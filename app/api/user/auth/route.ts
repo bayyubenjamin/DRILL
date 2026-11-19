@@ -52,7 +52,7 @@ export async function POST(request: Request) {
 
     const { data: existingUser, error: fetchError } = await supabaseAdmin
       .from('users')
-      .select('id, telegram_user_id')
+      .select('id, telegram_user_id, wallet_address')
       .eq('telegram_user_id', tgUser.id)
       .maybeSingle();
     if (fetchError) throw fetchError;
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     const { data: newUser, error: createError } = await supabaseAdmin
       .from('users')
       .insert(profile)
-      .select('id, telegram_user_id')
+      .select('id, telegram_user_id, wallet_address')
       .single();
     if (createError) throw createError;
 

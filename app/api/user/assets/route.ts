@@ -19,20 +19,27 @@ export async function POST(request: Request) {
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
     const owner = walletAddress || user.wallet_address;
-    const hasNft = owner ? await hasOnchainPass(owner) : false;
+    // Tiga hal ini tidak saling bergantung — jalankan paralel, bukan
+    // berurutan. Sebelumnya cek pass on-chain (RPC TON, paling lambat)
+    // memblokir dua query database di belakangnya.
+    const [hasNft, accountRes, withdrawalsRes] = await Promise.all([
+      owner ? hasOnchainPass(owner) : Promise.resolve(false),
+      supabaseAdmin
+        .from('mining_accounts')
+        .select('balance, last_claim_at, mining_active, mining_speed')
+        .eq('user_id', user.id)
+        .maybeSingle(),
+      supabaseAdmin
+        .from('withdrawals')
+        .select('id, amount, fee, receive_amount, status, created_at, updated_at, wallet_address, tx_hash')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50),
+    ]);
 
-    const { data: account } = await supabaseAdmin
-      .from('mining_accounts')
-      .select('balance, last_claim_at, mining_active, mining_speed')
-      .eq('user_id', user.id)
-      .maybeSingle();
+    const account = accountRes.data;
 
-    let withdrawalsQuery = await supabaseAdmin
-      .from('withdrawals')
-      .select('id, amount, fee, receive_amount, status, created_at, updated_at, wallet_address, tx_hash')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(50);
+    let withdrawalsQuery = withdrawalsRes;
     if (withdrawalsQuery.error) {
       withdrawalsQuery = await supabaseAdmin
         .from('withdrawals')

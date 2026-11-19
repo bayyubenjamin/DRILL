@@ -3,6 +3,7 @@ import { create } from 'zustand';
 interface User {
   id: string;
   telegram_user_id: number;
+  wallet_address?: string | null;
 }
 
 interface UserState {

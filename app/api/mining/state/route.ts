@@ -19,9 +19,14 @@ export async function POST(request: Request) {
       });
     }
 
-    const hasNft = await hasOnchainPass(walletAddress);
     const tgUser = JSON.parse(new URLSearchParams(initData).get('user')!);
-    const { data: user } = await supabaseAdmin.from('users').select('id').eq('telegram_user_id', tgUser.id).maybeSingle();
+    // Cek pass on-chain (RPC TON) dan lookup user tidak saling bergantung —
+    // jalankan paralel, bukan berurutan.
+    const [hasNft, userRes] = await Promise.all([
+      hasOnchainPass(walletAddress),
+      supabaseAdmin.from('users').select('id').eq('telegram_user_id', tgUser.id).maybeSingle(),
+    ]);
+    const user = userRes.data;
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
     let { data: account } = await supabaseAdmin

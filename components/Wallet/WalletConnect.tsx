@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTonAddress, useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import { Check, Copy, LogOut, ShieldAlert, ShieldCheck, User, Wallet, X } from 'lucide-react';
+import { useUserStore } from '@/store/useUserStore';
 import { IS_MAINNET, isTonMainnet, isTonTestnet, networkLabel } from '@/lib/ton/network';
 import { describeWalletFailure, shortAddress } from '@/lib/ton/wallet-errors';
 import { showToast } from '@/components/UI/Toast';
@@ -26,8 +27,8 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
   const [tgName, setTgName] = useState('OPERATOR');
   // Wallet yang terikat ke akun Telegram ini menurut database — sumber
   // kebenaran saat sesi TonConnect di perangkat ini sudah hilang.
+  const storeWallet = useUserStore((s) => s.user?.wallet_address ?? null);
   const [boundWallet, setBoundWallet] = useState<string | null>(null);
-  const [boundLoaded, setBoundLoaded] = useState(false);
   const [copied, setCopied] = useState(false);
   const boundFetchedRef = useRef(false);
   const chainOk = IS_MAINNET ? isTonMainnet(wallet?.account?.chain) : isTonTestnet(wallet?.account?.chain);
@@ -45,28 +46,54 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
     setTgName(full || (user.username ? `@${user.username}` : 'OPERATOR'));
   }, []);
 
-  // Ambil wallet yang sudah terikat ke akun Telegram ini dari database —
-  // supaya pengguna langsung tahu wallet mana yang terhubung, walau sesi
-  // TonConnect di perangkat ini sudah hilang. Tanpa initData (di luar
-  // Telegram) lewati saja, tampilannya tetap seperti semula.
+  // Wallet terikat sudah dibawa pulang oleh /api/user/auth saat aplikasi
+  // dibuka (tersimpan di useUserStore) — jadi kartu bisa tampil langsung
+  // tanpa menunggu satu request tambahan. Cache sessionStorage dipakai
+  // supaya kartu langsung muncul walau auth belum selesai; GET ke
+  // /api/user/wallet hanya jalan di latar belakang bila keduanya kosong,
+  // dan TIDAK PERNAH memblokir tombol CONNECT (fail-open, timeout 4 dtk).
   useEffect(() => {
-    if (boundFetchedRef.current) return;
-    boundFetchedRef.current = true;
-    const initData = window.Telegram?.WebApp?.initData || '';
-    if (!initData) {
-      setBoundLoaded(true);
+    if (storeWallet) {
+      setBoundWallet(storeWallet);
+      try {
+        sessionStorage.setItem('drill:bound-wallet', storeWallet);
+      } catch {
+        // abaikan — cache hanya percepatan, bukan kebutuhan
+      }
       return;
     }
-    void fetch(`/api/user/wallet?initData=${encodeURIComponent(initData)}`)
+    try {
+      const cached = sessionStorage.getItem('drill:bound-wallet');
+      if (cached) setBoundWallet(cached);
+    } catch {
+      // abaikan
+    }
+  }, [storeWallet]);
+
+  useEffect(() => {
+    if (boundFetchedRef.current || boundWallet) return;
+    const initData = window.Telegram?.WebApp?.initData || '';
+    if (!initData) return;
+    boundFetchedRef.current = true;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
+    void fetch(`/api/user/wallet?initData=${encodeURIComponent(initData)}`, {
+      signal: controller.signal,
+    })
       .then((res) => res.json().catch(() => ({})))
       .then((data) => {
         if (typeof data.walletAddress === 'string' && data.walletAddress) {
           setBoundWallet(data.walletAddress);
+          try {
+            sessionStorage.setItem('drill:bound-wallet', data.walletAddress);
+          } catch {
+            // abaikan
+          }
         }
       })
       .catch(() => undefined)
-      .finally(() => setBoundLoaded(true));
-  }, []);
+      .finally(() => clearTimeout(timer));
+  }, [boundWallet]);
 
   // Beri tahu pengguna bila wallet terputus sendiri dari luar (misal diputus
   // dari aplikasi wallet, atau sesi TonConnect berakhir) — sebelumnya kejadian
@@ -152,6 +179,11 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
     }
     void verifyNFT(walletAddress);
     setBoundWallet(data.walletAddress ?? walletAddress);
+    try {
+      sessionStorage.setItem('drill:bound-wallet', data.walletAddress ?? walletAddress);
+    } catch {
+      // abaikan
+    }
     showToast({
       kind: 'success',
       title: 'Wallet terhubung',
@@ -212,9 +244,7 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
   return (
     <div className="flex flex-col w-full gap-2">
       {!address ? (
-        !boundLoaded ? (
-          <div className="h-12 w-full emboss animate-pulse" />
-        ) : boundWallet ? (
+        boundWallet ? (
           <div className="emboss emboss-accent w-full px-3 py-2.5 font-mono">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2.5 min-w-0">
