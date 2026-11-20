@@ -3,6 +3,13 @@
 -- ============================================================================
 -- Run this file ONCE on a FRESH Supabase project (SQL Editor).
 -- It is idempotent: safe to re-run on the existing test project too.
+-- Aligned 20 Nov 2026 to the LIVE schema (information_schema dump):
+--   * mining_nfts has minted_at (no created_at/updated_at)
+--   * referrals has no updated_at
+--   * user_tasks has completed_at
+--   * pre-existing tables keep nullable columns (NOT NULL only where
+--     the live table actually enforces it).
+-- Per owner: overwrite this file in place, no new migration.
 -- Reconstructed 19 Nov 2026 from: repo code (all API routes), the SQL
 -- files in supabase/, and the live DRILL ENGINE project inspection.
 -- Anything the code reads/writes is defined here; nothing is assumed
@@ -36,8 +43,8 @@ create table if not exists public.users (
   first_name text,
   last_name text,
   wallet_address text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
 
 do $$ begin
@@ -58,15 +65,15 @@ create index if not exists users_created_at_idx on public.users (created_at);
 create table if not exists public.mining_accounts (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null,
-  balance numeric not null default 0,
-  mining_speed numeric not null default 0,
-  level integer not null default 1,
-  mining_active boolean not null default false,
+  balance numeric default 0,
+  mining_speed numeric default 0,
+  level integer default 1,
+  mining_active boolean default false,
   last_claim_at timestamptz,
-  valid_ref_pool numeric not null default 0,
-  friend_pool numeric not null default 0,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  valid_ref_pool numeric default 0,
+  friend_pool numeric default 0,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
 
 do $$ begin
@@ -86,7 +93,7 @@ create table if not exists public.mining_claims (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null,
   amount numeric not null,
-  created_at timestamptz not null default now()
+  created_at timestamptz default now()
 );
 
 do $$ begin
@@ -107,9 +114,8 @@ create table if not exists public.mining_nfts (
   user_id uuid not null,
   nft_address text not null,
   collection_address text,
-  is_active boolean not null default true,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  is_active boolean default true,
+  minted_at timestamptz
 );
 
 do $$ begin
@@ -133,10 +139,9 @@ create table if not exists public.referrals (
   id uuid primary key default gen_random_uuid(),
   referrer_id uuid not null,
   referred_id uuid not null,
-  reward numeric not null default 0,
+  reward numeric default 0,
   status text not null default 'pending',
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  created_at timestamptz default now()
 );
 
 do $$ begin
@@ -174,9 +179,10 @@ create table if not exists public.user_tasks (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null,
   task_id uuid not null,
-  status text not null default 'started',
+  status text default 'started',
   started_at timestamptz default now(),
   claimed_at timestamptz,
+  completed_at timestamptz,
   unique (user_id, task_id)
 );
 
@@ -203,6 +209,7 @@ alter table public.tasks add column if not exists reward numeric default 5;
 alter table public.tasks add column if not exists is_active boolean default true;
 alter table public.tasks add column if not exists created_at timestamptz default now();
 alter table public.user_tasks add column if not exists status text default 'started';
+alter table public.user_tasks add column if not exists completed_at timestamptz;
 alter table public.user_tasks add column if not exists started_at timestamptz default now();
 alter table public.user_tasks add column if not exists claimed_at timestamptz;
 
@@ -242,10 +249,10 @@ create table if not exists public.withdrawals (
   amount numeric not null,
   fee numeric not null default 70,
   receive_amount numeric not null,
-  status text not null default 'QUEUED',
+  status text default 'QUEUED',
   tx_hash text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
 
 do $$ begin
