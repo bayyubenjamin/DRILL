@@ -123,7 +123,7 @@ function mainKeyboard(): { inline_keyboard: InlineButton[][] } {
         { text: '❓ Help', callback_data: 'help' },
       ],
       [
-        { text: '👥 Referral', web_app: { url: `${APP_URL}/referral` } },
+        { text: '👥 Referral', callback_data: 'referral' },
         { text: '💰 My Balance', callback_data: 'balance' },
       ],
     ],
@@ -400,6 +400,18 @@ async function handleCallback(query: TelegramCallbackQuery): Promise<void> {
     });
   } else if (query.data === 'balance') {
     const text = await balanceText(query.from.id);
+    await callTelegram(editMethod, {
+      chat_id: chatId,
+      message_id: messageId,
+      [textKey]: text,
+      parse_mode: 'HTML',
+      disable_web_page_preview: true,
+      reply_markup: mainKeyboard(),
+    });
+  } else if (query.data === 'referral') {
+    // Shows real referral data + invite link IN CHAT (edits the card,
+    // like My Balance) — NOT a Mini App open (Bayu, 27 Nov 2026).
+    const text = await referralText(query.from.id);
     await callTelegram(editMethod, {
       chat_id: chatId,
       message_id: messageId,
