@@ -165,6 +165,7 @@ export default function DrillLanding() {
           <Row label="Minimum" value="500 DRILL" />
           <Row label="Fee" value="70 DRILL" />
           <Row label="Max per day" value="5,000 DRILL" />
+          <Row label="Frequency" value="1x per 24 hours" />
           <p>Withdrawals go to the wallet bound to your account. No 30-day lock — that rule was removed.</p>
         </Section>
 

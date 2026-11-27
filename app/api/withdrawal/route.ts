@@ -4,6 +4,11 @@ import { supabaseAdmin } from '@/lib/supabase/server';
 
 const MIN_WITHDRAW = 500;
 const WITHDRAW_FEE = 70;
+// Withdrawal cooldown — owner rule, 27 Nov 2026 (amendment on top of
+// Frozen v1.0): at most 1 withdrawal per 24h per user. The clock starts at
+// the last withdrawal that actually went through; FAILED / REJECTED /
+// CANCELLED ones never start it — the user got nothing from those.
+const WITHDRAW_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
 export async function POST(request: Request) {
   try {
@@ -27,6 +32,31 @@ export async function POST(request: Request) {
       .eq('telegram_user_id', tgUser.id)
       .maybeSingle();
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
+    // 1 withdrawal per 24h — enforced server-side, never trust the client.
+    const { data: lastWd, error: lastWdError } = await supabaseAdmin
+      .from('withdrawals')
+      .select('created_at')
+      .eq('user_id', user.id)
+      .not('status', 'in', '("FAILED","REJECTED","CANCELLED")')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (lastWdError) console.error('Cooldown lookup error:', lastWdError);
+    if (lastWd?.created_at) {
+      const nextAt = new Date(lastWd.created_at).getTime() + WITHDRAW_COOLDOWN_MS;
+      const remainingMs = nextAt - Date.now();
+      if (remainingMs > 0) {
+        return NextResponse.json(
+          {
+            error: 'Withdrawal cooldown active — 1 withdrawal per 24 hours',
+            nextWithdrawAt: new Date(nextAt).toISOString(),
+            remainingSeconds: Math.ceil(remainingMs / 1000),
+          },
+          { status: 429 },
+        );
+      }
+    }
 
     const { data: account } = await supabaseAdmin
       .from('mining_accounts')

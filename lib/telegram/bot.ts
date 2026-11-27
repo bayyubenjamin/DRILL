@@ -216,6 +216,19 @@ const ABOUT_TEXT =
 // authenticated by Telegram (secret-token header, checked in the route)
 // ---------------------------------------------------------------------------
 
+// 1 withdrawal per 24h per user (owner rule, 27 Nov 2026) — same clock as
+// POST /api/withdrawal: FAILED / REJECTED / CANCELLED never start it.
+const WITHDRAW_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
+function formatCooldownHMS(ms: number): string {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${p(h)}:${p(m)}:${p(s)}`;
+}
+
 async function balanceText(tgId: number): Promise<string> {
   const { data: user } = await supabaseAdmin
     .from('users')
@@ -240,8 +253,7 @@ async function balanceText(tgId: number): Promise<string> {
       .select('amount, status, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+      .limit(5),
   ]);
 
   const account = accountRes.data;
@@ -251,7 +263,10 @@ async function balanceText(tgId: number): Promise<string> {
   const level = account?.level ?? 1;
   const speed = Number(account?.mining_speed || 0);
   const active = Boolean(account?.mining_active);
-  const last = withdrawalRes.data;
+  const rows = withdrawalRes.data || [];
+  const last = rows[0] || null;
+  // Cooldown anchor: latest withdrawal that actually went through.
+  const anchor = rows.find((r) => !['FAILED', 'REJECTED', 'CANCELLED'].includes(String(r.status || '').toUpperCase()));
 
   let text =
     `<b>💰 My Balance</b>\n\n` +
@@ -259,6 +274,12 @@ async function balanceText(tgId: number): Promise<string> {
     `Level ${level} · Speed ${speed}/min · Mining ${active ? 'active ✅' : 'paused ⏸️'}\n`;
   if (last) {
     text += `\nLast withdrawal: ${Number(last.amount).toLocaleString('en-US')} DRILL — ${escapeHtml(String(last.status))}`;
+  }
+  if (anchor?.created_at) {
+    const remainingMs = new Date(anchor.created_at).getTime() + WITHDRAW_COOLDOWN_MS - Date.now();
+    if (remainingMs > 0) {
+      text += `\nNext WD in ${formatCooldownHMS(remainingMs)} — 1x per 24h`;
+    }
   }
   return text;
 }

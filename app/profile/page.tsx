@@ -15,6 +15,19 @@ import { impact } from '@/lib/telegram/haptic';
 
 const MIN_WITHDRAW = 500;
 const WITHDRAW_FEE = 70;
+// 1 withdrawal per 24h per user (owner rule, 27 Nov 2026). Withdrawals
+// that never paid out don't start the clock.
+const WITHDRAW_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+const COOLDOWN_EXEMPT = ['FAILED', 'REJECTED', 'CANCELLED'];
+
+function formatCooldown(ms: number) {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${p(h)}:${p(m)}:${p(s)}`;
+}
 
 // Last-known profile assets, so the rows show instantly on reopen while
 // fresh data loads (stale-while-revalidate). Always overwritten by the
@@ -109,6 +122,8 @@ export default function ProfilePage() {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
+  // Ticking clock so the cooldown countdown counts down live.
+  const [now, setNow] = useState(() => Date.now());
 
   const initData = () => window.Telegram?.WebApp?.initData || '';
 
@@ -150,6 +165,11 @@ export default function ProfilePage() {
   useEffect(() => {
     const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
     if (user) setTgUser(user);
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
   }, []);
 
   useEffect(() => {
@@ -234,7 +254,19 @@ export default function ProfilePage() {
     }
   };
 
-  const canWithdraw = Boolean(address && hasNft && engineBalance >= MIN_WITHDRAW);
+  // Cooldown anchor: the latest withdrawal that actually went through
+  // (withdrawals arrive newest-first from /api/user/assets).
+  const lastCountedWithdrawal = useMemo(
+    () => withdrawals.find((w) => !COOLDOWN_EXEMPT.includes(String(w.status || '').toUpperCase())),
+    [withdrawals],
+  );
+  const cooldownEndsAt = lastCountedWithdrawal
+    ? new Date(lastCountedWithdrawal.created_at || '').getTime() + WITHDRAW_COOLDOWN_MS
+    : 0;
+  const cooldownRemainingMs = Math.max(0, cooldownEndsAt - now);
+  const onCooldown = cooldownRemainingMs > 0;
+
+  const canWithdraw = Boolean(address && hasNft && engineBalance >= MIN_WITHDRAW && !onCooldown);
 
   return (
     <main className="min-h-screen max-w-md mx-auto text-white px-4 pt-4 pb-28 flex flex-col gap-2.5 font-mono">
@@ -301,7 +333,11 @@ export default function ProfilePage() {
           <History className="w-4 h-4" />
         </button>
       </div>
-      <p className="text-center text-[9px] tracking-[0.16em] text-zinc-600">MIN {MIN_WITHDRAW} · FEE {WITHDRAW_FEE}</p>
+      {onCooldown ? (
+        <p className="text-center text-[9px] tracking-[0.16em] text-amber-400">NEXT WD IN {formatCooldown(cooldownRemainingMs)}</p>
+      ) : (
+        <p className="text-center text-[9px] tracking-[0.16em] text-zinc-600">MIN {MIN_WITHDRAW} · FEE {WITHDRAW_FEE} · 1X / 24H</p>
+      )}
 
       {address && (
         <EmbossCard className="px-4 py-3">
@@ -336,9 +372,10 @@ export default function ProfilePage() {
         <p className="text-[10px] text-zinc-500 mb-2">Engine claimed: {formatDrill(engineBalance)} $DRILL</p>
         <input value={wdAmount} onChange={(e) => setWdAmount(e.target.value)} inputMode="decimal" placeholder="Amount" aria-label="Withdraw amount" className="emboss emboss-inset w-full rounded-xl px-3 py-3 text-sm text-white mb-3 bg-transparent" />
         <p className="text-[10px] text-zinc-500 mb-3">Fee {WITHDRAW_FEE}. Receive {formatDrill(Math.max(0, Number(wdAmount || 0) - WITHDRAW_FEE), 2)} $DRILL</p>
+        {onCooldown && <p role="status" className="text-[10px] text-amber-400 mb-3">COOLDOWN — NEXT WD IN {formatCooldown(cooldownRemainingMs)}</p>}
         {wdError && <p role="alert" className="text-[10px] text-red-400 mb-3">{wdError}</p>}
         {message && <p role="status" className="text-[10px] text-amber-400 mb-3">{message}</p>}
-        <button type="button" disabled={busy || !address || !hasNft || !wdAmount || Boolean(wdError)} onClick={submitWithdraw} className="emboss-btn w-full py-3 bg-emerald-500 text-black text-xs font-bold disabled:opacity-50">{busy ? 'QUEUEING...' : 'CONFIRM WITHDRAW'}</button>
+        <button type="button" disabled={busy || onCooldown || !address || !hasNft || !wdAmount || Boolean(wdError)} onClick={submitWithdraw} className="emboss-btn w-full py-3 bg-emerald-500 text-black text-xs font-bold disabled:opacity-50">{busy ? 'QUEUEING...' : 'CONFIRM WITHDRAW'}</button>
       </SheetModal>
 
       <SheetModal open={historyOpen} onClose={() => setHistoryOpen(false)} label="Withdrawal history">
