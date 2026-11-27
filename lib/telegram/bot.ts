@@ -24,7 +24,13 @@ const CHANNEL_URL = 'https://t.me/drillprotocol';
 // /start card photo — the DRILL ENGINE banner (27 Nov 2026, Bayu).
 // NOT drill-pass.png: that file is the NFT Pass artwork and stays as
 // the image/cover in public/drill-pass.json.
-const CARD_PHOTO_URL = `${CANONICAL_URL}/drill-banner.png`;
+// NOTE: drill-banner.png (same bytes) is POISONED in Telegram's fetch
+// cache — Telegram first fetched it while the deploy did not have the
+// file yet (404) and keeps failing that exact URL ("failed to get HTTP
+// URL content"), even though browsers/curl get 200. Verified 27 Nov
+// 2026: drill-pass.png + logo.png + drill-banner-v2.png (same bytes,
+// new URL) all fetch fine via Telegram. So the card uses v2.
+const CARD_PHOTO_URL = `${CANONICAL_URL}/drill-banner-v2.png`;
 
 // ---------------------------------------------------------------------------
 // Minimal Telegram types (only what we use)
