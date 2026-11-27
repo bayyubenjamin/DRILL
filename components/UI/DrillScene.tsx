@@ -9,12 +9,12 @@ interface DrillSceneProps {
   onError?: () => void;
 }
 
-const LIME = 0xb6ff14;
-const LIME_DEEP = 0x8fd400;
+const BLUE = 0x38bdf8;
+const BLUE_DEEP = 0x0284c7;
 const STEEL = 0xd7dae0;
 const STEEL_DARK = 0x9aa0a6;
 const METAL_DARK = 0x2a2e35;
-const ROCK = 0x242818;
+const ROCK = 0x1e293b;
 
 /** Fixed rock layout so the scene is identical on every mount. */
 const ROCKS: Array<{ x: number; z: number; s: number; ry: number }> = [
@@ -118,18 +118,18 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
     const key = new THREE.DirectionalLight(0xffffff, 2.4);
     key.position.set(4, 6, 5);
     scene.add(key);
-    const rim = new THREE.DirectionalLight(0x9dff00, 0.9);
+    const rim = new THREE.DirectionalLight(0x38bdf8, 0.9);
     rim.position.set(-5, 3, -4);
     scene.add(rim);
     // Stays in `world` (not the turntable) so the lighting never swings
     // around while the diorama rotates beneath it.
-    const glowLight = new THREE.PointLight(LIME, 9, 9, 1.6);
+    const glowLight = new THREE.PointLight(BLUE, 9, 9, 1.6);
     glowLight.position.set(0, 0.6, 1.6);
     world.add(glowLight);
 
     // ---- ground -----------------------------------------------------------
     const groundMat = track(
-      new THREE.MeshStandardMaterial({ color: 0x0a0c08, roughness: 1, metalness: 0 }),
+      new THREE.MeshStandardMaterial({ color: 0x0a0c10, roughness: 1, metalness: 0 }),
     );
     const ground = new THREE.Mesh(track(new THREE.CircleGeometry(2.7, 48)), groundMat);
     ground.rotation.x = -Math.PI / 2;
@@ -138,7 +138,7 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
 
     const glowMat = track(
       new THREE.MeshBasicMaterial({
-        color: LIME,
+        color: BLUE,
         transparent: true,
         opacity: 0.1,
         blending: THREE.AdditiveBlending,
@@ -153,7 +153,7 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
     // ---- rim ring: the circle that turns with the scene --------------------
     const rimRingMat = track(
       new THREE.MeshBasicMaterial({
-        color: LIME,
+        color: BLUE,
         transparent: true,
         opacity: 0.5,
         blending: THREE.AdditiveBlending,
@@ -171,7 +171,7 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
     // Tick marks around the rim — they make the rotation visible.
     const tickMat = track(
       new THREE.MeshBasicMaterial({
-        color: LIME,
+        color: BLUE,
         transparent: true,
         opacity: 0.55,
         blending: THREE.AdditiveBlending,
@@ -192,8 +192,8 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
       track(new THREE.SphereGeometry(0.07, 16, 12)),
       track(
         new THREE.MeshStandardMaterial({
-          color: 0x1d3300,
-          emissive: LIME,
+          color: 0x082f49,
+          emissive: BLUE,
           emissiveIntensity: 2.2,
           roughness: 0.3,
         }),
@@ -217,8 +217,8 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
 
     const crystalMat = track(
       new THREE.MeshStandardMaterial({
-        color: 0x1d3300,
-        emissive: LIME,
+        color: 0x082f49,
+        emissive: BLUE,
         emissiveIntensity: 1.4,
         roughness: 0.25,
         metalness: 0.1,
@@ -298,8 +298,8 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
       track(new THREE.ConeGeometry(0.07, 0.32, 12)),
       track(
         new THREE.MeshStandardMaterial({
-          color: 0x1d3300,
-          emissive: LIME,
+          color: 0x082f49,
+          emissive: BLUE,
           emissiveIntensity: 1.8,
           roughness: 0.3,
         }),
@@ -325,7 +325,7 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
     const shell = new THREE.Mesh(
       track(new THREE.BoxGeometry(1.5, 1.8, 1.06)),
       track(
-        new THREE.MeshStandardMaterial({ color: LIME_DEEP, metalness: 0.25, roughness: 0.38 }),
+        new THREE.MeshStandardMaterial({ color: BLUE_DEEP, metalness: 0.25, roughness: 0.38 }),
       ),
     );
     shell.position.z = 0.02;
@@ -334,7 +334,7 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
     const panel = new THREE.Mesh(
       track(new THREE.BoxGeometry(1.34, 1.64, 0.06)),
       track(
-        new THREE.MeshStandardMaterial({ color: LIME, metalness: 0.2, roughness: 0.3 }),
+        new THREE.MeshStandardMaterial({ color: BLUE, metalness: 0.2, roughness: 0.3 }),
       ),
     );
     panel.position.set(0, 0, 0.56);
@@ -366,7 +366,7 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
     }
 
     const ventMat = track(
-      new THREE.MeshStandardMaterial({ color: 0x4d7a00, metalness: 0.4, roughness: 0.5 }),
+      new THREE.MeshStandardMaterial({ color: 0x0369a1, metalness: 0.4, roughness: 0.5 }),
     );
     const ventGeo = track(new THREE.BoxGeometry(1.1, 0.09, 0.04));
     for (let i = 0; i < 3; i += 1) {
@@ -378,7 +378,7 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
     const arm = new THREE.Mesh(
       track(new THREE.BoxGeometry(0.62, 0.24, 0.34)),
       track(
-        new THREE.MeshStandardMaterial({ color: LIME_DEEP, metalness: 0.3, roughness: 0.4 }),
+        new THREE.MeshStandardMaterial({ color: BLUE_DEEP, metalness: 0.3, roughness: 0.4 }),
       ),
     );
     arm.position.set(-0.95, 0.55, 0);
@@ -400,7 +400,7 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
     particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     const particleMat = track(
       new THREE.PointsMaterial({
-        color: 0xc8ff3a,
+        color: 0x38bdf8,
         size: 0.05,
         transparent: true,
         opacity: 0.85,
@@ -457,7 +457,7 @@ export default function DrillScene({ active, onError }: DrillSceneProps) {
     // ---- shockwave ring: expands from the impact point while mining ----------
     const shockMat = track(
       new THREE.MeshBasicMaterial({
-        color: LIME,
+        color: BLUE,
         transparent: true,
         opacity: 0,
         blending: THREE.AdditiveBlending,

@@ -2,24 +2,24 @@
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#050605"/>
-      <stop offset="55%" stop-color="#071008"/>
+      <stop offset="55%" stop-color="#071020"/>
       <stop offset="100%" stop-color="#000"/>
     </linearGradient>
     <linearGradient id="top" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#d8ff62" stop-opacity=".28"/>
-      <stop offset="100%" stop-color="#6aa000" stop-opacity=".1"/>
+      <stop offset="0%" stop-color="#7dd3fc" stop-opacity=".28"/>
+      <stop offset="100%" stop-color="#0369a1" stop-opacity=".1"/>
     </linearGradient>
     <linearGradient id="left" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#3d5208" stop-opacity=".35"/>
-      <stop offset="100%" stop-color="#101804" stop-opacity=".2"/>
+      <stop offset="0%" stop-color="#075985" stop-opacity=".35"/>
+      <stop offset="100%" stop-color="#0c1a2e" stop-opacity=".2"/>
     </linearGradient>
     <linearGradient id="right" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#c8ff3a" stop-opacity=".18"/>
-      <stop offset="100%" stop-color="#1a2a00" stop-opacity=".12"/>
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity=".18"/>
+      <stop offset="100%" stop-color="#0c2d48" stop-opacity=".12"/>
     </linearGradient>
   </defs>
   <rect width="540" height="960" fill="url(#sky)"/>
-  <g fill="none" stroke="#c8ff3a" stroke-opacity=".12" stroke-width="1">
+  <g fill="none" stroke="#38bdf8" stroke-opacity=".12" stroke-width="1">
     <path d="M40 120l40-20 40 20v36l-40 20-40-20zM160 100l36-18 36 18v32l-36 18-36-18zM280 128l44-22 44 22v38l-44 22-44-22zM420 108l38-19 38 19v34l-38 19-38-19z"/>
     <path d="M90 250l42-21 42 21v36l-42 21-42-21zM220 230l34-17 34 17v30l-34 17-34-17zM340 258l48-24 48 24v40l-48 24-48-24z"/>
     <path d="M50 390l40-20 40 20v36l-40 20-40-20zM180 370l46-23 46 23v38l-46 23-46-23zM330 396l36-18 36 18v32l-36 18-36-18zM450 378l40-20 40 20v36l-40 20-40-20z"/>

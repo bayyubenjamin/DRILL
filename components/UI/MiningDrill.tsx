@@ -33,7 +33,7 @@ function DrillArtwork2D({ active }: { active: boolean }) {
           <path d="M42 332 78 304 118 328 84 346Z" fill="#1a1c14" />
           <path d="M70 334 104 312 136 332 96 348Z" fill="#2a2e22" />
           <path d="M128 312 176 328 140 348 108 330Z" fill="#16180f" />
-          <path d="M154 322 198 308 222 330 168 344Z" fill="#242818" />
+          <path d="M154 322 198 308 222 330 168 344Z" fill="#1e293b" />
           <path d="M28 338 52 322 68 336 46 348Z" fill="#12140c" />
           <path d="M210 334 246 318 262 336 224 350Z" fill="#10120c" />
           <circle cx="96" cy="336" r="6" fill="#2f3324" />
@@ -47,16 +47,16 @@ function DrillArtwork2D({ active }: { active: boolean }) {
         <rect x="162" y="300" width="68" height="10" fill="#111318" />
 
         <g transform="translate(148,168)">
-          <rect x="0" y="0" width="96" height="132" rx="4" fill="#8fd400" />
-          <rect x="6" y="8" width="84" height="116" rx="3" fill="#b6ff14" />
+          <rect x="0" y="0" width="96" height="132" rx="4" fill="#0284c7" />
+          <rect x="6" y="8" width="84" height="116" rx="3" fill="#38bdf8" />
           <rect x="14" y="18" width="38" height="52" rx="2" fill="#111" />
           <circle cx="26" cy="34" r="6" fill="#3a3a3a" />
           <circle cx="40" cy="34" r="6" fill="#3a3a3a" />
           <rect x="20" y="48" width="26" height="14" fill="#222" />
           <rect x="58" y="16" width="26" height="18" fill="#111" />
-          <rect x="10" y="84" width="76" height="10" fill="#6aa000" />
-          <rect x="-28" y="40" width="36" height="16" rx="2" fill="#8fd400" />
-          <rect x="-18" y="8" width="22" height="48" fill="#b6ff14" />
+          <rect x="10" y="84" width="76" height="10" fill="#0369a1" />
+          <rect x="-28" y="40" width="36" height="16" rx="2" fill="#0284c7" />
+          <rect x="-18" y="8" width="22" height="48" fill="#38bdf8" />
         </g>
 
         <g transform="translate(78,18)">
@@ -71,7 +71,7 @@ function DrillArtwork2D({ active }: { active: boolean }) {
             <path d="M26 28 C58 44 18 60 50 76 C18 92 58 108 26 124 C58 140 18 156 50 172 C18 188 58 204 38 220" stroke="#e8eaee" strokeWidth="7" fill="none" />
             <rect x="26" y="196" width="24" height="28" rx="3" fill="#9aa0a6" />
             <path d="M28 248 L48 248 L38 286 Z" fill="#b8bcc2" />
-            <path d="M32 252 L44 252 L38 274 Z" fill="#c8ff3a" opacity=".85" />
+            <path d="M32 252 L44 252 L38 274 Z" fill="#38bdf8" opacity=".85" />
           </g>
         </g>
       </svg>

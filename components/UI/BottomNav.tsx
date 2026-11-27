@@ -39,7 +39,7 @@ export default function BottomNav() {
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center border transition-shadow ${
                     isActive
-                      ? 'bg-emerald-500 border-emerald-300 text-black shadow-[0_0_22px_rgba(200,255,58,0.5)]'
+                      ? 'bg-emerald-500 border-emerald-300 text-black shadow-[0_0_22px_rgba(56,189,248,0.5)]'
                       : 'bg-zinc-950 border-emerald-500/45 text-emerald-400'
                   }`}
                 >
@@ -69,7 +69,7 @@ export default function BottomNav() {
                   transition={{ type: 'spring', stiffness: 500, damping: 38 }}
                 />
               )}
-              <Icon size={20} className={`relative z-[1] ${isActive ? 'drop-shadow-[0_0_8px_rgba(200,255,58,0.9)]' : ''}`} />
+              <Icon size={20} className={`relative z-[1] ${isActive ? 'drop-shadow-[0_0_8px_rgba(56,189,248,0.9)]' : ''}`} />
               <span className="relative z-[1] text-[9px] font-mono tracking-widest font-bold">{item.name}</span>
             </Link>
           );

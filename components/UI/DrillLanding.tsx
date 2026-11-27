@@ -57,9 +57,9 @@ function Row({ label, value }: { label: string; value: string }) {
 export default function DrillLanding() {
   return (
     <main className="drill-landing-blue min-h-screen w-full bg-black font-mono text-white">
-      {/* Scoped blue overrides: the shared .emboss/.emboss-btn styles in
-          globals.css are hardcoded lime (shared with the Mini App, which
-          stays green). On this page only, the same shapes glow blue. */}
+      {/* Scoped blue overrides: belt-and-braces on top of the blue
+          globals.css theme, so the landing cards glow blue even if the
+          shared styles drift. */}
       <style>{`
         .drill-landing-blue .emboss {
           background:
