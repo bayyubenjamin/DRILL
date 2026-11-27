@@ -135,10 +135,7 @@ export default function DrillLanding() {
           <Row label="Offline cap" value="24 hours" />
           <Row label="Emission Q1" value="100,000,000 DRILL" />
           <Row label="Emission total" value="200,000,000 DRILL" />
-          <p>
-            Speed grows with your level. Emission halves every 90 days until the 200M reserve is done. Each
-            quarter has a hard cap — when it runs out, mining pauses.
-          </p>
+          <p>Speed grows with your level. Emission halves every 90 days; capped quarters pause mining.</p>
         </Section>
 
         {/* ---- Drill Pass ---- */}
@@ -146,7 +143,7 @@ export default function DrillLanding() {
           <Row label="Price" value="1 TON" />
           <Row label="You send" value="1.15 TON" />
           <Row label="Type" value="Soulbound · 1 / wallet" />
-          <p>Your mining license — one per wallet, non-transferable. 1 TON to treasury, 0.15 TON covers gas.</p>
+          <p>Mining license — one per wallet, non-transferable. 1 TON to treasury, 0.15 TON gas.</p>
         </Section>
 
         {/* ---- Referral ---- */}
@@ -154,10 +151,7 @@ export default function DrillLanding() {
           <Row label="Valid referral" value="+500 DRILL" />
           <Row label="Friend share" value="5% of friend claims" />
           <Row label="Share cap" value="500 / quarter / friend" />
-          <p>
-            Valid once your friend mints the Pass, claims once, and 7 days pass. You also earn 5% of their
-            claims (max 500 / friend / quarter).
-          </p>
+          <p>Valid when your friend mints, claims once, and 7 days pass. You earn 5% of their claims (max 500 / friend / quarter).</p>
         </Section>
 
         {/* ---- Withdraw ---- */}
@@ -176,7 +170,7 @@ export default function DrillLanding() {
           <Row label="Rewards pool" value="300,000,000 (3%)" />
           <Row label="DEX liquidity" value="1,000,000,000 (10%)" />
           <Row label="Minted at deploy" value="3,000,000,000 (30%)" />
-          <p>10B is a cap, not a promise. 7B stays unminted until a published schedule. Genesis = Jetton mainnet deploy day.</p>
+          <p>10B is a cap, not a promise. 7B unminted until a published schedule. Genesis = mainnet deploy day.</p>
         </Section>
 
         {/* ---- Status + links ---- */}
