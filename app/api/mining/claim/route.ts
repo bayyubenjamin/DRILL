@@ -6,7 +6,6 @@ import { hasOnchainPass } from '@/lib/ton/pass';
 import { capElapsedMinutes, getCurrentQuarterStart } from '@/lib/mining/emission';
 import { getQuarterRemaining, incrementQuarterMinted, readQuarterInfo } from '@/lib/mining/quarters';
 import { creditFriendShare } from '@/lib/referral/pools';
-import { activateReferralIfPending } from '@/lib/referral/activate';
 
 export async function POST(request: Request) {
   try {
@@ -117,13 +116,6 @@ export async function POST(request: Request) {
         emissionCapped,
       });
     }
-
-    // First claim is one of the referral-valid gates (Frozen v1.0: Pass +
-    // first claim + 7 days). The claim itself is the trigger that can
-    // finally activate a pending referral — verify/start/mint only run
-    // before the first claim exists, so without this call a referral could
-    // stay pending forever.
-    await activateReferralIfPending(user.id);
 
     return NextResponse.json({
       success: true,

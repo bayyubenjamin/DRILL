@@ -58,11 +58,9 @@ export async function creditFriendShare(
 
   // Frozen v1.0 §1: friend share caps at 500 DRILL per friend per quarter.
   // Share accrued so far = 5% of this friend's mining claims in the
-  // quarter. That sum is exact enough: a friend can only mine (and claim)
-  // after the Pass is verified, which is also when the referral activates,
-  // so every claim in the window is post-activation. Edge case: claims made
-  // while the referral was still pending (too young / no first claim yet)
-  // count toward the cap too — conservative, it can only under-pay.
+  // quarter. That sum is exact: a friend can only mine (and claim) after
+  // the Pass is verified, which is also when the referral activates, so
+  // every claim in the window is post-activation.
   const windowStart = quarterStart ?? getCurrentQuarterStart(null);
   const { data: claims, error: claimsError } = await supabaseAdmin
     .from('mining_claims')
