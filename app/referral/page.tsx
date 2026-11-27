@@ -1,9 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Users, Copy, CheckCircle2, ArrowLeft, Zap, Clock3 } from 'lucide-react';
+import { Copy, CheckCircle2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { BOT_USERNAME, FRIEND_SHARE, REFERRAL_REWARD } from '@/lib/referral/constants';
+import AppIcon from '@/components/UI/AppIcon';
 import EmbossCard from '@/components/UI/EmbossCard';
 import Skeleton from '@/components/UI/Skeleton';
 import { formatDrill, formatInt } from '@/lib/format';
@@ -85,11 +86,11 @@ export default function ReferralPage() {
     <div className="min-h-screen max-w-md mx-auto text-white p-4 font-mono flex flex-col pb-24">
       <header className="flex items-center mb-6">
         <Link href="/" className="text-zinc-400 mr-4"><ArrowLeft size={24} /></Link>
-        <h1 className="text-xl tracking-widest text-emerald-500">REFERRAL SYSTEM</h1>
+        <h1 className="text-xl tracking-widest text-emerald-500 flex items-center gap-2"><AppIcon name="friends" size={24} />REFERRAL SYSTEM</h1>
       </header>
 
       <EmbossCard className="p-4 mb-4">
-        <span className="text-[9px] tracking-widest text-emerald-400 font-bold uppercase">ENGINE BALANCE</span>
+        <span className="text-[9px] tracking-widest text-emerald-400 font-bold uppercase flex items-center gap-1.5"><AppIcon name="engine" size={14} />ENGINE BALANCE</span>
         {loading ? (
           <Skeleton className="h-8 w-40 mt-1" label="Loading engine balance" />
         ) : (
@@ -99,7 +100,7 @@ export default function ReferralPage() {
 
       <div className="grid grid-cols-2 gap-3 mb-4">
         <EmbossCard className="p-4" accent>
-          <span className="text-[9px] tracking-widest text-emerald-400 font-bold uppercase">VALID REF POOL</span>
+          <span className="text-[9px] tracking-widest text-emerald-400 font-bold uppercase flex items-center gap-1.5"><AppIcon name="reward" size={14} />VALID REF POOL</span>
           <p className="text-xl font-bold text-emerald-400 mt-1 tabular-nums">+{formatDrill(stats.validPool, 2)}</p>
           <p className="text-[10px] text-zinc-500 mt-1">+{REFERRAL_REWARD} each time a friend mints</p>
           <button
@@ -112,7 +113,7 @@ export default function ReferralPage() {
           </button>
         </EmbossCard>
         <EmbossCard className="p-4" accent>
-          <span className="text-[9px] tracking-widest text-emerald-400 font-bold uppercase">FRIENDS POOL</span>
+          <span className="text-[9px] tracking-widest text-emerald-400 font-bold uppercase flex items-center gap-1.5"><AppIcon name="friends" size={14} />FRIENDS POOL</span>
           <p className="text-xl font-bold text-emerald-400 mt-1 tabular-nums">+{formatDrill(stats.friendPool)}</p>
           <p className="text-[10px] text-zinc-500 mt-1">{FRIEND_SHARE * 100}% of friend $DRILL claims</p>
           <button
@@ -147,9 +148,9 @@ export default function ReferralPage() {
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-3 mb-6">
-          <EmbossCard className="p-3 text-center"><span className="text-zinc-500 text-[9px]">INVITES</span><p className="text-xl font-bold tabular-nums">{formatInt(stats.totalInvites)}</p></EmbossCard>
-          <EmbossCard className="p-3 text-center"><span className="text-zinc-500 text-[9px] flex items-center justify-center gap-1"><Clock3 size={11} /> PENDING</span><p className="text-xl font-bold text-amber-400 tabular-nums">{formatInt(stats.pendingCount)}</p></EmbossCard>
-          <EmbossCard className="p-3 text-center" accent><span className="text-zinc-500 text-[9px] flex items-center justify-center gap-1"><CheckCircle2 size={11} /> VALID</span><p className="text-xl font-bold text-emerald-400 tabular-nums">{formatInt(stats.validCount)}</p></EmbossCard>
+          <EmbossCard className="p-3 text-center"><span className="text-zinc-500 text-[9px] flex items-center justify-center gap-1"><AppIcon name="friends" size={14} />INVITES</span><p className="text-xl font-bold tabular-nums">{formatInt(stats.totalInvites)}</p></EmbossCard>
+          <EmbossCard className="p-3 text-center"><span className="text-zinc-500 text-[9px] flex items-center justify-center gap-1"><AppIcon name="history" size={14} />PENDING</span><p className="text-xl font-bold text-amber-400 tabular-nums">{formatInt(stats.pendingCount)}</p></EmbossCard>
+          <EmbossCard className="p-3 text-center" accent><span className="text-zinc-500 text-[9px] flex items-center justify-center gap-1"><AppIcon name="level" size={14} />VALID</span><p className="text-xl font-bold text-emerald-400 tabular-nums">{formatInt(stats.validCount)}</p></EmbossCard>
         </div>
       )}
 
@@ -172,8 +173,11 @@ export default function ReferralPage() {
             const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent('Join DRILL ENGINE and mine $DRILL with me.')}`;
             window.Telegram?.WebApp?.openTelegramLink?.(shareUrl);
           }}
-          className="emboss-btn w-full bg-emerald-500 text-black font-bold tracking-widest text-sm py-3"
+          className="emboss-btn w-full bg-emerald-500 text-black font-bold tracking-widest text-sm py-3 flex items-center justify-center gap-2"
         >
+          <span className="w-5 h-5 rounded-full bg-black/85 flex items-center justify-center">
+            <AppIcon name="friends" size={14} />
+          </span>
           INVITE OPERATORS
         </button>
       </EmbossCard>

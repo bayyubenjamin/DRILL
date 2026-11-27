@@ -5,6 +5,7 @@ import {
   TELEGRAM_MINIAPP_DEEP_LINK,
   TELEGRAM_MINIAPP_URL,
 } from '@/lib/telegram/detect';
+import AppIcon, { type AppIconName } from '@/components/UI/AppIcon';
 
 const CHANNEL_URL = 'https://t.me/drillprotocol';
 
@@ -30,16 +31,23 @@ function openTelegram() {
 function Section({
   kicker,
   title,
+  icon,
   children,
 }: {
   kicker: string;
   title: string;
+  icon?: AppIconName;
   children: React.ReactNode;
 }) {
   return (
     <section className="emboss w-full p-5 text-left">
-      <p className="text-[10px] tracking-[0.3em] text-sky-400">{kicker}</p>
-      <h2 className="mt-1 text-sm font-bold tracking-widest text-white">{title}</h2>
+      <div className="flex items-center gap-3">
+        {icon && <AppIcon name={icon} size={30} />}
+        <div>
+          <p className="text-[10px] tracking-[0.3em] text-sky-400">{kicker}</p>
+          <h2 className="mt-1 text-sm font-bold tracking-widest text-white">{title}</h2>
+        </div>
+      </div>
       <div className="mt-3 space-y-2 text-[12px] leading-relaxed text-zinc-400">{children}</div>
     </section>
   );
@@ -113,7 +121,7 @@ export default function DrillLanding() {
         </header>
 
         {/* ---- How it works ---- */}
-        <Section kicker="START HERE" title="HOW IT WORKS">
+        <Section kicker="START HERE" title="HOW IT WORKS" icon="mine">
           <Row label="1. Connect wallet" value="TON wallet in the app" />
           <Row label="2. Mint Drill Pass" value="1 TON · soulbound" />
           <Row label="3. Mine + level up" value="Claim, then withdraw" />
@@ -124,7 +132,7 @@ export default function DrillLanding() {
         </Section>
 
         {/* ---- Mining mechanics ---- */}
-        <Section kicker="MINING" title="THE RIG">
+        <Section kicker="MINING" title="THE RIG" icon="engine">
           <Row label="Mining speed" value="0.01 – 0.12 / min" />
           <Row label="Levels" value="1 – 500" />
           <Row label="Offline cap" value="24 hours" />
@@ -138,7 +146,7 @@ export default function DrillLanding() {
         </Section>
 
         {/* ---- Drill Pass ---- */}
-        <Section kicker="PASS" title="DRILL PASS">
+        <Section kicker="PASS" title="DRILL PASS" icon="profile">
           <Row label="Price" value="1 TON" />
           <Row label="You send" value="1.15 TON" />
           <Row label="Type" value="Soulbound · 1 / wallet" />
@@ -149,7 +157,7 @@ export default function DrillLanding() {
         </Section>
 
         {/* ---- Referral ---- */}
-        <Section kicker="FRIENDS" title="REFERRAL">
+        <Section kicker="FRIENDS" title="REFERRAL" icon="friends">
           <Row label="Valid referral" value="+500 DRILL" />
           <Row label="Friend share" value="5% of friend claims" />
           <Row label="Share cap" value="500 / quarter / friend" />
@@ -161,7 +169,7 @@ export default function DrillLanding() {
         </Section>
 
         {/* ---- Withdraw ---- */}
-        <Section kicker="CASH OUT" title="WITHDRAW">
+        <Section kicker="CASH OUT" title="WITHDRAW" icon="withdraw">
           <Row label="Minimum" value="500 DRILL" />
           <Row label="Fee" value="70 DRILL" />
           <Row label="Max per day" value="5,000 DRILL" />
@@ -170,7 +178,7 @@ export default function DrillLanding() {
         </Section>
 
         {/* ---- Token ---- */}
-        <Section kicker="TOKEN" title="$DRILL SUPPLY">
+        <Section kicker="TOKEN" title="$DRILL SUPPLY" icon="reward">
           <Row label="Hard cap" value="10,000,000,000" />
           <Row label="Mining reserve" value="200,000,000 (2%)" />
           <Row label="Rewards pool" value="300,000,000 (3%)" />
@@ -183,7 +191,7 @@ export default function DrillLanding() {
         </Section>
 
         {/* ---- Status + links ---- */}
-        <Section kicker="STATUS" title="WHERE WE ARE">
+        <Section kicker="STATUS" title="WHERE WE ARE" icon="speed">
           <Row label="Testnet" value="Live now" />
           <Row label="Mainnet" value="Coming soon" />
           <p>

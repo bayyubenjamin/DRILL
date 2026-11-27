@@ -3,18 +3,19 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Pickaxe, CheckSquare, Hexagon, Users, User } from 'lucide-react';
+import { Hexagon } from 'lucide-react';
+import AppIcon, { type AppIconName } from '@/components/UI/AppIcon';
 import { impact } from '@/lib/telegram/haptic';
 
 export default function BottomNav() {
   const pathname = usePathname();
 
-  const navItems = [
-    { name: 'MINE', path: '/', icon: Pickaxe },
-    { name: 'TASKS', path: '/tasks', icon: CheckSquare },
-    { name: 'DRILL', path: '/drill', icon: Hexagon, center: true },
-    { name: 'FRIENDS', path: '/referral', icon: Users },
-    { name: 'PROFILE', path: '/profile', icon: User },
+  const navItems: { name: string; path: string; icon: AppIconName; center?: boolean }[] = [
+    { name: 'MINE', path: '/', icon: 'mine' },
+    { name: 'TASKS', path: '/tasks', icon: 'tasks' },
+    { name: 'DRILL', path: '/drill', icon: 'drill', center: true },
+    { name: 'FRIENDS', path: '/referral', icon: 'friends' },
+    { name: 'PROFILE', path: '/profile', icon: 'profile' },
   ];
 
   return (
@@ -25,8 +26,10 @@ export default function BottomNav() {
       <div className="flex justify-around items-end h-16">
         {navItems.map((item) => {
           const isActive = pathname === item.path;
-          const Icon = item.icon;
 
+          // Center button keeps the lucide mark: the generated icon is
+          // blue art on black, which is invisible on the bright blue
+          // circle. The other four tabs use the generated icon set.
           if (item.center) {
             return (
               <Link
@@ -43,7 +46,7 @@ export default function BottomNav() {
                       : 'bg-zinc-950 border-emerald-500/45 text-emerald-400'
                   }`}
                 >
-                  <Icon size={22} />
+                  <Hexagon size={22} />
                 </div>
                 <span className={`text-[9px] font-mono tracking-widest font-bold mt-1 ${isActive ? 'text-emerald-400' : 'text-zinc-500'}`}>
                   {item.name}
@@ -69,7 +72,7 @@ export default function BottomNav() {
                   transition={{ type: 'spring', stiffness: 500, damping: 38 }}
                 />
               )}
-              <Icon size={20} className={`relative z-[1] ${isActive ? 'drop-shadow-[0_0_8px_rgba(56,189,248,0.9)]' : ''}`} />
+              <AppIcon name={item.icon} size={20} className={`relative z-[1] ${isActive ? 'drop-shadow-[0_0_8px_rgba(56,189,248,0.9)]' : ''}`} />
               <span className="relative z-[1] text-[9px] font-mono tracking-widest font-bold">{item.name}</span>
             </Link>
           );

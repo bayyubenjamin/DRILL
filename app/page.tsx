@@ -3,7 +3,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
-import { Zap, Trophy, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
+import AppIcon from '@/components/UI/AppIcon';
 import { useTonAddress, useTonConnectUI } from '@tonconnect/ui-react';
 import WalletConnect from '@/components/Wallet/WalletConnect';
 import MiningDrill from '@/components/UI/MiningDrill';
@@ -307,7 +308,7 @@ export default function DrillEngineDashboard() {
             />
           )}
         </div>
-        <span className="text-sm font-bold text-emerald-400 tracking-widest">$DRILL</span>
+        <span className="text-sm font-bold text-emerald-400 tracking-widest flex items-center justify-center gap-1.5"><AppIcon name="engine" size={16} />$DRILL</span>
       </div>
 
       <div className="drill-stage relative h-[240px] flex items-end justify-center">
@@ -321,14 +322,14 @@ export default function DrillEngineDashboard() {
       <EmbossCard className="px-3.5 py-2.5 flex flex-col gap-2" accent={live}>
         <div className="flex justify-between items-center text-[11px] font-mono">
           <div className="flex items-center gap-1.5 text-white font-medium">
-            <Trophy className="w-3.5 h-3.5 text-emerald-400" />
+            <AppIcon name="level" size={14} />
             <div className="leading-tight">
               <p className="text-[10px] tracking-widest">LEVEL {progress.currentLevel}</p>
               <p className="text-[9px] text-zinc-500 tracking-widest">NEXT LEVEL: {Math.round(progress.progressPercent)}%</p>
             </div>
           </div>
           <div className="flex items-center gap-1 text-emerald-400 font-medium text-right">
-            <Zap className="w-3.5 h-3.5" />
+            <AppIcon name="speed" size={14} />
             <div className="leading-tight">
               <p className="text-[11px]">+{(live ? account.miningSpeed : 0).toFixed(2)} $DRILL / MIN</p>
               <p className="text-[8px] text-zinc-500 tracking-widest">MINING SPEED</p>
@@ -344,6 +345,7 @@ export default function DrillEngineDashboard() {
         <EmbossCard className="px-3 py-3 flex flex-col items-center text-center min-h-[188px]" accent={live}>
           <p className="text-[9px] tracking-[0.22em] text-zinc-500">DRILL STATUS</p>
           <p className={`mt-1 text-[11px] tracking-widest font-bold flex items-center gap-1.5 ${live ? 'text-emerald-400' : 'text-zinc-500'}`}>
+            <AppIcon name="mine" size={14} />
             {live ? 'EXTRACTING' : 'STANDBY'}
             {live && <span className="status-dot" />}
           </p>
@@ -359,7 +361,7 @@ export default function DrillEngineDashboard() {
 
         <EmbossCard className="px-3 py-3 flex flex-col items-center text-center min-h-[188px]" accent={liveUnclaimed > 0}>
           <p className="text-[9px] tracking-[0.22em] text-zinc-500">REWARD</p>
-          <p className="mt-1 text-[11px] tracking-widest font-bold text-zinc-300">UNCLAIMED</p>
+          <p className="mt-1 text-[11px] tracking-widest font-bold text-zinc-300 flex items-center gap-1.5"><AppIcon name="reward" size={14} />UNCLAIMED</p>
           <AnimatedNumber
             value={liveUnclaimed}
             digits={4}

@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useTonAddress, useTonWallet } from '@tonconnect/ui-react';
-import { Copy, CheckCircle2, History, User, X } from 'lucide-react';
+import { Copy, CheckCircle2, User, X } from 'lucide-react';
+import AppIcon, { type AppIconName } from '@/components/UI/AppIcon';
 import WalletConnect from '@/components/Wallet/WalletConnect';
 import EmbossCard from '@/components/UI/EmbossCard';
 import SheetModal from '@/components/UI/SheetModal';
@@ -72,11 +73,11 @@ type Withdrawal = {
   tx_hash?: string | null;
 };
 
-function Row({ label, value, tone = 'white' }: { label: string; value: string; tone?: 'white' | 'emerald' | 'amber' }) {
+function Row({ label, value, tone = 'white', icon }: { label: string; value: string; tone?: 'white' | 'emerald' | 'amber'; icon?: AppIconName }) {
   const color = tone === 'emerald' ? 'text-emerald-400' : tone === 'amber' ? 'text-amber-400' : 'text-zinc-100';
   return (
     <div className="grid grid-cols-[1fr_auto] items-center gap-3 h-9">
-      <span className="text-[10px] tracking-[0.18em] text-zinc-500">{label}</span>
+      <span className="text-[10px] tracking-[0.18em] text-zinc-500 flex items-center gap-2">{icon && <AppIcon name={icon} size={16} />}{label}</span>
       <span className={`text-[12px] tabular-nums tracking-wide ${color}`}>{value}</span>
     </div>
   );
@@ -309,9 +310,9 @@ export default function ProfilePage() {
           </div>
         ) : (
           <>
-            <Row label="WALLET" value={formatDrill(walletBalance)} />
-            <Row label="ENGINE" value={formatDrill(engineBalance)} tone="emerald" />
-            <Row label="UNCLAIMED" value={`+${formatDrill(liveUnclaimed)}`} tone="amber" />
+            <Row label="WALLET" value={formatDrill(walletBalance)} icon="wallet" />
+            <Row label="ENGINE" value={formatDrill(engineBalance)} tone="emerald" icon="engine" />
+            <Row label="UNCLAIMED" value={`+${formatDrill(liveUnclaimed)}`} tone="amber" icon="reward" />
           </>
         )}
         <div className="mt-2 pt-3 border-t border-white/10">
@@ -326,11 +327,16 @@ export default function ProfilePage() {
       </EmbossCard>
 
       <div className="flex items-center gap-2">
-        <button type="button" onClick={() => setWdOpen(true)} disabled={!canWithdraw} className={`emboss-btn flex-1 h-11 text-[11px] font-bold ${canWithdraw ? 'bg-emerald-500 text-black' : 'bg-zinc-900 text-zinc-600'}`}>
+        <button type="button" onClick={() => setWdOpen(true)} disabled={!canWithdraw} className={`emboss-btn flex-1 h-11 text-[11px] font-bold flex items-center justify-center gap-2 ${canWithdraw ? 'bg-emerald-500 text-black' : 'bg-zinc-900 text-zinc-600'}`}>
+          {canWithdraw && (
+            <span className="w-5 h-5 rounded-full bg-black/85 flex items-center justify-center">
+              <AppIcon name="withdraw" size={14} />
+            </span>
+          )}
           WITHDRAW ENGINE
         </button>
         <button type="button" onClick={() => setHistoryOpen(true)} className="emboss h-11 w-11 flex items-center justify-center text-zinc-300">
-          <History className="w-4 h-4" />
+          <AppIcon name="history" size={20} />
         </button>
       </div>
       {onCooldown ? (
@@ -352,15 +358,17 @@ export default function ProfilePage() {
 
       <div className="grid grid-cols-2 gap-2.5">
         <Link href="/referral" className="block">
-          <EmbossCard className="h-16 px-3 flex flex-col items-center justify-center">
+          <EmbossCard className="h-20 px-3 flex flex-col items-center justify-center gap-1">
+            <AppIcon name="friends" size={28} />
             <p className="text-[9px] tracking-[0.22em] text-zinc-500">REFERRAL</p>
-            <p className="text-[11px] text-zinc-200 mt-1 tracking-widest">SYSTEM</p>
+            <p className="text-[11px] text-zinc-200 tracking-widest">SYSTEM</p>
           </EmbossCard>
         </Link>
         <Link href="/tasks" className="block">
-          <EmbossCard className="h-16 px-3 flex flex-col items-center justify-center">
+          <EmbossCard className="h-20 px-3 flex flex-col items-center justify-center gap-1">
+            <AppIcon name="tasks" size={28} />
             <p className="text-[9px] tracking-[0.22em] text-zinc-500">TASKS</p>
-            <p className="text-[11px] text-zinc-200 mt-1 tracking-widest">PROTOCOL</p>
+            <p className="text-[11px] text-zinc-200 tracking-widest">PROTOCOL</p>
           </EmbossCard>
         </Link>
       </div>

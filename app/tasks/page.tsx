@@ -5,16 +5,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
   CheckCircle2,
-  Zap,
-  ShieldCheck,
   Sparkles,
   ExternalLink,
-  Calendar,
-  Share2,
-  Wallet,
-  Cpu,
 } from 'lucide-react';
 import Link from 'next/link';
+import AppIcon from '@/components/UI/AppIcon';
 import EmbossCard from '@/components/UI/EmbossCard';
 import Skeleton from '@/components/UI/Skeleton';
 import { impact, notify } from '@/lib/telegram/haptic';
@@ -180,10 +175,10 @@ export default function TasksPage() {
   );
 
   const getTaskIcon = (type: string) => {
-    if (type === 'daily') return <Calendar className="w-4 h-4 text-amber-400" />;
-    if (type === 'social') return <Share2 className="w-4 h-4 text-blue-400" />;
-    if (type === 'onchain') return <Wallet className="w-4 h-4 text-emerald-400" />;
-    return <Cpu className="w-4 h-4 text-zinc-400" />;
+    if (type === 'daily') return <AppIcon name="history" size={16} />;
+    if (type === 'social') return <AppIcon name="friends" size={16} />;
+    if (type === 'onchain') return <AppIcon name="wallet" size={16} />;
+    return <AppIcon name="engine" size={16} />;
   };
 
   return (
@@ -194,7 +189,7 @@ export default function TasksPage() {
           <span>DASHBOARD</span>
         </Link>
         <div className="emboss emboss-accent px-2.5 py-1 rounded-md flex items-center gap-1.5">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+          <AppIcon name="tasks" size={14} />
           <span className="text-[10px] tracking-widest text-zinc-300 font-semibold uppercase">TASKS PROTOCOL</span>
         </div>
       </header>
@@ -209,7 +204,7 @@ export default function TasksPage() {
       </AnimatePresence>
 
       <EmbossCard className="my-4 p-4">
-        <span className="text-[9px] tracking-widest text-emerald-400 font-bold uppercase">ENGINE BALANCE</span>
+        <span className="text-[9px] tracking-widest text-emerald-400 font-bold uppercase flex items-center gap-1.5"><AppIcon name="engine" size={14} />ENGINE BALANCE</span>
         <div className="flex items-baseline gap-2 mt-1">
           <span className="text-2xl font-bold tracking-tight text-white">{userBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
           <span className="text-xs font-bold text-emerald-400">$DRILL</span>
@@ -271,7 +266,7 @@ export default function TasksPage() {
                       <span className="text-xs font-bold text-zinc-100">{task.title}</span>
                       <p className="text-[10px] text-zinc-400 mt-0.5 leading-normal">{task.description}</p>
                       <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 mt-1.5">
-                        <Zap className="w-3 h-3" />
+                        <AppIcon name="reward" size={12} />
                         <span>+{task.reward} $DRILL</span>
                       </div>
                     </div>
