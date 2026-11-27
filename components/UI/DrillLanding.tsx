@@ -57,28 +57,23 @@ function Row({ label, value }: { label: string; value: string }) {
 export default function DrillLanding() {
   return (
     <main className="drill-landing-blue min-h-screen w-full bg-black font-mono text-white">
-      {/* Scoped blue overrides: belt-and-braces on top of the blue
-          globals.css theme, so the landing cards glow blue even if the
-          shared styles drift. */}
+      {/* Scoped matte overrides: same flat surface as the app theme,
+          so the landing cards stay doff even if the shared styles drift. */}
       <style>{`
         .drill-landing-blue .emboss {
-          background:
-            radial-gradient(420px circle at var(--mx) var(--my), rgba(56, 189, 248, 0.12), transparent 46%),
-            linear-gradient(165deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 22%, transparent 42%),
-            linear-gradient(180deg, #161916 0%, #0a0c0a 100%);
-          border: 1px solid rgba(56, 189, 248, 0.16);
+          background: linear-gradient(180deg, #10141a 0%, #0b0e13 100%);
+          border: 1px solid rgba(125, 211, 252, 0.14);
+          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
         }
         .drill-landing-blue .emboss-ridge {
           box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.06);
         }
-        .drill-landing-blue .emboss-sheen {
-          background: linear-gradient(115deg, transparent 26%, rgba(56, 189, 248, 0.12) 48%, transparent 66%);
-        }
         .drill-landing-blue .emboss-btn {
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38), inset 0 -3px 0 rgba(0, 0, 0, 0.22), 0 10px 22px rgba(56, 189, 248, 0.22);
+          border: 1px solid rgba(255, 255, 255, 0.10);
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
         }
         .drill-landing-blue .emboss-btn:not(:disabled):active {
-          box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.3), 0 3px 10px rgba(56, 189, 248, 0.16);
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
         }
       `}</style>
       <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-5 py-8">

@@ -39,7 +39,7 @@ export default function BottomNav() {
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center border transition-shadow ${
                     isActive
-                      ? 'bg-emerald-500 border-emerald-300 text-black shadow-[0_0_22px_rgba(56,189,248,0.5)]'
+                      ? 'bg-emerald-500 border-emerald-300 text-black'
                       : 'bg-zinc-950 border-emerald-500/45 text-emerald-400'
                   }`}
                 >

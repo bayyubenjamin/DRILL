@@ -63,7 +63,6 @@ export default function EmbossCard({
       onPointerDown={() => window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.('light')}
     >
       <span className="emboss-ridge" />
-      <span className="emboss-sheen emboss-sheen-idle" />
       <div className={`relative z-[1] w-full ${className}`}>{children}</div>
     </motion.div>
   );
