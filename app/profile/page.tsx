@@ -92,7 +92,9 @@ export default function ProfilePage() {
   const address = useTonAddress();
   const wallet = useTonWallet();
   const [copied, setCopied] = useState(false);
-  const [tgUser, setTgUser] = useState<{ first_name?: string; last_name?: string; username?: string } | null>(null);
+  const [tgUser, setTgUser] = useState<{ first_name?: string; last_name?: string; username?: string; photo_url?: string } | null>(null);
+  // If the Telegram photo fails to load, fall back to the icon.
+  const [photoFailed, setPhotoFailed] = useState(false);
   const [hasNft, setHasNft] = useState(false);
   const [engineBalance, setEngineBalance] = useState(0);
   const [walletBalance, setWalletBalance] = useState(0);
@@ -242,8 +244,12 @@ export default function ProfilePage() {
 
       <EmbossCard className="px-4 py-4" accent>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full emboss emboss-inset flex items-center justify-center shrink-0">
-            <User className="w-4 h-4 text-emerald-400" />
+          <div className="w-10 h-10 rounded-full emboss emboss-inset flex items-center justify-center shrink-0 overflow-hidden">
+            {tgUser?.photo_url && !photoFailed ? (
+              <img src={tgUser.photo_url} alt={displayName} className="h-full w-full object-cover" onError={() => setPhotoFailed(true)} />
+            ) : (
+              <User className="w-4 h-4 text-emerald-400" />
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-bold tracking-[0.08em] truncate uppercase">{displayName}</p>

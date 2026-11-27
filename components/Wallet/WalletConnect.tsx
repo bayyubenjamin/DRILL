@@ -36,6 +36,9 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [tgName, setTgName] = useState('OPERATOR');
+  // Telegram profile photo (initDataUnsafe.user.photo_url) for the avatar.
+  const [tgPhoto, setTgPhoto] = useState<string | null>(null);
+  const [photoFailed, setPhotoFailed] = useState(false);
   // The wallet bound to this Telegram account according to the database —
   // the source of truth when the TonConnect session on this device is gone.
   const storeWallet = useUserStore((s) => s.user?.wallet_address ?? null);
@@ -55,6 +58,7 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
     if (!user) return;
     const full = [user.first_name, user.last_name].filter(Boolean).join(' ');
     setTgName(full || (user.username ? `@${user.username}` : 'OPERATOR'));
+    if (user.photo_url) setTgPhoto(user.photo_url);
   }, []);
 
   // The bound wallet already comes home with /api/user/auth when the app
@@ -304,8 +308,12 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
         <div className="emboss emboss-accent w-full px-3 py-2.5 font-mono">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 rounded-lg border border-emerald-500/35 flex items-center justify-center bg-black/40">
-                <User className="w-4 h-4 text-emerald-400" />
+              <div className="w-9 h-9 rounded-lg border border-emerald-500/35 flex items-center justify-center bg-black/40 overflow-hidden">
+                {tgPhoto && !photoFailed ? (
+                  <img src={tgPhoto} alt="" className="h-full w-full object-cover" onError={() => setPhotoFailed(true)} />
+                ) : (
+                  <User className="w-4 h-4 text-emerald-400" />
+                )}
               </div>
               <div className="min-w-0">
                 <p className="text-[8px] tracking-[0.28em] text-zinc-500">TELEGRAM · {networkLabel()}</p>
