@@ -209,7 +209,7 @@ export default function TasksPage() {
           <span className="text-2xl font-bold tracking-tight text-white">{userBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
           <span className="text-xs font-bold text-emerald-400">$DRILL</span>
         </div>
-        <p className="text-[10px] text-zinc-400 mt-1 leading-relaxed">Open the task link first. Claim appears after 1 minute.</p>
+        <p className="text-[10px] text-zinc-400 mt-1 leading-relaxed">Open the link first. Claim unlocks after 1 min.</p>
       </EmbossCard>
 
       <EmbossCard className="mb-4 p-1 grid grid-cols-4 gap-1">

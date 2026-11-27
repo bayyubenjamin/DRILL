@@ -116,7 +116,7 @@ export default function DrillLanding() {
             t.me/drillengine_bot
           </a>
           <p className="mt-2 text-[10px] leading-relaxed text-zinc-600">
-            DRILL only runs as a Telegram Mini App — a regular browser cannot mine, hold a wallet, or claim.
+            DRILL only works inside Telegram — browsers can't mine or claim.
           </p>
         </header>
 
@@ -125,10 +125,7 @@ export default function DrillLanding() {
           <Row label="1. Connect wallet" value="TON wallet in the app" />
           <Row label="2. Mint Drill Pass" value="1 TON · soulbound" />
           <Row label="3. Mine + level up" value="Claim, then withdraw" />
-          <p>
-            Open the app, connect your TON wallet, mint the Drill Pass, and your rig starts mining. Come back to
-            claim — mining pauses after 24 hours without a claim.
-          </p>
+          <p>Connect wallet, mint the Pass, your rig mines. Claim within 24 hours or mining pauses.</p>
         </Section>
 
         {/* ---- Mining mechanics ---- */}
@@ -139,9 +136,8 @@ export default function DrillLanding() {
           <Row label="Emission Q1" value="100,000,000 DRILL" />
           <Row label="Emission total" value="200,000,000 DRILL" />
           <p>
-            Speed grows with your level. Mining emission halves every 90 days — Q1 mints 100M, Q2 50M, Q3 25M,
-            and so on, until the 200M reserve is done. Each quarter has a hard cap: when it runs out, mining
-            pauses until the next quarter.
+            Speed grows with your level. Emission halves every 90 days until the 200M reserve is done. Each
+            quarter has a hard cap — when it runs out, mining pauses.
           </p>
         </Section>
 
@@ -150,10 +146,7 @@ export default function DrillLanding() {
           <Row label="Price" value="1 TON" />
           <Row label="You send" value="1.15 TON" />
           <Row label="Type" value="Soulbound · 1 / wallet" />
-          <p>
-            The Pass is your mining license — one per wallet, non-transferable. 1 TON goes to the treasury;
-            the extra 0.15 TON covers gas and collection float.
-          </p>
+          <p>Your mining license — one per wallet, non-transferable. 1 TON to treasury, 0.15 TON covers gas.</p>
         </Section>
 
         {/* ---- Referral ---- */}
@@ -162,9 +155,8 @@ export default function DrillLanding() {
           <Row label="Friend share" value="5% of friend claims" />
           <Row label="Share cap" value="500 / quarter / friend" />
           <p>
-            A referral counts as valid once your friend mints the Pass, makes their first mining claim, and 7
-            days have passed since they joined. You also earn 5% of every claim they make, capped at 500 DRILL
-            per friend per quarter.
+            Valid once your friend mints the Pass, claims once, and 7 days pass. You also earn 5% of their
+            claims (max 500 / friend / quarter).
           </p>
         </Section>
 
@@ -174,7 +166,7 @@ export default function DrillLanding() {
           <Row label="Fee" value="70 DRILL" />
           <Row label="Max per day" value="5,000 DRILL" />
           <Row label="Frequency" value="1x per 24 hours" />
-          <p>Withdrawals go to the wallet bound to your account. No 30-day lock — that rule was removed.</p>
+          <p>Paid to your bound wallet. No 30-day lock.</p>
         </Section>
 
         {/* ---- Token ---- */}
@@ -184,20 +176,14 @@ export default function DrillLanding() {
           <Row label="Rewards pool" value="300,000,000 (3%)" />
           <Row label="DEX liquidity" value="1,000,000,000 (10%)" />
           <Row label="Minted at deploy" value="3,000,000,000 (30%)" />
-          <p>
-            The 10B cap is an upper limit, not a promise to mint it all. 7B stays unminted and is only minted on
-            a published schedule. Genesis is the day the Jetton deploys on mainnet.
-          </p>
+          <p>10B is a cap, not a promise. 7B stays unminted until a published schedule. Genesis = Jetton mainnet deploy day.</p>
         </Section>
 
         {/* ---- Status + links ---- */}
         <Section kicker="STATUS" title="WHERE WE ARE" icon="speed">
           <Row label="Testnet" value="Live now" />
           <Row label="Mainnet" value="Coming soon" />
-          <p>
-            Testnet is live now. Mainnet launches after withdrawals are proven end-to-end. Follow the channel
-            for the genesis announcement.
-          </p>
+          <p>Mainnet launches after withdrawals are proven end-to-end. Follow the channel for genesis.</p>
           <div className="flex gap-3 pt-1">
             <a href={CHANNEL_URL} className="emboss-btn flex-1 py-2.5 text-center text-[11px] font-bold text-sky-400">
               📢 CHANNEL

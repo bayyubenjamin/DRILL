@@ -155,7 +155,7 @@ export default function ReferralPage() {
       )}
 
       <p className="text-[10px] text-zinc-500 leading-relaxed mb-6">
-        Friend opens your link = PENDING. After they mint the pass = VALID and +{REFERRAL_REWARD} $DRILL goes to Valid Ref Pool. When that friend claims $DRILL, you get {FRIEND_SHARE * 100}% in Friends Pool. Both pools must be claimed into engine balance.
+        PENDING when a friend opens your link. VALID (+{REFERRAL_REWARD}) when they mint the Pass. You also earn {FRIEND_SHARE * 100}% of their claims. Claim both pools into engine balance.
       </p>
 
       <EmbossCard className="p-4 mt-auto">

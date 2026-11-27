@@ -16,6 +16,13 @@
   --color-emerald-500: #38bdf8;
   --color-amber-500: #0ea5e9;
   --color-emerald-600: #0284c7;
+  /* Grey text was too dim to read on the dark cards (Bayu, 27 Nov 2026).
+     Lift every grey one step brighter — zinc-400/500/600 are only ever
+     used for text in this codebase (no bg/border uses them), so this
+     touches labels and descriptions only, nothing structural. */
+  --color-zinc-400: #d4d4d8;
+  --color-zinc-500: #a1a1aa;
+  --color-zinc-600: #71717a;
 }
 
 html,

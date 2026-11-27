@@ -337,7 +337,7 @@ export default function WalletConnect({ compact = false }: { compact?: boolean }
         </div>
         {boundWallet && !address && (
           <p className="mb-3 rounded-lg border border-emerald-500/25 bg-emerald-500/5 px-3 py-2 font-mono text-[10px] leading-relaxed tracking-wider text-zinc-300">
-            This account is bound to wallet <span className="text-emerald-400">{shortAddress(boundWallet)}</span> — pick the same wallet so it is not rejected.
+            This account is bound to <span className="text-emerald-400">{shortAddress(boundWallet)}</span> — connect the same wallet.
           </p>
         )}
         {WALLETS.map((item) => (
