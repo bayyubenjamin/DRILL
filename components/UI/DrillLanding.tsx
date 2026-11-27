@@ -151,7 +151,7 @@ export default function DrillLanding() {
           <Row label="Valid referral" value="+500 DRILL" />
           <Row label="Friend share" value="5% of friend claims" />
           <Row label="Share cap" value="500 / quarter / friend" />
-          <p>Valid when your friend mints, claims once, and 7 days pass. You earn 5% of their claims (max 500 / friend / quarter).</p>
+          <p>Valid when your friend mints, claims once, and 7 days pass. You earn 5% of their claims.</p>
         </Section>
 
         {/* ---- Withdraw ---- */}
