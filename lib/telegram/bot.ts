@@ -21,7 +21,10 @@ import { CANONICAL_URL } from '@/lib/site';
 const TELEGRAM_API = 'https://api.telegram.org';
 const APP_URL = CANONICAL_URL;
 const CHANNEL_URL = 'https://t.me/drillprotocol';
-const CARD_PHOTO_URL = `${CANONICAL_URL}/drill-pass.png`;
+// /start card photo — the DRILL ENGINE banner (27 Nov 2026, Bayu).
+// NOT drill-pass.png: that file is the NFT Pass artwork and stays as
+// the image/cover in public/drill-pass.json.
+const CARD_PHOTO_URL = `${CANONICAL_URL}/drill-banner.png`;
 
 // ---------------------------------------------------------------------------
 // Minimal Telegram types (only what we use)

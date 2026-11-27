@@ -2,7 +2,28 @@ import { BOT_USERNAME } from '@/lib/referral/constants';
 
 export const TELEGRAM_MINIAPP_URL = `https://t.me/${BOT_USERNAME}/app`;
 export const TELEGRAM_MINIAPP_DEEP_LINK = `tg://resolve?domain=${BOT_USERNAME}&appname=app`;
+export const TELEGRAM_BOT_URL = `https://t.me/${BOT_USERNAME}`;
 
+/**
+ * True only when the page is really running inside Telegram.
+ *
+ * Strong signals only:
+ * - Telegram appends tgWebAppData / tgWebAppStartParam to the Mini App URL
+ * - WebApp.initData is a non-empty signed payload
+ * - WebApp.initDataUnsafe.user.id is present
+ *
+ * Deliberately NOT used as proof:
+ * - window.Telegram.WebApp existing at all — telegram-web-app.js defines
+ *   the object even in a regular browser, with empty initData.
+ * - WebApp.version — the script sets a version string outside Telegram too.
+ * - WebApp.platform — it is "unknown" outside Telegram, and a non-empty
+ *   platform alone does not prove a signed Telegram session.
+ *
+ * The old code returned true on version / bare WebApp presence, which
+ * let a regular browser slip past the gate and land on a broken app
+ * (no initData, so every authed API call fails) instead of the
+ * "Open in Telegram" screen.
+ */
 export function isOpenedInsideTelegram() {
   if (typeof window === 'undefined') return false;
 
@@ -22,16 +43,11 @@ export function isOpenedInsideTelegram() {
   if (webApp.initData && webApp.initData.length > 0) return true;
   if (webApp.initDataUnsafe?.user?.id) return true;
 
-  // Fallback: platform is set by Telegram client (not "unknown")
-  const platform = (webApp as { platform?: string }).platform;
-  if (platform && platform !== 'unknown' && platform !== '') return true;
+  return false;
+}
 
-  // Last resort: version exists only when script was injected by Telegram
-  const version = (webApp as { version?: string }).version;
-  if (version && version.length > 0) return true;
-
-  // The WebApp object itself only exists inside Telegram (or a page that
-  // deliberately mocks it). After the script has loaded, treat its bare
-  // presence as a weak signal rather than locking a real Telegram user out.
-  return true;
+/** True once telegram-web-app.js has loaded (inside or outside Telegram). */
+export function isTelegramScriptLoaded() {
+  if (typeof window === 'undefined') return false;
+  return Boolean(window.Telegram?.WebApp);
 }
