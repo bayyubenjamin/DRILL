@@ -38,7 +38,7 @@ function Section({
 }) {
   return (
     <section className="emboss w-full p-5 text-left">
-      <p className="text-[10px] tracking-[0.3em] text-emerald-400">{kicker}</p>
+      <p className="text-[10px] tracking-[0.3em] text-sky-400">{kicker}</p>
       <h2 className="mt-1 text-sm font-bold tracking-widest text-white">{title}</h2>
       <div className="mt-3 space-y-2 text-[12px] leading-relaxed text-zinc-400">{children}</div>
     </section>
@@ -65,11 +65,11 @@ export default function DrillLanding() {
             alt="DRILL ENGINE"
             width={766}
             height={460}
-            className="w-full rounded-xl border border-emerald-500/20"
+            className="w-full rounded-xl border border-sky-400/20"
           />
           <h1 className="mt-4 text-xl font-bold tracking-[0.25em] text-white">DRILL ENGINE</h1>
           <p className="mt-2 text-[12px] leading-relaxed text-zinc-400">
-            Mine <span className="font-bold text-emerald-400">$DRILL</span> with your own rig on TON.
+            Mine <span className="font-bold text-sky-400">$DRILL</span> with your own rig on TON.
             Level up, invite friends, withdraw real DRILL.
           </p>
           <a
@@ -78,7 +78,7 @@ export default function DrillLanding() {
               e.preventDefault();
               openTelegram();
             }}
-            className="emboss-btn mt-5 block w-full bg-emerald-500 py-3.5 text-xs font-bold text-black"
+            className="emboss-btn mt-5 block w-full bg-sky-400 py-3.5 text-xs font-bold text-black"
           >
             OPEN IN TELEGRAM
           </a>
@@ -171,10 +171,10 @@ export default function DrillLanding() {
             for the genesis announcement.
           </p>
           <div className="flex gap-3 pt-1">
-            <a href={CHANNEL_URL} className="emboss-btn flex-1 py-2.5 text-center text-[11px] font-bold text-emerald-400">
+            <a href={CHANNEL_URL} className="emboss-btn flex-1 py-2.5 text-center text-[11px] font-bold text-sky-400">
               📢 CHANNEL
             </a>
-            <a href={TELEGRAM_BOT_URL} className="emboss-btn flex-1 py-2.5 text-center text-[11px] font-bold text-emerald-400">
+            <a href={TELEGRAM_BOT_URL} className="emboss-btn flex-1 py-2.5 text-center text-[11px] font-bold text-sky-400">
               🤖 BOT
             </a>
           </div>
