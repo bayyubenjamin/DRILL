@@ -8,6 +8,9 @@
  *
  * No new dependency: plain fetch to api.telegram.org.
  * Language: English (matches the Mini App since 19 Nov 2026).
+ * Tone: casual, slang + abbreviations, NOT neat corporate copy
+ * (Bayu, 27 Nov 2026: "struktur bahasanya jangan terlalu rapi,
+ * tambahin slang dan singkatan kata"). Facts/numbers stay exact.
  *
  * NOTE: the X button is deliberately absent from the keyboards until
  * the @drillprotocol handle exists (x.com/drillprotocol is 404 as of
@@ -178,35 +181,35 @@ async function sendText(
 function startCaption(firstName: string): string {
   const name = escapeHtml(firstName || 'Miner');
   return (
-    `<b>⛏️ Welcome to DRILL ENGINE, ${name}</b>\n\n` +
-    `Mine <b>$DRILL</b> with your own rig, level up, and withdraw real DRILL.\n\n` +
+    `<b>⛏️ Yo, welcome to DRILL ENGINE, ${name}</b>\n\n` +
+    `Mine <b>$DRILL</b> w/ ur own rig, lvl up, and cash out real DRILL. No cap.\n\n` +
     `<b>How it works</b>\n` +
-    `1️⃣ Open the app and connect your TON wallet\n` +
+    `1️⃣ Open the app + connect ur TON wallet\n` +
     `2️⃣ Mint the Drill Pass — <b>1 TON</b>\n` +
-    `3️⃣ Mine, level up, and withdraw from <b>500 DRILL</b> (fee 70)\n\n` +
+    `3️⃣ Mine, lvl up, withdraw from <b>500 DRILL</b> (fee 70)\n\n` +
     `<b>Token</b> — Hard cap 10,000,000,000 DRILL · Mining reserve 200,000,000\n` +
-    `<b>Status</b> — Testnet live now, mainnet coming soon.`
+    `<b>Status</b> — Testnet live rn, mainnet coming soon.`
   );
 }
 
 const HELP_TEXT =
   `<b>❓ DRILL ENGINE — Commands</b>\n\n` +
-  `<b>/start</b> — Welcome card &amp; open the app\n` +
+  `<b>/start</b> — Welcome card + open the app\n` +
   `<b>/app</b> — Open the DRILL miner\n` +
-  `<b>/balance</b> — Your DRILL balance, level &amp; mining status\n` +
-  `<b>/referral</b> — Your invite link &amp; referral stats\n` +
+  `<b>/balance</b> — Ur DRILL balance, lvl + mining status\n` +
+  `<b>/referral</b> — Ur invite link + referral stats\n` +
   `<b>/about</b> — What DRILL is\n` +
   `<b>/channel</b> — Official Telegram channel\n` +
   `<b>/help</b> — This list\n\n` +
-  `Everything happens inside the Mini App — tap <b>Open DRILL App</b> below to start mining.`;
+  `Everything happens inside the Mini App — tap <b>Open DRILL App</b> below and start mining.`;
 
 const ABOUT_TEXT =
   `<b>⛏️ About DRILL ENGINE</b>\n\n` +
-  `DRILL is a Telegram Mini App on TON. You run a virtual drilling rig that mines <b>$DRILL</b> over time. Level up your rig to mine faster.\n\n` +
+  `DRILL is a Telegram Mini App on TON. U run a virtual drilling rig that mines <b>$DRILL</b> over time. Lvl up ur rig to mine faster.\n\n` +
   `<b>Pass</b> — Drill Pass (Soulbound, 1 per wallet): 1 TON\n` +
-  `<b>Withdraw</b> — Minimum 500 DRILL, fee 70 DRILL\n` +
+  `<b>Withdraw</b> — Min 500 DRILL, fee 70 DRILL\n` +
   `<b>Supply</b> — Hard cap 10,000,000,000 DRILL; mining emission 200,000,000, halving every 90 days\n\n` +
-  `Testnet is live now. Mainnet launches after withdrawals are proven end-to-end.`;
+  `Testnet is live rn. Mainnet drops after withdrawals are proven end-to-end.`;
 
 // ---------------------------------------------------------------------------
 // /balance — read-only lookup, no initData needed: the webhook itself is
@@ -222,7 +225,7 @@ async function balanceText(tgId: number): Promise<string> {
   if (!user) {
     return (
       `<b>💰 My Balance</b>\n\n` +
-      `You have no miner yet. Open the app once to create your account, then check back here.`
+      `No miner yet. Open the app once to set up ur account, then check back here.`
     );
   }
 
@@ -275,7 +278,7 @@ async function referralText(tgId: number): Promise<string> {
   const link = `https://t.me/${BOT_USERNAME}/app?startapp=${tgId}`;
   let text =
     `<b>👥 Referral</b>\n\n` +
-    `Your invite link:\n${link}\n\n`;
+    `Ur invite link:\n${link}\n\n`;
   const { data: user } = await supabaseAdmin
     .from('users')
     .select('id')
@@ -284,8 +287,8 @@ async function referralText(tgId: number): Promise<string> {
   if (!user) {
     return (
       text +
-      `Open the app once to activate your account, then check back here for your invite stats.\n\n` +
-      `Friend opens your link = PENDING. After they mint the Drill Pass = VALID, +${REFERRAL_REWARD} DRILL to your Valid Ref Pool. You also get ${FRIEND_SHARE * 100}% of their $DRILL claims in Friends Pool.`
+      `Open the app once to activate ur account, then check back here for ur invite stats.\n\n` +
+      `Friend opens ur link = PENDING. Once they mint the Drill Pass = VALID, +${REFERRAL_REWARD} DRILL to ur Valid Ref Pool. U also get ${FRIEND_SHARE * 100}% of their $DRILL claims in Friends Pool.`
     );
   }
   const [{ data: referrals }, { data: account }] = await Promise.all([
@@ -303,7 +306,7 @@ async function referralText(tgId: number): Promise<string> {
     text +
     `Invites: <b>${rows.length}</b> · Valid: <b>${valid}</b> · Pending: <b>${pending}</b>\n` +
     `Valid pool: <b>+${Number(account?.valid_ref_pool || 0)} DRILL</b> · Friends pool: <b>+${Number(account?.friend_pool || 0)} DRILL</b>\n\n` +
-    `Friend opens your link = PENDING. After they mint the Drill Pass = VALID, +${REFERRAL_REWARD} DRILL to your Valid Ref Pool. You also get ${FRIEND_SHARE * 100}% of their $DRILL claims in Friends Pool. Claim both pools in the app.`
+    `Friend opens ur link = PENDING. Once they mint the Drill Pass = VALID, +${REFERRAL_REWARD} DRILL to ur Valid Ref Pool. U also get ${FRIEND_SHARE * 100}% of their $DRILL claims in Friends Pool. Claim both pools in the app.`
   );
 }
 
@@ -323,7 +326,7 @@ async function handleCommand(chatId: number, from: TelegramUser, rawText: string
     case '/app':
       await sendText(
         chatId,
-        `<b>⛏️ DRILL ENGINE</b>\n\nTap below to open the miner.`,
+        `<b>⛏️ DRILL ENGINE</b>\n\nTap below to open the miner, let's go.`,
         mainKeyboard(),
       );
       break;
@@ -343,7 +346,7 @@ async function handleCommand(chatId: number, from: TelegramUser, rawText: string
     case '/channel':
       await sendText(
         chatId,
-        `<b>📢 Official channel</b>\n\nAnnouncements, updates and mainnet news:`,
+        `<b>📢 Official channel</b>\n\nAnnouncements, updates + mainnet news:`,
         {
           inline_keyboard: [[{ text: '📢 Open Channel', url: CHANNEL_URL }]],
         },
@@ -352,7 +355,7 @@ async function handleCommand(chatId: number, from: TelegramUser, rawText: string
     default:
       await sendText(
         chatId,
-        `Unknown command <b>${escapeHtml(command)}</b>. Try /help for the full list.`,
+        `Hmm, idk that command <b>${escapeHtml(command)}</b>. Try /help for the full list.`,
         helpKeyboard(),
       );
       break;
@@ -429,7 +432,7 @@ export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void
     } else {
       await sendText(
         message.chat.id,
-        `Tap <b>Open DRILL App</b> to start mining, or send /help for commands.`,
+        `Tap <b>Open DRILL App</b> to start mining, or /help if u need the full list.`,
         mainKeyboard(),
       );
     }
