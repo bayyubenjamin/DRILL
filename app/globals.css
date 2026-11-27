@@ -202,6 +202,38 @@ tc-root {
   border-color: rgba(125, 211, 252, 0.30);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
 }
+/* SBT frame — owner request, 27 Nov 2026: the Drill Pass card gets a
+   slightly glowing, luxurious frame. Deliberate exception to the matte
+   rule: the glow lives ONLY on this card, nowhere else. Double frame
+   (bright border + faint outer hairline via outline) with a slow,
+   gentle breathing glow — "agak menyala", not flashy. */
+.sbt-glow {
+  border-color: rgba(125, 211, 252, 0.75);
+  outline: 1px solid rgba(125, 211, 252, 0.28);
+  outline-offset: 5px;
+  box-shadow:
+    inset 0 0 0 1px rgba(186, 230, 253, 0.22),
+    0 0 18px rgba(56, 189, 248, 0.45),
+    0 0 54px rgba(56, 189, 248, 0.18),
+    0 6px 18px rgba(0, 0, 0, 0.35);
+  animation: sbt-glow-breathe 4s ease-in-out infinite;
+}
+@keyframes sbt-glow-breathe {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 0 1px rgba(186, 230, 253, 0.22),
+      0 0 14px rgba(56, 189, 248, 0.35),
+      0 0 42px rgba(56, 189, 248, 0.14),
+      0 6px 18px rgba(0, 0, 0, 0.35);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 1px rgba(186, 230, 253, 0.35),
+      0 0 26px rgba(56, 189, 248, 0.55),
+      0 0 70px rgba(56, 189, 248, 0.24),
+      0 6px 18px rgba(0, 0, 0, 0.35);
+  }
+}
 .emboss-pulse { animation: none; }
 .emboss-inset {
   background: rgba(0, 0, 0, 0.55);
