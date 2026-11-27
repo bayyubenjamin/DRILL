@@ -131,13 +131,20 @@ async function sendPhotoCard(
   caption: string,
   replyMarkup: { inline_keyboard: InlineButton[][] },
 ): Promise<void> {
-  await callTelegram('sendPhoto', {
+  const sent = await callTelegram('sendPhoto', {
     chat_id: chatId,
     photo: CARD_PHOTO_URL,
     caption,
     parse_mode: 'HTML',
     reply_markup: replyMarkup,
   });
+  if (sent) return;
+  // Photo send failed (e.g. Telegram could not fetch the card image
+  // while a deploy was still rolling out) — fall back to text so
+  // /start never goes silent again. Reported 27 Nov 2026: three
+  // /start messages got no reply at all after the banner change.
+  console.error('sendPhotoCard failed, falling back to text');
+  await sendText(chatId, caption, replyMarkup);
 }
 
 async function sendText(
