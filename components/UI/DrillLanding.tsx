@@ -56,7 +56,31 @@ function Row({ label, value }: { label: string; value: string }) {
 
 export default function DrillLanding() {
   return (
-    <main className="min-h-screen w-full bg-black font-mono text-white">
+    <main className="drill-landing-blue min-h-screen w-full bg-black font-mono text-white">
+      {/* Scoped blue overrides: the shared .emboss/.emboss-btn styles in
+          globals.css are hardcoded lime (shared with the Mini App, which
+          stays green). On this page only, the same shapes glow blue. */}
+      <style>{`
+        .drill-landing-blue .emboss {
+          background:
+            radial-gradient(420px circle at var(--mx) var(--my), rgba(56, 189, 248, 0.12), transparent 46%),
+            linear-gradient(165deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 22%, transparent 42%),
+            linear-gradient(180deg, #161916 0%, #0a0c0a 100%);
+          border: 1px solid rgba(56, 189, 248, 0.16);
+        }
+        .drill-landing-blue .emboss-ridge {
+          box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.06);
+        }
+        .drill-landing-blue .emboss-sheen {
+          background: linear-gradient(115deg, transparent 26%, rgba(56, 189, 248, 0.12) 48%, transparent 66%);
+        }
+        .drill-landing-blue .emboss-btn {
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38), inset 0 -3px 0 rgba(0, 0, 0, 0.22), 0 10px 22px rgba(56, 189, 248, 0.22);
+        }
+        .drill-landing-blue .emboss-btn:not(:disabled):active {
+          box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.3), 0 3px 10px rgba(56, 189, 248, 0.16);
+        }
+      `}</style>
       <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-5 py-8">
         {/* ---- Top: direct the user to the Mini App ---- */}
         <header className="text-center">

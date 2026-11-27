@@ -72,7 +72,13 @@ export default function TelegramGate({ children }: { children: React.ReactNode }
   if (!ready) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center gap-3 bg-black font-mono text-xs tracking-widest text-sky-400">
-        <span className="spinner" aria-hidden />
+        {/* .spinner is hardcoded lime in globals.css (shared with the
+            Mini App) — blue only on this web gate screen. */}
+        <span
+          className="spinner"
+          style={{ borderColor: 'rgba(56, 189, 248, 0.25)', borderTopColor: '#38bdf8' }}
+          aria-hidden
+        />
         <span>INITIALIZING...</span>
         <a
           href={TELEGRAM_MINIAPP_URL}
