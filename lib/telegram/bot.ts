@@ -17,6 +17,7 @@
 
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { CANONICAL_URL } from '@/lib/site';
+import { BOT_USERNAME, FRIEND_SHARE, REFERRAL_REWARD } from '@/lib/referral/constants';
 
 const TELEGRAM_API = 'https://api.telegram.org';
 const APP_URL = CANONICAL_URL;
@@ -118,7 +119,10 @@ function mainKeyboard(): { inline_keyboard: InlineButton[][] } {
         { text: '📢 Channel', url: CHANNEL_URL },
         { text: '❓ Help', callback_data: 'help' },
       ],
-      [{ text: '💰 My Balance', callback_data: 'balance' }],
+      [
+        { text: '👥 Referral', web_app: { url: `${APP_URL}/referral` } },
+        { text: '💰 My Balance', callback_data: 'balance' },
+      ],
     ],
   };
 }
@@ -190,6 +194,7 @@ const HELP_TEXT =
   `<b>/start</b> — Welcome card &amp; open the app\n` +
   `<b>/app</b> — Open the DRILL miner\n` +
   `<b>/balance</b> — Your DRILL balance, level &amp; mining status\n` +
+  `<b>/referral</b> — Your invite link &amp; referral stats\n` +
   `<b>/about</b> — What DRILL is\n` +
   `<b>/channel</b> — Official Telegram channel\n` +
   `<b>/help</b> — This list\n\n` +
@@ -256,6 +261,53 @@ async function balanceText(tgId: number): Promise<string> {
 }
 
 // ---------------------------------------------------------------------------
+// /referral — same numbers as the Mini App's FRIENDS tab
+// (/api/referral): invites, valid/pending, both claim pools.
+// The invite link is the user's Telegram id as startapp param.
+// ---------------------------------------------------------------------------
+
+function resolveReferralStatus(row: { status?: string | null; reward?: number | string | null }): string {
+  if (row.status === 'valid' || row.status === 'pending') return row.status;
+  return Number(row.reward || 0) > 0 ? 'valid' : 'pending';
+}
+
+async function referralText(tgId: number): Promise<string> {
+  const link = `https://t.me/${BOT_USERNAME}/app?startapp=${tgId}`;
+  let text =
+    `<b>👥 Referral</b>\n\n` +
+    `Your invite link:\n${link}\n\n`;
+  const { data: user } = await supabaseAdmin
+    .from('users')
+    .select('id')
+    .eq('telegram_user_id', tgId)
+    .maybeSingle();
+  if (!user) {
+    return (
+      text +
+      `Open the app once to activate your account, then check back here for your invite stats.\n\n` +
+      `Friend opens your link = PENDING. After they mint the Drill Pass = VALID, +${REFERRAL_REWARD} DRILL to your Valid Ref Pool. You also get ${FRIEND_SHARE * 100}% of their $DRILL claims in Friends Pool.`
+    );
+  }
+  const [{ data: referrals }, { data: account }] = await Promise.all([
+    supabaseAdmin.from('referrals').select('id, reward, status').eq('referrer_id', user.id),
+    supabaseAdmin
+      .from('mining_accounts')
+      .select('valid_ref_pool, friend_pool')
+      .eq('user_id', user.id)
+      .maybeSingle(),
+  ]);
+  const rows = (referrals || []).map((row) => resolveReferralStatus(row));
+  const valid = rows.filter((s) => s === 'valid').length;
+  const pending = rows.filter((s) => s === 'pending').length;
+  return (
+    text +
+    `Invites: <b>${rows.length}</b> · Valid: <b>${valid}</b> · Pending: <b>${pending}</b>\n` +
+    `Valid pool: <b>+${Number(account?.valid_ref_pool || 0)} DRILL</b> · Friends pool: <b>+${Number(account?.friend_pool || 0)} DRILL</b>\n\n` +
+    `Friend opens your link = PENDING. After they mint the Drill Pass = VALID, +${REFERRAL_REWARD} DRILL to your Valid Ref Pool. You also get ${FRIEND_SHARE * 100}% of their $DRILL claims in Friends Pool. Claim both pools in the app.`
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Command + callback handlers
 // ---------------------------------------------------------------------------
 
@@ -280,6 +332,11 @@ async function handleCommand(chatId: number, from: TelegramUser, rawText: string
       break;
     case '/balance': {
       const text = await balanceText(from.id);
+      await sendText(chatId, text, mainKeyboard());
+      break;
+    }
+    case '/referral': {
+      const text = await referralText(from.id);
       await sendText(chatId, text, mainKeyboard());
       break;
     }
