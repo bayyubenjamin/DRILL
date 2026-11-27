@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { validateTelegramWebAppData } from '@/utils/telegram';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { calculateLevel, calculateMiningSpeed, getLevelProgress } from '@/lib/level/calculator';
+import { capElapsedMinutes } from '@/lib/mining/emission';
 import { hasOnchainPass } from '@/lib/ton/pass';
 
 export async function POST(request: Request) {
@@ -51,10 +52,10 @@ export async function POST(request: Request) {
     const speed = miningActive
       ? Number(account?.mining_speed || 0) || calculateMiningSpeed(level)
       : 0;
+    // Same 24h offline cap as the claim route — the number shown here must
+    // never exceed what a claim would actually pay.
     const unclaimed =
-      miningActive && lastClaimAt
-        ? Math.max(0, (Date.now() - new Date(lastClaimAt).getTime()) / 60000) * speed
-        : 0;
+      miningActive && lastClaimAt ? capElapsedMinutes(lastClaimAt) * speed : 0;
 
     return NextResponse.json({
       success: true,

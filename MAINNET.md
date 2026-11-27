@@ -63,6 +63,33 @@ Run in SQL editor:
 
 Prefer a fresh production project. Do not mix testnet users with mainnet.
 
+### Set genesis (required for the quarterly emission cap)
+
+The claim route enforces the quarterly hard cap (Frozen v1.0 §1-§3) from
+`app_config.genesis_timestamp` and books minted DRILL into the
+`emission_quarters` table (both defined in
+`supabase/migrations/0001_full_schema.sql`). Until genesis is set, mining
+has no quarterly cap (testnet mode). Set it right after the Jetton deploy,
+to 00:00 UTC of the deploy day:
+
+```sql
+insert into public.app_config (key, value) values
+  ('genesis_timestamp', '<unix seconds, 00:00 UTC of Jetton deploy day>')
+on conflict (key) do update set value = excluded.value;
+```
+
+Verify:
+
+```sql
+select key, value from public.app_config;
+select table_name from information_schema.tables
+  where table_schema = 'public' and table_name in ('emission_quarters', 'app_config');
+```
+
+If either table is missing, apply `supabase/migrations/0001_full_schema.sql`
+first — without it the quota lookups fail open (claims still work, but the
+cap does not apply) and the server logs will show `quarters:` errors.
+
 ## 6. Smoke test
 
 - Connect mainnet wallet in app

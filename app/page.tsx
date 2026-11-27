@@ -12,6 +12,7 @@ import AnimatedNumber from '@/components/UI/AnimatedNumber';
 import Skeleton from '@/components/UI/Skeleton';
 import EmbossCard from '@/components/UI/EmbossCard';
 import { getLevelProgress } from '@/lib/level/calculator';
+import { capElapsedMinutes } from '@/lib/mining/emission';
 import { DRILL_PASS_COLLECTION } from '@/lib/ton/network';
 import { buyPassPayloadBase64, MINT_SEND_NANOTON } from '@/lib/ton/pass';
 import { useLevelUpPopup } from '@/hooks/useLevelUpPopup';
@@ -170,7 +171,9 @@ export default function DrillEngineDashboard() {
       return;
     }
     const tick = () => {
-      const elapsedMin = Math.max(0, (Date.now() - new Date(account.lastClaimAt as string).getTime()) / 60000);
+      // 24h offline cap (Frozen v1.0 §1) — the ticker must stop growing
+      // where a claim would stop paying.
+      const elapsedMin = capElapsedMinutes(account.lastClaimAt as string);
       setUnclaimed(elapsedMin * account.miningSpeed);
       setNow(Date.now());
     };

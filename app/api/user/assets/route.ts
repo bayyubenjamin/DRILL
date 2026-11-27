@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { validateTelegramWebAppData } from '@/utils/telegram';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { capElapsedMinutes } from '@/lib/mining/emission';
 import { hasOnchainPass } from '@/lib/ton/pass';
 
 export async function POST(request: Request) {
@@ -53,10 +54,9 @@ export async function POST(request: Request) {
     const miningActive = hasNft && Boolean(account?.mining_active);
     const lastClaimAt = miningActive ? account?.last_claim_at || null : null;
     const miningSpeed = miningActive ? Number(account?.mining_speed || 0) : 0;
+    // Same 24h offline cap as the claim route.
     const unclaimed =
-      miningActive && lastClaimAt
-        ? Math.max(0, (Date.now() - new Date(lastClaimAt).getTime()) / 60000) * miningSpeed
-        : 0;
+      miningActive && lastClaimAt ? capElapsedMinutes(lastClaimAt) * miningSpeed : 0;
 
     return NextResponse.json({
       success: true,

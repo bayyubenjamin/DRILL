@@ -3,7 +3,10 @@ import { validateTelegramWebAppData } from '@/utils/telegram';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { calculateLevel, calculateMiningSpeed } from '@/lib/level/calculator';
 import { hasOnchainPass } from '@/lib/ton/pass';
+import { capElapsedMinutes, getCurrentQuarterStart } from '@/lib/mining/emission';
+import { getQuarterRemaining, incrementQuarterMinted, readQuarterInfo } from '@/lib/mining/quarters';
 import { creditFriendShare } from '@/lib/referral/pools';
+import { activateReferralIfPending } from '@/lib/referral/activate';
 
 export async function POST(request: Request) {
   try {
@@ -30,17 +33,45 @@ export async function POST(request: Request) {
 
     const now = new Date();
     const lastClaimAt = new Date(account.last_claim_at);
-    const elapsedMinutes = Math.max(0, (now.getTime() - lastClaimAt.getTime()) / 60000);
+    // Frozen v1.0 §1: offline accrual stops after 24h. Without this cap a
+    // user idle for a year could claim ~63,000 DRILL in one tap (spec max
+    // is 172.8/day at top speed).
+    const elapsedMinutes = capElapsedMinutes(lastClaimAt, now.getTime());
     const speed = Number(account.mining_speed || 0);
-    const rewardAmount = Number((speed * elapsedMinutes).toFixed(8));
+    let rewardAmount = Number((speed * elapsedMinutes).toFixed(8));
     if (rewardAmount <= 0) {
       return NextResponse.json({ error: 'Nothing to claim yet' }, { status: 400 });
+    }
+
+    // Frozen v1.0 §1-§3: quarterly hard cap. When the quarter's budget is
+    // gone, mining pauses. Genesis lives in app_config (NULL until mainnet
+    // deploy) — before mainnet there is no quarter, so no cap yet.
+    const quarter = await readQuarterInfo();
+    // Friend-share cap needs a quarter window even pre-mainnet: calendar
+    // quarter is the fallback there (see lib/mining/emission.ts).
+    const shareQuarterStart = quarter.start ?? getCurrentQuarterStart(null);
+    let emissionCapped = false;
+    if (quarter.start && quarter.budget) {
+      const remaining = await getQuarterRemaining(quarter.start, quarter.budget);
+      if (remaining <= 0) {
+        return NextResponse.json(
+          { error: 'Quarterly emission exhausted — mining paused until next quarter' },
+          { status: 403 },
+        );
+      }
+      if (rewardAmount > remaining) {
+        rewardAmount = Number(remaining.toFixed(8));
+        emissionCapped = true;
+      }
     }
 
     const newBalance = Number(account.balance || 0) + rewardAmount;
     const level = calculateLevel(newBalance);
     const nextSpeed = calculateMiningSpeed(level);
 
+    // Atomic balance move: the update only applies if the balance is still
+    // what we read. Two claims racing on the same balance can no longer
+    // both credit the same minutes (same guard as the withdrawal route).
     const { data: updatedAccount, error: updateError } = await supabaseAdmin
       .from('mining_accounts')
       .update({
@@ -50,14 +81,24 @@ export async function POST(request: Request) {
         last_claim_at: now.toISOString(),
       })
       .eq('id', account.id)
+      .eq('balance', account.balance)
       .select('balance, mining_speed, level, last_claim_at, mining_active')
       .single();
 
     if (updateError || !updatedAccount) {
-      return NextResponse.json({ error: 'Claim failed. Try again.' }, { status: 409 });
+      return NextResponse.json({ error: 'Transaction collision, please try again' }, { status: 409 });
     }
 
-    await creditFriendShare(user.id, rewardAmount);
+    // Book the minted amount against this quarter's budget. Runs after the
+    // account update on purpose: if the counter update fails, the user
+    // keeps their (already credited) reward and the counter under-counts
+    // slightly, instead of the reverse (quota eaten, user paid nothing).
+    if (quarter.start && quarter.budget) {
+      const booked = await incrementQuarterMinted(quarter.start, quarter.budget, rewardAmount);
+      if (!booked) console.error('Claim: quarterly minted counter not updated for', account.id);
+    }
+
+    await creditFriendShare(user.id, rewardAmount, shareQuarterStart);
 
     const { data: claimRow, error: claimError } = await supabaseAdmin
       .from('mining_claims')
@@ -73,8 +114,16 @@ export async function POST(request: Request) {
         new_balance: Number(updatedAccount.balance || 0),
         claimSaved: false,
         claimError: claimError.message,
+        emissionCapped,
       });
     }
+
+    // First claim is one of the referral-valid gates (Frozen v1.0: Pass +
+    // first claim + 7 days). The claim itself is the trigger that can
+    // finally activate a pending referral — verify/start/mint only run
+    // before the first claim exists, so without this call a referral could
+    // stay pending forever.
+    await activateReferralIfPending(user.id);
 
     return NextResponse.json({
       success: true,
@@ -85,6 +134,7 @@ export async function POST(request: Request) {
       mining_speed: Number(updatedAccount.mining_speed || nextSpeed),
       claimSaved: true,
       claimId: claimRow.id,
+      emissionCapped,
     });
   } catch (error) {
     console.error('Claim Error:', error);

@@ -22,6 +22,37 @@ export function calculateGlobalQuarterlyEmission(genesisTimestampSec: number): n
     return currentEmission;
 }
 
+// Frozen v1.0 §1: akumulasi offline berhenti setelah 24 jam tanpa klaim.
+// Cap ini berlaku di SEMUA tempat yang menghitung menit sejak klaim terakhir
+// (claim route, state route, assets route, ticker di halaman Mine) — kalau
+// satu tempat lupa, user bisa klaim menit di luar 24 jam dari jalur itu.
+export const OFFLINE_CAP_MINUTES = 24 * 60; // 1440
+
+/** Menit sejak lastClaimAt, dipotong di cap offline 24 jam. */
+export function capElapsedMinutes(lastClaimAt: string | Date, nowMs: number = Date.now()): number {
+    const elapsed = Math.max(0, (nowMs - new Date(lastClaimAt).getTime()) / 60000);
+    return Math.min(elapsed, OFFLINE_CAP_MINUTES);
+}
+
+/**
+ * Awal kuartal saat ini. Genesis = app_config.genesis_timestamp (di-set
+ * saat deploy Jetton mainnet, 00:00 UTC hari deploy). Sebelum mainnet
+ * (genesis null) kuartal jatuh ke kuartal kalender, supaya cap per kuartal
+ * (mis. friend share) tetap punya jendela yang jelas di testnet.
+ */
+export function getCurrentQuarterStart(genesisTimestampSec: number | null): Date {
+    const now = new Date();
+    if (genesisTimestampSec && genesisTimestampSec > 0) {
+        const genesisMs = genesisTimestampSec * 1000;
+        const elapsed = now.getTime() - genesisMs;
+        if (elapsed < 0) return new Date(genesisMs);
+        const q = Math.floor(elapsed / (QUARTER_DURATION_SEC * 1000));
+        return new Date(genesisMs + q * QUARTER_DURATION_SEC * 1000);
+    }
+    const month = now.getUTCMonth();
+    return new Date(Date.UTC(now.getUTCFullYear(), Math.floor(month / 3) * 3, 1, 0, 0, 0));
+}
+
 /**
  * Menyesuaikan Mining Speed pengguna (Multiplier) jika Global Emission berkurang.
  * Ini memastikan inflasi off-chain sejalan dengan supply on-chain.
