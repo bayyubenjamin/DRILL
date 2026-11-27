@@ -158,7 +158,6 @@ export default function DrillLanding() {
         <Section kicker="CASH OUT" title="WITHDRAW" icon="withdraw">
           <Row label="Minimum" value="500 DRILL" />
           <Row label="Fee" value="70 DRILL" />
-          <Row label="Max per day" value="5,000 DRILL" />
           <Row label="Frequency" value="1x per 24 hours" />
           <p>Paid to your bound wallet. No 30-day lock.</p>
         </Section>

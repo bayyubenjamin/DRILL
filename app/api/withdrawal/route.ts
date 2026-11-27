@@ -5,14 +5,15 @@ import { sameTonAddress } from '@/lib/user/wallet-bind';
 
 const MIN_WITHDRAW = 500;
 const WITHDRAW_FEE = 70;
-// Frozen v1.0 §1: max 5,000 DRILL withdrawn per user per day. Window is a
-// rolling 24h, same as the cooldown below — a calendar day would let a
-// user take 5,000 at 23:59 and another 5,000 at 00:01.
-const MAX_WITHDRAW_PER_DAY = 5000;
-// Withdrawal cooldown — owner rule, 27 Nov 2026 (amendment on top of
-// Frozen v1.0): at most 1 withdrawal per 24h per user. The clock starts at
-// the last withdrawal that actually went through; FAILED / REJECTED /
-// CANCELLED ones never start it — the user got nothing from those.
+// Withdrawal rule — owner decision, 27 Nov 2026 (amendment on top of
+// Frozen v1.0, which had a 5,000/day cap): NO daily cap. What matters is
+// 1 withdrawal per 24h per user. A request goes straight into the queue
+// (status QUEUED in the withdrawals table) for the admin to pay, and only
+// after 24h have passed can the user withdraw again. The frozen spec
+// document is NOT edited; this amendment is recorded here + in MEMORY.md.
+// The clock starts at the last withdrawal that actually went through;
+// FAILED / REJECTED / CANCELLED ones never start it — the user got
+// nothing from those.
 const WITHDRAW_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
 export async function POST(request: Request) {
@@ -28,12 +29,6 @@ export async function POST(request: Request) {
     }
     if (Number.isNaN(withdrawAmount) || withdrawAmount < MIN_WITHDRAW) {
       return NextResponse.json({ error: `Minimum withdrawal is ${MIN_WITHDRAW} $DRILL` }, { status: 400 });
-    }
-    if (withdrawAmount > MAX_WITHDRAW_PER_DAY) {
-      return NextResponse.json(
-        { error: `Maximum withdrawal is ${MAX_WITHDRAW_PER_DAY} $DRILL per day` },
-        { status: 400 },
-      );
     }
 
     const tgUser = JSON.parse(new URLSearchParams(initData).get('user')!);
@@ -88,28 +83,6 @@ export async function POST(request: Request) {
           { status: 429 },
         );
       }
-    }
-
-    // Daily cap — same rolling 24h window and same status exemptions as
-    // the cooldown. With the 1x/24h cooldown this is normally a single
-    // withdrawal, but the sum check keeps the cap true even if the
-    // cooldown rule is ever relaxed.
-    const { data: recentWds, error: recentWdsError } = await supabaseAdmin
-      .from('withdrawals')
-      .select('amount')
-      .eq('user_id', user.id)
-      .not('status', 'in', '("FAILED","REJECTED","CANCELLED")')
-      .gte('created_at', new Date(Date.now() - WITHDRAW_COOLDOWN_MS).toISOString());
-    if (recentWdsError) console.error('Daily cap lookup error:', recentWdsError);
-    const withdrawnToday = (recentWds || []).reduce((sum, row) => sum + Number(row.amount || 0), 0);
-    if (withdrawnToday + withdrawAmount > MAX_WITHDRAW_PER_DAY) {
-      return NextResponse.json(
-        {
-          error: `Daily withdrawal limit is ${MAX_WITHDRAW_PER_DAY} $DRILL`,
-          dailyRemaining: Math.max(0, MAX_WITHDRAW_PER_DAY - withdrawnToday),
-        },
-        { status: 429 },
-      );
     }
 
     const { data: account } = await supabaseAdmin
