@@ -61,7 +61,7 @@ export default function DrillLanding() {
           so the landing cards stay doff even if the shared styles drift. */}
       <style>{`
         .drill-landing-blue .emboss {
-          background: linear-gradient(180deg, #10141a 0%, #0b0e13 100%);
+          background: #121212;
           border: 1px solid rgba(125, 211, 252, 0.14);
           box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
         }
